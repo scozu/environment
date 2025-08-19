@@ -1,0 +1,11 @@
+theme = light:kanso-pearl, dark:Kanagawa Dragon
+
+font-family = TX-02
+font-size = 16
+
+cursor-style = block
+shell-integration-features = no-cursor
+cursor-style-blink = false
+# cursor-opacity = 0.5
+window-padding-x = 10
+window-padding-y = 10

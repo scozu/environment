@@ -1,0 +1,9 @@
+[init]
+	defaultBranch = main
+[user]
+	name = Jason Scholtz
+	email = 33293669+scozu@users.noreply.github.com
+[pull]
+	rebase = false
+[core]
+	excludesfile = /Users/scozu/.gitignore_global
