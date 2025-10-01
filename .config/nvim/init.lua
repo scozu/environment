@@ -164,7 +164,27 @@ rtp:prepend(lazypath)
 
 require('lazy').setup({
 
-  { 'NMAC427/guess-indent.nvim', opts = {} }, -- Detect tabstop and shiftwidth automatically
+  {
+    'folke/snacks.nvim',
+    priority = 1000,
+    lazy = false,
+    opts = {
+      indent = {
+        enabled = true,
+        priority = 1,
+        char = '│',
+        only_scope = false,
+        only_current = false,
+      },
+      scope = {
+        enabled = true,
+        priority = 200,
+        char = '│',
+        underline = false,
+        only_current = false,
+      },
+    },
+  },
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
