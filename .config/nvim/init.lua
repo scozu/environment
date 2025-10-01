@@ -165,24 +165,18 @@ rtp:prepend(lazypath)
 require('lazy').setup({
 
   {
+    'windwp/nvim-ts-autotag',
+    event = 'InsertEnter',
+    opts = {},
+  },
+
+  {
     'folke/snacks.nvim',
     priority = 1000,
     lazy = false,
     opts = {
-      indent = {
-        enabled = true,
-        priority = 1,
-        char = '│',
-        only_scope = false,
-        only_current = false,
-      },
-      scope = {
-        enabled = true,
-        priority = 200,
-        char = '│',
-        underline = false,
-        only_current = false,
-      },
+      indent = { enabled = true },
+      scope = { enabled = true },
     },
   },
 
@@ -946,7 +940,7 @@ require('lazy').setup({
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
