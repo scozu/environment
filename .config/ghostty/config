@@ -1,11 +1,15 @@
 theme = light:kanso-pearl, dark:Kanagawa Dragon
 
 font-family = TX-02
-font-size = 16
+font-size = 14
+
+macos-icon = custom-style
+macos-icon-frame = plastic
+macos-icon-ghost-color = #FFFFFF
+macos-icon-screen-color = #000000
 
 cursor-style = block
 shell-integration-features = no-cursor
 cursor-style-blink = false
-# cursor-opacity = 0.5
 window-padding-x = 10
 window-padding-y = 10
