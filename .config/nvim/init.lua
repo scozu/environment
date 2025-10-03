@@ -1,19 +1,12 @@
---[[
-Run `:checkhealth` for more info
-
---]]
-
+-- [[ GLOBAL ]]
 -- Set <space> as the leader key
--- See `:help mapleader`
--- Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
--- [[ Setting options ]]
--- See `:help vim.o` or`:help option-list`
+-- [[ OPTIONS ]]
 
 -- Line numbers
 vim.o.number = true
@@ -57,18 +50,10 @@ vim.o.splitright = true
 vim.o.splitbelow = true
 
 -- Sets how neovim will display certain whitespace characters in the editor.
---  See `:help 'list'`
---  and `:help 'listchars'`
---
---  Notice listchars is set using `vim.opt` instead of `vim.o`.
---  It is very similar to `vim.o` but offers an interface for conveniently interacting with tables.
---   See `:help lua-options`
---   and `:help lua-options-guide`
 vim.o.list = true
 vim.opt.listchars = { tab = '→ ', trail = '·', nbsp = '␣' }
 
 -- Default indentation settings (2 spaces)
--- These serve as fallbacks when guess-indent can't detect existing patterns
 vim.o.expandtab = true
 vim.o.shiftwidth = 2
 vim.o.tabstop = 2
@@ -83,16 +68,12 @@ vim.o.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
 
--- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
--- instead raise a dialog asking if you wish to save the current file(s)
--- See `:help 'confirm'`
+-- Raise a dialog asking if you wish to save the current file(s)
 vim.o.confirm = true
 
--- [[ Basic Keymaps ]]
---  See `:help vim.keymap.set()`
+-- [[ KEYMAPS ]]
 
 -- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
@@ -106,33 +87,17 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
--- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
---
 --  See `:help wincmd` for a list of all window commands
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
--- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
--- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
--- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
--- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
--- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
-
--- [[ Basic Autocommands ]]
+-- [[ AUTOCOMMANDS ]]
 --  See `:help lua-guide-autocommands`
 
 -- Highlight when yanking (copying) text
---  Try it with `yap` in normal mode
---  See `:help vim.hl.on_yank()`
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
@@ -141,8 +106,13 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
--- [[ Install `lazy.nvim` plugin manager ]]
---    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
+-- [[ PLUGINS ]]
+--  To manage your plugins, run `:Lazy`
+--  Plugins can be added with a link (or for a github repo: 'owner/repo' link)
+--  Use the link as the first argument in a table to confgiure plugins with `opts = {}`
+--  Plugins can also be configured to run Lua code when they are loaded
+
+-- Install `lazy.nvim`
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
@@ -152,15 +122,10 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   end
 end
 
+-- Add `lazypath` to beginning of runtime path
 ---@type vim.Option
 local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
-
--- [[ Plugins ]]
---  To check the current status of your plugins, run :Lazy
---  You can press `?` in this menu for help. Use `:q` to close the window
---  Plugins can be added with a link (or for a github repo: 'owner/repo' link).
---  To update plugins you can run :Lazy update
 
 require('lazy').setup({
 
@@ -175,33 +140,44 @@ require('lazy').setup({
     priority = 1000,
     lazy = false,
     opts = {
-      indent = { enabled = true },
-      scope = { enabled = true },
+      indent = {
+        enabled = true,
+        animate = { enabled = false },
+      },
+      scope = {
+        enabled = true,
+      },
+      dashboard = {
+        enabled = true,
+        preset = {
+          header = [[
+                           
+                           
+ /'\,  /'\  /'\\ /\\ \\ \\ 
+||_.  ||   || ||  /  || || 
+ ~ || ||   || || /\\ || || 
+,-_-  \\,/ \\,/   || \\/\\ 
+                  /        
+                 (,        
+]],
+          keys = {
+            { icon = ' ', key = 'f', desc = 'Find File', action = ':Telescope find_files' },
+            { icon = ' ', key = 'n', desc = 'Notebook', action = ':cd ~/Documents/notebook | Telescope find_files' },
+            { icon = ' ', key = 'g', desc = 'Find Text', action = ':Telescope live_grep' },
+            { icon = ' ', key = 'r', desc = 'Recent Files', action = ':Telescope oldfiles' },
+            { icon = ' ', key = 'c', desc = 'Config', action = ':e $MYVIMRC' },
+            { icon = ' ', key = 'q', desc = 'Quit', action = ':qa' },
+          },
+        },
+        sections = {
+          { section = 'header' },
+          { section = 'keys', gap = 1, padding = 1 },
+          { section = 'startup' },
+        },
+      },
     },
   },
 
-  -- NOTE: Plugins can also be added by using a table,
-  -- with the first argument being the link and the following
-  -- keys can be used to configure plugin behavior/loading/etc.
-  --
-  -- Use `opts = {}` to automatically pass options to a plugin's `setup()` function, forcing the plugin to be loaded.
-  --
-
-  -- Alternatively, use `config = function() ... end` for full control over the configuration.
-  -- If you prefer to call `setup` explicitly, use:
-  --    {
-  --        'lewis6991/gitsigns.nvim',
-  --        config = function()
-  --            require('gitsigns').setup({
-  --                -- Your gitsigns configuration here
-  --            })
-  --        end,
-  --    }
-  --
-  -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`.
-  --
-  -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
@@ -215,27 +191,11 @@ require('lazy').setup({
     },
   },
 
-  -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
-  --
-  -- This is often very useful to both group configuration, as well as handle
-  -- lazy loading plugins that don't need to be loaded immediately at startup.
-  --
-  -- For example, in the following configuration, we use:
-  --  event = 'VimEnter'
-  --
-  -- which loads which-key before all the UI elements are loaded. Events can be
-  -- normal autocommands events (`:help autocmd-events`).
-  --
-  -- Then, because we use the `opts` key (recommended), the configuration runs
-  -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
-
-  { -- Useful plugin to show you pending keybinds.
+  { -- Show pending keybinds
     'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
-    opts = {
-      -- delay between pressing a key and opening which-key (milliseconds)
-      -- this setting is independent of vim.o.timeoutlen
-      delay = 0,
+    event = 'VimEnter', -- Loads which-key before UI elements
+    opts = { -- Plugin config loads after plugin as `require(MODULE).setup(opts)`
+      delay = 0, -- delay between pressing a key and opening which-key (milliseconds)
       icons = {
         -- set icon mappings to true if you have a Nerd Font
         mappings = vim.g.have_nerd_font,
