@@ -57,3 +57,8 @@ yarn-error.log*
 # Optional: Uncomment if you want to ignore nvim plugin lockfiles
 # lazy-lock.json
 # packer_compiled.lua
+
+# Zed runtime directories (personal data, not config)
+.config/zed/conversations/
+.config/zed/prompts/
+.config/zed/themes/

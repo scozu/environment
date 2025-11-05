@@ -1,0 +1,26 @@
+{
+  // opencode
+  "agent_servers": {
+    "opencode": {
+      "command": "opencode",
+      "args": ["acp"]
+    }
+  },
+
+  // Vim
+  "vim_mode": true,
+  "cursor_blink": false,
+  "relative_line_numbers": true,
+  "scroll_beyond_last_line": "off",
+
+  // Interface
+  "ui_font_size": 14,
+  // "ui_font_family": "TX-02",
+  "buffer_font_size": 16,
+  "buffer_font_family": "TX-02",
+  "theme": {
+    "mode": "system",
+    "light": "Kanso Pearl",
+    "dark": "Gruvbox Material"
+  }
+}
