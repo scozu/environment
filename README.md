@@ -7,7 +7,9 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 - **Shell**: `.zshrc` with vi motions, fzf integration, and useful aliases
 - **Git**: `.gitconfig` with sensible defaults and GitHub integration
 - **Terminal**: Ghostty configuration with themes and custom settings
-- **Editor**: Neovim configuration based on kickstart.nvim
+- **Editors**: 
+  - Neovim configuration based on kickstart.nvim
+  - Zed settings with vim mode, custom fonts, and theme configuration
 
 ## Quick Setup
 
@@ -30,6 +32,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
    mv ~/.gitconfig ~/.gitconfig.backup
    mv ~/.config/nvim ~/.config/nvim.backup
    mv ~/.config/ghostty ~/.config/ghostty.backup
+   mv ~/.config/zed ~/.config/zed.backup
    ```
 
 3. **Create symlinks with Stow:**
@@ -40,7 +43,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 
 4. **Verify symlinks:**
    ```bash
-   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty
+   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/zed
    ```
 
 ## Usage
@@ -91,7 +94,8 @@ For private configs, consider:
 ~/Developer/environment/
 ├── .config/
 │   ├── ghostty/          # Terminal configuration
-│   └── nvim/             # Neovim configuration (kickstart.nvim)
+│   ├── nvim/             # Neovim configuration (kickstart.nvim)
+│   └── zed/              # Zed editor configuration
 ├── .gitconfig            # Git configuration
 ├── .zshrc               # Zsh shell configuration
 ├── .gitignore           # Git ignore patterns
@@ -106,6 +110,7 @@ The configurations assume you have:
 - **pure prompt**: Zsh prompt (`npm install -g pure-prompt`)
 - **Neovim**: Modern vim (`brew install neovim`)
 - **Ghostty**: Terminal emulator
+- **Zed**: Modern code editor (https://zed.dev)
 
 ## Troubleshooting
 
