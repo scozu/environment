@@ -7,6 +7,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 - **Shell**: `.zshrc` with vi motions, fzf integration, and useful aliases
 - **Git**: `.gitconfig` with sensible defaults and GitHub integration
 - **Terminal**: Ghostty configuration with themes and custom settings
+- **AI Assistant**: Opencode configuration for AI-powered development assistance
 - **Editors**: 
   - Neovim configuration based on kickstart.nvim
   - Zed settings with vim mode, custom fonts, and theme configuration
@@ -97,6 +98,7 @@ For private configs, consider:
 │   ├── nvim/             # Neovim configuration (kickstart.nvim)
 │   └── zed/              # Zed editor configuration
 ├── .gitconfig            # Git configuration
+├── .opencode/            # Opencode AI assistant configuration
 ├── .zshrc               # Zsh shell configuration
 ├── .gitignore           # Git ignore patterns
 ├── AGENTS.md            # AI assistant guidelines
