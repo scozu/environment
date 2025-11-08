@@ -62,3 +62,6 @@ yarn-error.log*
 .config/zed/conversations/
 .config/zed/prompts/
 .config/zed/themes/
+
+# Opencode binary
+.opencode/bin/
