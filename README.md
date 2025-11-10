@@ -1,6 +1,6 @@
 # Environment Dotfiles
 
-A unified dotfiles setup using GNU Stow for managing development environment configurations.
+A unified dotfiles setup using GNU Stow for managing development environment configurations. Yes, everything is setup to be in ~/Developer/ just to get the fancy little icon in Finder.
 
 ## What's Included
 

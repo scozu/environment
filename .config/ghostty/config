@@ -1,4 +1,7 @@
-theme = light:kanso-pearl, dark:Kanagawa Dragon
+theme = karasu
+# theme = ~/Developer/karasu/ghostty/karasu
+
+# theme = light:kanso-pearl, dark:Kanagawa Dragon
 
 font-family = TX-02
 font-size = 14

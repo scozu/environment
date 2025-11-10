@@ -767,58 +767,76 @@ require('lazy').setup({
     },
   },
 
-  {
-    -- Color Settings
-    -- Load Kanagawa Dragon theme
-    'rebelot/kanagawa.nvim',
-    lazy = false,
-    priority = 1000,
-    opts = {
-      compile = false,
-      theme = 'dragon',
-      colors = {
-        theme = {
-          all = {
-            ui = {
-              -- Remove gutter background
-              bg_gutter = 'none',
-            },
-          },
-        },
-      },
-    },
-  },
+  -- {
+  --   -- Color Settings
+  --   -- Load Kanagawa Dragon theme
+  --   'rebelot/kanagawa.nvim',
+  --   lazy = false,
+  --   priority = 1000,
+  --   opts = {
+  --     compile = false,
+  --     theme = 'dragon',
+  --     colors = {
+  --       theme = {
+  --         all = {
+  --           ui = {
+  --             -- Remove gutter background
+  --             bg_gutter = 'none',
+  --           },
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
+
+  -- {
+  --   -- Load Kanso Pearl theme
+  --   'webhooked/kanso.nvim',
+  --   lazy = false,
+  --   priority = 1000,
+  --   opts = {
+  --     theme = 'pearl',
+  --   },
+  -- },
+
+  -- {
+  --   -- Load Auto Dark Mode theme to switch theme with system settings
+  --   'f-person/auto-dark-mode.nvim',
+  --   lazy = false,
+  --   config = function()
+  --     local auto_dark_mode = require 'auto-dark-mode'
+
+  --     auto_dark_mode.setup {
+  --       update_interval = 100, -- Check every .1 second
+  --       set_dark_mode = function()
+  --         vim.o.background = 'dark'
+  --         vim.cmd.colorscheme 'kanagawa-dragon'
+  --       end,
+  --       set_light_mode = function()
+  --         vim.o.background = 'light'
+  --         vim.cmd.colorscheme 'kanso-pearl'
+  --       end,
+  --     }
+
+  --     auto_dark_mode.init()
+  --   end,
+  -- },
 
   {
-    -- Load Kanso Pearl theme
-    'webhooked/kanso.nvim',
+    -- Karasu Colorscheme
+    'scozu/karasu',
     lazy = false,
     priority = 1000,
-    opts = {
-      theme = 'pearl',
-    },
-  },
-
-  {
-    -- Load Auto Dark Mode theme to switch theme with system settings
-    'f-person/auto-dark-mode.nvim',
-    lazy = false,
     config = function()
-      local auto_dark_mode = require 'auto-dark-mode'
-
-      auto_dark_mode.setup {
-        update_interval = 100, -- Check every .1 second
-        set_dark_mode = function()
-          vim.o.background = 'dark'
-          vim.cmd.colorscheme 'kanagawa-dragon'
-        end,
-        set_light_mode = function()
-          vim.o.background = 'light'
-          vim.cmd.colorscheme 'kanso-pearl'
-        end,
-      }
-
-      auto_dark_mode.init()
+      require('karasu').setup({
+        transparent = false,
+        italic_comments = true,
+        italic_keywords = false,
+        italic_functions = false,
+        italic_strings = false,
+        italic_variables = false,
+        contrast = 'medium'
+      })
     end,
   },
 
