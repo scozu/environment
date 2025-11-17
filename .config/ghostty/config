@@ -1,10 +1,11 @@
+# include ~/.config/ghostty/themes/karasu/ghostty/karasu
 theme = karasu
 # theme = ~/Developer/karasu/ghostty/karasu
 
 # theme = light:kanso-pearl, dark:Kanagawa Dragon
 
 font-family = TX-02
-font-size = 14
+font-size = 16
 
 macos-icon = custom-style
 macos-icon-frame = plastic
@@ -14,5 +15,5 @@ macos-icon-screen-color = #000000
 cursor-style = block
 shell-integration-features = no-cursor
 cursor-style-blink = false
-window-padding-x = 10
-window-padding-y = 10
+window-padding-x = 15
+window-padding-y = 15
