@@ -143,10 +143,7 @@ require('lazy').setup({
       indent = {
         enabled = true,
         animate = { enabled = false },
-      },
-      scope = {
-        enabled = true,
-      },
+  },
       dashboard = {
         enabled = true,
         preset = {
@@ -160,6 +157,15 @@ require('lazy').setup({
                   /        
                  (,        
 ]],
+          formats = {
+            header = { "%s", align = "center", hl = "SnacksDashboardHeader" },
+            icon = function(item)
+              return { item.icon, width = 2, hl = "SnacksDashboardIcon" }
+            end,
+            key = { "[%s]", hl = "SnacksDashboardKey" },
+            desc = { "%s", hl = "SnacksDashboardDesc" },
+            footer = { "%s", align = "center", hl = "SnacksDashboardFooter" },
+          },
           keys = {
             { icon = ' ', key = 'f', desc = 'Find File', action = ':Telescope find_files' },
             { icon = ' ', key = 'n', desc = 'Notebook', action = ':cd ~/Documents/notebook | Telescope find_files' },
@@ -173,6 +179,10 @@ require('lazy').setup({
           { section = 'header' },
           { section = 'keys', gap = 1, padding = 1 },
           { section = 'startup' },
+        },
+        win = {
+          winhighlight = "Normal:SnacksDashboardNormal,NormalFloat:SnacksDashboardNormal",
+          border = "rounded",
         },
       },
     },
@@ -575,6 +585,34 @@ require('lazy').setup({
         -- ts_ls = {},
         --
 
+        tailwindcss = {
+          -- filetypes = { 'html', 'css', 'scss', 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'vue', 'svelte', 'astro' },
+          settings = {
+            tailwindCSS = {
+              -- Include additional filetypes
+              includeLanguages = {
+                elixir = "html-eex",
+                eelixir = "html-eex", 
+                heex = "html-eex",
+              },
+              -- Exclude filetypes from Tailwind CSS IntelliSense
+              -- filetypes_exclude = { "markdown" },
+              -- Show pixel equivalents for rem values
+              showPixelEquivalents = true,
+              -- Root font size for pixel conversion
+              rootFontSize = 16,
+              -- Enable hover previews
+              hovers = true,
+              -- Enable suggestions
+              suggestions = true,
+              -- Enable code actions
+              codeActions = true,
+              -- Enable validation/linting
+              validate = true,
+            },
+          },
+        },
+
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },
@@ -607,6 +645,7 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'prettier', -- Used to format CSS, JavaScript, TypeScript, and other web files
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -664,6 +703,16 @@ require('lazy').setup({
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        css = { 'prettier' },
+        scss = { 'prettier' },
+        javascript = { 'prettier' },
+        typescript = { 'prettier' },
+        javascriptreact = { 'prettier' },
+        typescriptreact = { 'prettier' },
+        html = { 'prettier' },
+        vue = { 'prettier' },
+        svelte = { 'prettier' },
+        astro = { 'prettier' },
       },
     },
   },
@@ -837,6 +886,18 @@ require('lazy').setup({
         italic_variables = false,
         contrast = 'medium'
       })
+      
+      -- Apply neutral dashboard colors using karasu palette
+      vim.api.nvim_set_hl(0, "SnacksDashboardNormal", { bg = "#121212" }) -- bg0 (deepest black)
+      vim.api.nvim_set_hl(0, "SnacksDashboardHeader", { fg = "#fbf1c7", bold = true }) -- brightWhite
+      vim.api.nvim_set_hl(0, "SnacksDashboardFooter", { fg = "#928374" }) -- fg3 (muted)
+      vim.api.nvim_set_hl(0, "SnacksDashboardKey", { fg = "#d4c5b9" }) -- fg0 (primary cream)
+      vim.api.nvim_set_hl(0, "SnacksDashboardIcon", { fg = "#a89984" }) -- fg2 (warm gray)
+      vim.api.nvim_set_hl(0, "SnacksDashboardDesc", { fg = "#c5b6aa" }) -- fg1 (secondary cream)
+      vim.api.nvim_set_hl(0, "SnacksDashboardFile", { fg = "#d4c5b9" }) -- fg0 (primary cream)
+      vim.api.nvim_set_hl(0, "SnacksDashboardDir", { fg = "#a89984" }) -- fg2 (warm gray)
+      vim.api.nvim_set_hl(0, "SnacksDashboardTitle", { fg = "#fbf1c7", bold = true }) -- brightWhite
+      vim.api.nvim_set_hl(0, "SnacksDashboardSpecial", { fg = "#665c54" }) -- fgDim (dimmed)
     end,
   },
 
@@ -886,7 +947,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'css', 'scss', 'javascript', 'typescript', 'tsx' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -926,7 +987,7 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
