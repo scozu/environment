@@ -143,7 +143,7 @@ require('lazy').setup({
       indent = {
         enabled = true,
         animate = { enabled = false },
-  },
+      },
       dashboard = {
         enabled = true,
         preset = {
@@ -158,13 +158,13 @@ require('lazy').setup({
                  (,        
 ]],
           formats = {
-            header = { "%s", align = "center", hl = "SnacksDashboardHeader" },
+            header = { '%s', align = 'center', hl = 'SnacksDashboardHeader' },
             icon = function(item)
-              return { item.icon, width = 2, hl = "SnacksDashboardIcon" }
+              return { item.icon, width = 2, hl = 'SnacksDashboardIcon' }
             end,
-            key = { "[%s]", hl = "SnacksDashboardKey" },
-            desc = { "%s", hl = "SnacksDashboardDesc" },
-            footer = { "%s", align = "center", hl = "SnacksDashboardFooter" },
+            key = { '[%s]', hl = 'SnacksDashboardKey' },
+            desc = { '%s', hl = 'SnacksDashboardDesc' },
+            footer = { '%s', align = 'center', hl = 'SnacksDashboardFooter' },
           },
           keys = {
             { icon = ' ', key = 'f', desc = 'Find File', action = ':Telescope find_files' },
@@ -181,8 +181,8 @@ require('lazy').setup({
           { section = 'startup' },
         },
         win = {
-          winhighlight = "Normal:SnacksDashboardNormal,NormalFloat:SnacksDashboardNormal",
-          border = "rounded",
+          winhighlight = 'Normal:SnacksDashboardNormal,NormalFloat:SnacksDashboardNormal',
+          border = 'rounded',
         },
       },
     },
@@ -591,9 +591,9 @@ require('lazy').setup({
             tailwindCSS = {
               -- Include additional filetypes
               includeLanguages = {
-                elixir = "html-eex",
-                eelixir = "html-eex", 
-                heex = "html-eex",
+                elixir = 'html-eex',
+                eelixir = 'html-eex',
+                heex = 'html-eex',
               },
               -- Exclude filetypes from Tailwind CSS IntelliSense
               -- filetypes_exclude = { "markdown" },
@@ -877,27 +877,27 @@ require('lazy').setup({
     lazy = false,
     priority = 1000,
     config = function()
-      require('karasu').setup({
+      require('karasu').setup {
         transparent = false,
         italic_comments = true,
-        italic_keywords = false,
+        italic_keywords = true,
         italic_functions = false,
         italic_strings = false,
         italic_variables = false,
-        contrast = 'medium'
-      })
-      
+        contrast = 'medium',
+      }
+
       -- Apply neutral dashboard colors using karasu palette
-      vim.api.nvim_set_hl(0, "SnacksDashboardNormal", { bg = "#121212" }) -- bg0 (deepest black)
-      vim.api.nvim_set_hl(0, "SnacksDashboardHeader", { fg = "#fbf1c7", bold = true }) -- brightWhite
-      vim.api.nvim_set_hl(0, "SnacksDashboardFooter", { fg = "#928374" }) -- fg3 (muted)
-      vim.api.nvim_set_hl(0, "SnacksDashboardKey", { fg = "#d4c5b9" }) -- fg0 (primary cream)
-      vim.api.nvim_set_hl(0, "SnacksDashboardIcon", { fg = "#a89984" }) -- fg2 (warm gray)
-      vim.api.nvim_set_hl(0, "SnacksDashboardDesc", { fg = "#c5b6aa" }) -- fg1 (secondary cream)
-      vim.api.nvim_set_hl(0, "SnacksDashboardFile", { fg = "#d4c5b9" }) -- fg0 (primary cream)
-      vim.api.nvim_set_hl(0, "SnacksDashboardDir", { fg = "#a89984" }) -- fg2 (warm gray)
-      vim.api.nvim_set_hl(0, "SnacksDashboardTitle", { fg = "#fbf1c7", bold = true }) -- brightWhite
-      vim.api.nvim_set_hl(0, "SnacksDashboardSpecial", { fg = "#665c54" }) -- fgDim (dimmed)
+      vim.api.nvim_set_hl(0, 'SnacksDashboardNormal', { bg = '#121212' }) -- bg0 (deepest black)
+      vim.api.nvim_set_hl(0, 'SnacksDashboardHeader', { fg = '#fbf1c7', bold = true }) -- brightWhite
+      vim.api.nvim_set_hl(0, 'SnacksDashboardFooter', { fg = '#928374' }) -- fg3 (muted)
+      vim.api.nvim_set_hl(0, 'SnacksDashboardKey', { fg = '#d4c5b9' }) -- fg0 (primary cream)
+      vim.api.nvim_set_hl(0, 'SnacksDashboardIcon', { fg = '#a89984' }) -- fg2 (warm gray)
+      vim.api.nvim_set_hl(0, 'SnacksDashboardDesc', { fg = '#c5b6aa' }) -- fg1 (secondary cream)
+      vim.api.nvim_set_hl(0, 'SnacksDashboardFile', { fg = '#d4c5b9' }) -- fg0 (primary cream)
+      vim.api.nvim_set_hl(0, 'SnacksDashboardDir', { fg = '#a89984' }) -- fg2 (warm gray)
+      vim.api.nvim_set_hl(0, 'SnacksDashboardTitle', { fg = '#fbf1c7', bold = true }) -- brightWhite
+      vim.api.nvim_set_hl(0, 'SnacksDashboardSpecial', { fg = '#665c54' }) -- fgDim (dimmed)
     end,
   },
 
@@ -947,7 +947,24 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'css', 'scss', 'javascript', 'typescript', 'tsx' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'css',
+        'scss',
+        'javascript',
+        'typescript',
+        'tsx',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
