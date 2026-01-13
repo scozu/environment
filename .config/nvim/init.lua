@@ -717,6 +717,11 @@ require('lazy').setup({
         svelte = { 'prettier' },
         astro = { 'prettier' },
       },
+      formatters = {
+        prettier = {
+          prepend_args = { '--tab-width', '4' },
+        },
+      },
     },
   },
 
