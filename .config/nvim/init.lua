@@ -15,6 +15,9 @@ vim.o.relativenumber = true
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.o.mouse = 'a'
 
+-- Enable true color support
+vim.o.termguicolors = true
+
 -- Don't show the mode, since it's already in the status line
 vim.o.showmode = false
 
@@ -53,10 +56,10 @@ vim.o.splitbelow = true
 vim.o.list = true
 vim.opt.listchars = { tab = '→ ', trail = '·', nbsp = '␣' }
 
--- Default indentation settings (2 spaces)
+-- Default indentation settings (4 spaces)
 vim.o.expandtab = true
-vim.o.shiftwidth = 2
-vim.o.tabstop = 2
+vim.o.shiftwidth = 4
+vim.o.tabstop = 4
 vim.o.smartindent = true
 
 -- Preview substitutions live, as you type!
@@ -886,6 +889,9 @@ require('lazy').setup({
         italic_variables = false,
         contrast = 'medium',
       }
+      
+      -- Apply the colorscheme
+      vim.cmd.colorscheme('karasu')
 
       -- Apply neutral dashboard colors using karasu palette
       vim.api.nvim_set_hl(0, 'SnacksDashboardNormal', { bg = '#121212' }) -- bg0 (deepest black)
@@ -1033,4 +1039,4 @@ require('lazy').setup({
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- vim: ts=4 sts=4 sw=4 et
