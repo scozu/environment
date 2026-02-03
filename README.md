@@ -7,10 +7,10 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 - **Shell**: `.zshrc` with vi motions, fzf integration, and useful aliases
 - **Git**: `.gitconfig` with sensible defaults and GitHub integration
 - **Terminal**: Ghostty configuration with themes and custom settings
-- **AI Assistant**: Opencode configuration for AI-powered development assistance
-- **Editors**: 
+- **AI Assistant**: OpenCode configuration and themes
+- **Editors**:
   - Neovim configuration based on kickstart.nvim
-  - Zed settings with vim mode, custom fonts, and theme configuration
+  - Zed configuration (settings, themes, extensions)
 
 ## Quick Setup
 
@@ -33,6 +33,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
    mv ~/.gitconfig ~/.gitconfig.backup
    mv ~/.config/nvim ~/.config/nvim.backup
    mv ~/.config/ghostty ~/.config/ghostty.backup
+   mv ~/.config/opencode ~/.config/opencode.backup
    mv ~/.config/zed ~/.config/zed.backup
    ```
 
@@ -44,14 +45,14 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 
 4. **Verify symlinks:**
    ```bash
-   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/zed
+   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed
    ```
 
 ## Usage
 
-- **Edit configs**: Make changes directly in `~/Developer/environment/`
-- **Changes sync automatically**: Symlinks ensure changes appear in your home directory
-- **Version control**: Commit changes with git for history and backup
+- **Canonical source**: `~/Developer/environment/.config` is the source of truth
+- **Edit configs**: Make changes in this repo and re-stow if needed
+- **Version control**: Commit changes for reproducibility and sharing
 
 ## Management Commands
 
@@ -96,9 +97,9 @@ For private configs, consider:
 ├── .config/
 │   ├── ghostty/          # Terminal configuration
 │   ├── nvim/             # Neovim configuration (kickstart.nvim)
-│   └── zed/              # Zed editor configuration
+│   ├── opencode/         # OpenCode configuration + themes
+│   └── zed/              # Zed editor configuration (includes extensions)
 ├── .gitconfig            # Git configuration
-├── .opencode/            # Opencode AI assistant configuration
 ├── .zshrc               # Zsh shell configuration
 ├── .gitignore           # Git ignore patterns
 ├── AGENTS.md            # AI assistant guidelines
@@ -113,6 +114,7 @@ The configurations assume you have:
 - **Neovim**: Modern vim (`brew install neovim`)
 - **Ghostty**: Terminal emulator
 - **Zed**: Modern code editor (https://zed.dev)
+- **OpenCode**: OpenCode CLI (uses `~/.config/opencode`)
 
 ## Troubleshooting
 
