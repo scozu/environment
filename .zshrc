@@ -9,11 +9,25 @@ autoload -U promptinit; promptinit
 prompt pure
 
 # alias
-alias v=nvim
-alias vi=nvim
-alias vim=nvim
-alias ls="ls -lah --color=auto"
-# alias ff='nvim $(fzf -m --preview="bat --color=always {}")'
+ alias v=nvim
+ alias vi=nvim
+ alias vim=nvim
+ # Colors and color-aware ls with cross-platform support
+ if command -v gls >/dev/null 2>&1; then
+   alias ls="gls -lah --color=auto"
+ elif command -v ls >/dev/null 2>&1 && ls --color=auto >/dev/null 2>&1; then
+   alias ls="ls -lah --color=auto"
+ else
+   if ls -G >/dev/null 2>&1; then
+       alias ls="ls -lahG"
+   else
+       alias ls="ls -lah"
+   fi
+ fi
+ # macOS/BSD-friendly color config (enable CLI coloring)
+ export CLICOLOR=1
+ export LSCOLORS=GxFxCxDxBxegedabagacad
+ # alias ff='nvim $(fzf -m --preview="bat --color=always {}")'
 
 # opencode
 export PATH=/Users/scozu/.opencode/bin:$PATH

@@ -824,91 +824,38 @@ require('lazy').setup({
     },
   },
 
-  -- {
-  --   -- Color Settings
-  --   -- Load Kanagawa Dragon theme
-  --   'rebelot/kanagawa.nvim',
-  --   lazy = false,
-  --   priority = 1000,
-  --   opts = {
-  --     compile = false,
-  --     theme = 'dragon',
-  --     colors = {
-  --       theme = {
-  --         all = {
-  --           ui = {
-  --             -- Remove gutter background
-  --             bg_gutter = 'none',
-  --           },
-  --         },
-  --       },
-  --     },
-  --   },
-  -- },
-
-  -- {
-  --   -- Load Kanso Pearl theme
-  --   'webhooked/kanso.nvim',
-  --   lazy = false,
-  --   priority = 1000,
-  --   opts = {
-  --     theme = 'pearl',
-  --   },
-  -- },
-
-  -- {
-  --   -- Load Auto Dark Mode theme to switch theme with system settings
-  --   'f-person/auto-dark-mode.nvim',
-  --   lazy = false,
-  --   config = function()
-  --     local auto_dark_mode = require 'auto-dark-mode'
-
-  --     auto_dark_mode.setup {
-  --       update_interval = 100, -- Check every .1 second
-  --       set_dark_mode = function()
-  --         vim.o.background = 'dark'
-  --         vim.cmd.colorscheme 'kanagawa-dragon'
-  --       end,
-  --       set_light_mode = function()
-  --         vim.o.background = 'light'
-  --         vim.cmd.colorscheme 'kanso-pearl'
-  --       end,
-  --     }
-
-  --     auto_dark_mode.init()
-  --   end,
-  -- },
-
   {
-    -- Karasu Colorscheme
-    'scozu/karasu',
+    -- Color Settings
+    -- Karasu colorscheme (local)
+    dir = '/Users/scozu/Developer/karasu',
+    name = 'karasu',
     lazy = false,
     priority = 1000,
     config = function()
-      require('karasu').setup {
-        transparent = false,
-        italic_comments = true,
-        italic_keywords = true,
-        italic_functions = false,
-        italic_strings = false,
-        italic_variables = false,
-        contrast = 'medium',
-      }
-      
-      -- Apply the colorscheme
-      vim.cmd.colorscheme('karasu')
+      require('karasu').setup { mode = 'night' }
+    end,
+  },
 
-      -- Apply neutral dashboard colors using karasu palette
-      vim.api.nvim_set_hl(0, 'SnacksDashboardNormal', { bg = '#121212' }) -- bg0 (deepest black)
-      vim.api.nvim_set_hl(0, 'SnacksDashboardHeader', { fg = '#fbf1c7', bold = true }) -- brightWhite
-      vim.api.nvim_set_hl(0, 'SnacksDashboardFooter', { fg = '#928374' }) -- fg3 (muted)
-      vim.api.nvim_set_hl(0, 'SnacksDashboardKey', { fg = '#d4c5b9' }) -- fg0 (primary cream)
-      vim.api.nvim_set_hl(0, 'SnacksDashboardIcon', { fg = '#a89984' }) -- fg2 (warm gray)
-      vim.api.nvim_set_hl(0, 'SnacksDashboardDesc', { fg = '#c5b6aa' }) -- fg1 (secondary cream)
-      vim.api.nvim_set_hl(0, 'SnacksDashboardFile', { fg = '#d4c5b9' }) -- fg0 (primary cream)
-      vim.api.nvim_set_hl(0, 'SnacksDashboardDir', { fg = '#a89984' }) -- fg2 (warm gray)
-      vim.api.nvim_set_hl(0, 'SnacksDashboardTitle', { fg = '#fbf1c7', bold = true }) -- brightWhite
-      vim.api.nvim_set_hl(0, 'SnacksDashboardSpecial', { fg = '#665c54' }) -- fgDim (dimmed)
+  {
+    -- Auto Dark Mode to switch Karasu with system settings
+    'f-person/auto-dark-mode.nvim',
+    lazy = false,
+    config = function()
+      local auto_dark_mode = require 'auto-dark-mode'
+
+      auto_dark_mode.setup {
+        update_interval = 100, -- Check every .1 second
+        set_dark_mode = function()
+          vim.o.background = 'dark'
+          vim.cmd.colorscheme 'karasu-night'
+        end,
+        set_light_mode = function()
+          vim.o.background = 'light'
+          vim.cmd.colorscheme 'karasu-snow'
+        end,
+      }
+
+      auto_dark_mode.init()
     end,
   },
 

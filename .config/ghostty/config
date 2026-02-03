@@ -1,5 +1,5 @@
 # include ~/.config/ghostty/themes/karasu/ghostty/karasu
-theme = karasu
+theme = dark:karasu-night,light:karasu-snow
 # theme = ~/Developer/karasu/ghostty/karasu
 
 # theme = light:kanso-pearl, dark:Kanagawa Dragon

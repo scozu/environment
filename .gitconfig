@@ -7,3 +7,5 @@
 	rebase = false
 [core]
 	excludesfile = /Users/scozu/.gitignore_global
+[color]
+	ui = auto

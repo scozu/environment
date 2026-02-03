@@ -20,7 +20,7 @@
   "buffer_font_family": "TX-02",
   "theme": {
     "mode": "system",
-    "light": "Kanso Pearl",
-    "dark": "Karasu"
+    "light": "Karasu Snow",
+    "dark": "Karasu Night"
   }
 }
