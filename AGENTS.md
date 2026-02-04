@@ -21,3 +21,12 @@ This repository is the canonical, reproducible source of truth for all configs.
 ## Workflow
 - Prefer `stow -R -t ~ environment` to refresh links.
 - If files exist directly under `~/.config` without symlinks, move them into this repo and re-stow.
+
+## Tooling Defaults
+- Always use `bun` (never `npm` or `pnpm`).
+- Canonical commands:
+  - `bun install`
+  - `bun run test`
+  - `bun run lint`
+  - `bun run format`
+  - `bun run build`

@@ -1,0 +1,14 @@
+personality = "pragmatic"
+model = "gpt-5.2-codex"
+model_reasoning_effort = "medium"
+[projects."/Users/scozu"]
+trust_level = "untrusted"
+
+[projects."/Users/scozu/Developer/universal-proofer"]
+trust_level = "trusted"
+
+[mcp_servers.notion]
+url = "https://mcp.notion.com/mcp"
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
