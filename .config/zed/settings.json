@@ -24,4 +24,13 @@
     "light": "Karasu Snow",
     "dark": "Karasu Night",
   },
+  "context_servers": {
+    "Sanity": {
+      "url": "https://mcp.sanity.io",
+      "headers": {
+        "Authorization": "Bearer skvFuGab47YphVeBkCWCaxQBL8BPfJgiEiwqD5UjcbAczt7beE0b44IUIMwyksaPLEJDboXQlAtNcXhoZ"
+      },
+      "settings": {}
+    }
+  },
 }
