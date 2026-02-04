@@ -4,13 +4,10 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 
 ## What's Included
 
-- **Shell**: `.zshrc` with vi motions, fzf integration, and useful aliases
-- **Git**: `.gitconfig` with sensible defaults and GitHub integration
-- **Terminal**: Ghostty configuration with themes and custom settings
-- **AI Assistant**: OpenCode configuration and themes
-- **Editors**:
-  - Neovim configuration based on kickstart.nvim
-  - Zed configuration (settings, themes, extensions)
+- **Shell**: zsh
+- **Terminal**: Ghostty
+- **Agents**: Codex, OpenCode
+- **Editors**: Neovim, Zed
 
 ## Quick Setup
 
@@ -45,7 +42,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 
 4. **Verify symlinks:**
    ```bash
-   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed
+   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed ~/.codex
    ```
 
 ## Usage
