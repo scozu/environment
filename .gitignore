@@ -67,16 +67,7 @@ yarn-error.log*
 # Opencode binary
 .opencode/bin/
 
-# Codex session logs
-.codex/sessions/
-
-# Codex runtime/state (keep only config/rules/skills/AGENTS.md)
-.codex/auth.json
-.codex/log/
-.codex/sqlite/
-.codex/tmp/
-.codex/models_cache.json
-.codex/.codex-global-state.json
-.codex/.personality_migration
-.codex/vendor_imports/
-.codex/version.json
+# Codex (commit only config.toml)
+.codex/*
+!.codex/
+!.codex/config.toml
