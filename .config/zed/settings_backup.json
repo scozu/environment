@@ -2,10 +2,9 @@
   // opencode
   "agent_servers": {
     "opencode": {
-      "type": "custom",
       "command": "opencode",
-      "args": ["acp"],
-    },
+      "args": ["acp"]
+    }
   },
 
   // Vim
@@ -21,7 +20,7 @@
   "buffer_font_family": "TX-02",
   "theme": {
     "mode": "system",
-    "light": "Karasu Snow",
-    "dark": "Karasu Night",
-  },
+    "light": "One Light",
+    "dark": "Karasu Night"
+  }
 }
