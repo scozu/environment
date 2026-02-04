@@ -1,8 +1,6 @@
 # Environment Dotfiles
 
-Dotfiles setup using Stow. Yes, everything is in ~/Developer just to get the fancy little Finder icon.
-
-## What's Included
+Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the fancy little Finder icon.
 
 - **Shell**: zsh
 - **Terminal**: Ghostty
