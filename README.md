@@ -1,6 +1,6 @@
 # Environment Dotfiles
 
-A unified dotfiles setup using GNU Stow for managing development environment configurations.
+Dotfiles setup using Stow. Yes, everything is in ~/Developer just to get the fancy little Finder icon.
 
 ## What's Included
 
@@ -9,14 +9,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 - **Agents**: OpenCode
 - **Editors**: Neovim, Zed
 
-## Quick Setup
-
-### Prerequisites
-
-- GNU Stow: `brew install stow`
-- Git (for cloning)
-
-### Installation
+## Installation
 
 1. **Clone this repository:**
    ```bash
@@ -45,13 +38,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
    ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed
    ```
 
-## Usage
-
-- **Canonical source**: `~/Developer/environment/.config` is the source of truth
-- **Edit configs**: Make changes in this repo and re-stow if needed
-- **Version control**: Commit changes for reproducibility and sharing
-
-## Management Commands
+### Management Commands
 
 ```bash
 # Create symlinks
@@ -67,51 +54,11 @@ cd ~/Developer && stow -R -t ~ environment
 cd ~/Developer && stow -n -v -t ~ environment
 ```
 
-## Customization
-
 ### Adding New Configs
 
 1. Copy config files to `~/Developer/environment/`
 2. Remove originals from home directory  
 3. Run `stow -R -t ~ environment` to create symlinks
-
-### Sensitive Information
-
-This repo is designed to be safe for public sharing:
-- Uses GitHub no-reply email in `.gitconfig`
-- No API keys, tokens, or passwords
-- See `.gitignore` for excluded file types
-
-For private configs, consider:
-- Creating a separate private dotfiles repo
-- Using environment variables for sensitive values
-- Adding `.local` config files (already in `.gitignore`)
-
-## File Structure
-
-```
-~/Developer/environment/
-├── .config/
-│   ├── ghostty/          # Terminal configuration
-│   ├── nvim/             # Neovim configuration (kickstart.nvim)
-│   ├── opencode/         # OpenCode configuration + themes
-│   └── zed/              # Zed editor configuration (includes extensions)
-├── .gitconfig            # Git configuration
-├── .zshrc               # Zsh shell configuration
-├── .gitignore           # Git ignore patterns
-├── AGENTS.md            # AI assistant guidelines
-└── README.md            # This file
-```
-
-## Dependencies
-
-The configurations assume you have:
-- **fzf**: For fuzzy finding (`brew install fzf`)
-- **pure prompt**: Zsh prompt (`npm install -g pure-prompt`)
-- **Neovim**: Modern vim (`brew install neovim`)
-- **Ghostty**: Terminal emulator
-- **Zed**: Modern code editor (https://zed.dev)
-- **OpenCode**: OpenCode CLI (uses `~/.config/opencode`)
 
 ## Troubleshooting
 
