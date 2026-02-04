@@ -67,7 +67,5 @@ yarn-error.log*
 # Opencode binary
 .opencode/bin/
 
-# Codex (commit only config.toml)
-.codex/*
-!.codex/
-!.codex/config.toml
+# Codex
+.codex/

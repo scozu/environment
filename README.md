@@ -6,7 +6,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 
 - **Shell**: zsh
 - **Terminal**: Ghostty
-- **Agents**: Codex, OpenCode
+- **Agents**: OpenCode
 - **Editors**: Neovim, Zed
 
 ## Quick Setup
@@ -42,7 +42,7 @@ A unified dotfiles setup using GNU Stow for managing development environment con
 
 4. **Verify symlinks:**
    ```bash
-   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed ~/.codex
+   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed
    ```
 
 ## Usage
