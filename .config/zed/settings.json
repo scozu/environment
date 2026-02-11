@@ -1,5 +1,11 @@
 {
   // opencode
+  "tabs": {
+    "git_status": true
+  },
+  "active_pane_modifiers": {
+    "border_size": 0.0
+  },
   "agent_servers": {
     "opencode": {
       "type": "custom",
