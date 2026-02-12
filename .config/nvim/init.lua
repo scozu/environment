@@ -21,6 +21,9 @@ vim.o.termguicolors = true
 -- Statusline shows mode
 vim.o.showmode = false
 
+-- Don't show built-in ruler in command area (line,col)
+vim.o.ruler = false
+
 -- OS clipboard sync after UI enter (avoid startup cost)
 vim.schedule(function()
   vim.o.clipboard = 'unnamedplus'
@@ -698,13 +701,26 @@ require('lazy').setup({
 
       -- Statusline
       local statusline = require 'mini.statusline'
-      statusline.setup { use_icons = vim.g.have_nerd_font }
+      statusline.setup {
+        use_icons = vim.g.have_nerd_font,
+        content = {
+          active = function()
+            local mode, mode_hl = statusline.section_mode { trunc_width = 120 }
+            local git = statusline.section_git { trunc_width = 75 }
+            local diagnostics = statusline.section_diagnostics { trunc_width = 75 }
+            local filename = statusline.section_filename { trunc_width = 140 }
 
-      -- Cursor location format
-      ---@diagnostic disable-next-line: duplicate-set-field
-      statusline.section_location = function()
-        return '%2l:%-2v'
-      end
+            return statusline.combine_groups {
+              { hl = mode_hl, strings = { mode } },
+              '%<',
+              { hl = 'MiniStatuslineFilename', strings = { filename } },
+              '%=',
+              { hl = 'MiniStatuslineDevinfo', strings = { git, diagnostics } },
+              { hl = mode_hl, strings = { '%2l:%-2v' } },
+            }
+          end,
+        },
+      }
     end,
   },
   { -- Highlight, edit, and navigate code
