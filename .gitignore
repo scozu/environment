@@ -27,6 +27,11 @@ Thumbs.db
 # config.local
 # secrets/
 
+# SSH: keep only shared config files in git
+.ssh/*
+!.ssh/config
+!.ssh/config.local.example
+
 # Editor files
 .vscode/
 .idea/

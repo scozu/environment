@@ -23,6 +23,7 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
    mv ~/.config/ghostty ~/.config/ghostty.backup
    mv ~/.config/opencode ~/.config/opencode.backup
    mv ~/.config/zed ~/.config/zed.backup
+   mv ~/.ssh/config ~/.ssh/config.backup
    ```
 
 3. **Create symlinks with Stow:**
@@ -33,7 +34,7 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
 
 4. **Verify symlinks:**
    ```bash
-   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed
+   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed ~/.ssh/config
    ```
 
 ### Management Commands
