@@ -1,12 +1,16 @@
 # Vim motions in Shell
 set -o vi
 
-# fzf bindings in shell 
-source <(fzf --zsh)
+# Initialize TTY-bound shell UI only when a real terminal is attached.
+# Some app sidecars spawn interactive shells without ZLE support.
+if [[ -o interactive && -t 1 ]]; then
+  # fzf bindings in shell
+  source <(fzf --zsh)
 
-# prompt
-autoload -U promptinit; promptinit
-prompt pure
+  # prompt
+  autoload -U promptinit; promptinit
+  prompt pure
+fi
 
 # alias
  alias v=nvim

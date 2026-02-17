@@ -18,6 +18,14 @@ This repository is the canonical, reproducible source of truth for all configs.
 - `~/.config/opencode` must be a symlink to `./.config/opencode`.
 - Do not use `~/.opencode` as a separate config root; keep a single canonical config in this repo.
 
+## Karasu Theme
+- Karasu source of truth is [github.com/scozu/karasu](https://github.com/scozu/karasu) and local dev checkout is `~/Developer/karasu`.
+- Use `./scripts/update-karasu.sh` to sync latest Karasu into this repo (`zed`, `opencode`, `ghostty`) and install/update Cursor theme extension.
+- Use `./scripts/update-karasu.sh --from-github` to validate/update from GitHub as a typical user flow.
+- Keep Neovim on `scozu/karasu` by default; use `KARASU_LOCAL_DEV=1 nvim` only when troubleshooting local changes in `~/Developer/karasu`.
+- `./scripts/update-karasu.sh` also refreshes Neovim's lazy.nvim Karasu checkout and updates `.config/nvim/lazy-lock.json` to the synced Karasu commit.
+- Keep Cursor settings in `./Library/Application Support/Cursor/User/settings.json` with Karasu selected.
+
 ## Workflow
 - Prefer `stow -R -t ~ environment` to refresh links.
 - If files exist directly under `~/.config` without symlinks, move them into this repo and re-stow.

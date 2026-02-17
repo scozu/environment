@@ -652,17 +652,35 @@ require('lazy').setup({
     },
   },
 
-  {
-    -- Color Settings
-    -- Karasu colorscheme (local)
-    dir = '/Users/scozu/Developer/karasu',
-    name = 'karasu',
-    lazy = false,
-    priority = 1000,
-    config = function()
-      require('karasu').setup { mode = 'night' }
-    end,
-  },
+  (function()
+    -- Default to the GitHub plugin for reproducible installs.
+    -- Opt in to local development with: KARASU_LOCAL_DEV=1 nvim
+    local use_local_karasu = os.getenv 'KARASU_LOCAL_DEV' == '1'
+      and vim.fn.isdirectory '/Users/scozu/Developer/karasu' == 1
+
+    local spec = {
+      'scozu/karasu',
+      lazy = false,
+      priority = 1000,
+      config = function()
+        require('karasu').setup { mode = 'night' }
+      end,
+    }
+
+    if use_local_karasu then
+      spec = {
+        dir = '/Users/scozu/Developer/karasu',
+        name = 'karasu',
+        lazy = false,
+        priority = 1000,
+        config = function()
+          require('karasu').setup { mode = 'night' }
+        end,
+      }
+    end
+
+    return spec
+  end)(),
 
   {
     -- Auto Dark Mode to switch Karasu with system settings
@@ -675,11 +693,11 @@ require('lazy').setup({
         update_interval = 100, -- Check every .1 second
         set_dark_mode = function()
           vim.o.background = 'dark'
-          vim.cmd.colorscheme 'karasu-night'
+          pcall(vim.cmd.colorscheme, 'karasu-night')
         end,
         set_light_mode = function()
           vim.o.background = 'light'
-          vim.cmd.colorscheme 'karasu-snow'
+          pcall(vim.cmd.colorscheme, 'karasu-snow')
         end,
       }
 
