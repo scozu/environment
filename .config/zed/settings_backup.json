@@ -1,10 +1,17 @@
 {
   // opencode
+  "tabs": {
+    "git_status": true,
+  },
+  "active_pane_modifiers": {
+    "border_size": 0.0,
+  },
   "agent_servers": {
     "opencode": {
+      "type": "custom",
       "command": "opencode",
-      "args": ["acp"]
-    }
+      "args": ["acp"],
+    },
   },
 
   // Vim
@@ -18,9 +25,21 @@
   // "ui_font_family": "TX-02",
   "buffer_font_size": 16,
   "buffer_font_family": "TX-02",
+  "use_system_window_tabs": true,
   "theme": {
     "mode": "system",
-    "light": "One Light",
-    "dark": "Karasu Night"
-  }
+    "light": "Karasu Snow",
+    "dark": "Karasu Night",
+  },
+
+  // MCP
+  "context_servers": {
+    "Sanity": {
+      "url": "https://mcp.sanity.io",
+      "headers": {
+        "Authorization": "Bearer skvFuGab47YphVeBkCWCaxQBL8BPfJgiEiwqD5UjcbAczt7beE0b44IUIMwyksaPLEJDboXQlAtNcXhoZ",
+      },
+      //"settings": {},
+    },
+  },
 }

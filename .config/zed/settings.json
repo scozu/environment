@@ -1,10 +1,10 @@
 {
   // opencode
   "tabs": {
-    "git_status": true
+    "git_status": true,
   },
   "active_pane_modifiers": {
-    "border_size": 0.0
+    "border_size": 0.0,
   },
   "agent_servers": {
     "opencode": {
@@ -25,18 +25,23 @@
   // "ui_font_family": "TX-02",
   "buffer_font_size": 16,
   "buffer_font_family": "TX-02",
+  "use_system_window_tabs": true,
   "theme": {
     "mode": "system",
     "light": "Karasu Snow",
     "dark": "Karasu Night",
   },
+
+  // MCP
   "context_servers": {
     "Sanity": {
+      "settings": {},
+
       "url": "https://mcp.sanity.io",
       "headers": {
-        "Authorization": "Bearer skvFuGab47YphVeBkCWCaxQBL8BPfJgiEiwqD5UjcbAczt7beE0b44IUIMwyksaPLEJDboXQlAtNcXhoZ"
+        "Authorization": "Bearer skvFuGab47YphVeBkCWCaxQBL8BPfJgiEiwqD5UjcbAczt7beE0b44IUIMwyksaPLEJDboXQlAtNcXhoZ",
       },
-      "settings": {}
-    }
+      //"settings": {},
+    },
   },
 }
