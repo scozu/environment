@@ -42,3 +42,25 @@ export PATH=/Users/scozu/.opencode/bin:$PATH
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# OpenClaw Completion
+source "/Users/scozu/.openclaw/completions/openclaw.zsh"
+
+# Omarchy-like terminal workflow
+alias c='opencode'
+
+n() {
+  if [ "$#" -eq 0 ]; then
+    command nvim .
+  else
+    command nvim "$@"
+  fi
+}
+
+t() {
+  "$HOME/Developer/environment/scripts/tmux-workspace.sh"
+}
+
+treset() {
+  "$HOME/Developer/environment/scripts/tmux-workspace.sh" --reset-layout
+}

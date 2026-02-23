@@ -4,6 +4,7 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
 
 - **Shell**: zsh
 - **Terminal**: Ghostty
+- **Multiplexer**: tmux
 - **Agents**: OpenCode
 - **Editors**: Neovim, Zed
 
@@ -20,8 +21,9 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
    mv ~/.zshrc ~/.zshrc.backup
    mv ~/.gitconfig ~/.gitconfig.backup
    mv ~/.config/nvim ~/.config/nvim.backup
-   mv ~/.config/ghostty ~/.config/ghostty.backup
-   mv ~/.config/opencode ~/.config/opencode.backup
+    mv ~/.config/ghostty ~/.config/ghostty.backup
+    mv ~/.config/tmux ~/.config/tmux.backup
+    mv ~/.config/opencode ~/.config/opencode.backup
    mv ~/.config/zed ~/.config/zed.backup
    mv ~/.ssh/config ~/.ssh/config.backup
    ```
@@ -34,8 +36,17 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
 
 4. **Verify symlinks:**
    ```bash
-   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/opencode ~/.config/zed ~/.ssh/config
+   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/tmux ~/.config/opencode ~/.config/zed ~/.ssh/config
    ```
+
+## Tmux
+
+- Entry command: `t` (attach to `Work`, or create it)
+- Reset/rebuild layout: `treset`
+- Default layout:
+  - left pane: `nvim`
+  - right pane: `opencode`
+  - bottom pane: terminal shell (default `TMUX_BOTTOM_LINES=15`)
 
 ### Management Commands
 
