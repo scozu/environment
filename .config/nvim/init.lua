@@ -10,7 +10,7 @@ vim.g.have_nerd_font = true
 
 -- Line numbers
 vim.o.number = true
-vim.o.relativenumber = true
+vim.o.relativenumber = false
 
 -- Mouse support (e.g. resize splits)
 vim.o.mouse = 'a'
