@@ -41,8 +41,10 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
 
 ## Tmux
 
-- Entry command: `t` (attach to `Work`, or create it)
+- Entry command: `t` (attach to `dev`, or create it)
 - Reset/rebuild layout: `treset`
+- Default session/window: `dev` / `environment`
+- New page/window: `Ctrl+Space` then `c` (creates a new `environment` window with `nvim`, `opencode`, and a bottom shell pane)
 - Default layout:
   - left pane: `nvim`
   - right pane: `opencode`

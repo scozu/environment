@@ -781,7 +781,7 @@ require('lazy').setup({
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- Optional: load `lua/custom/plugins/*.lua`
@@ -806,6 +806,36 @@ require('lazy').setup({
     },
   },
 })
+
+local function set_neotree_highlights()
+  local function link(group, preferred, fallback)
+    local target = vim.fn.hlexists(preferred) == 1 and preferred or fallback
+    vim.api.nvim_set_hl(0, group, { link = target })
+  end
+
+  link('NeoTreeNormal', 'NvimTreeNormal', 'Normal')
+  link('NeoTreeNormalNC', 'NvimTreeNormalNC', 'NormalNC')
+  link('NeoTreeEndOfBuffer', 'NvimTreeNormal', 'EndOfBuffer')
+  link('NeoTreeWinSeparator', 'WinSeparator', 'WinSeparator')
+  link('NeoTreeCursorLine', 'CursorLine', 'CursorLine')
+  link('NeoTreeDirectoryName', 'NvimTreeOpenedFolderName', 'Directory')
+  link('NeoTreeDirectoryIcon', 'NvimTreeFolderIcon', 'Directory')
+  link('NeoTreeRootName', 'NvimTreeRootFolder', 'Title')
+  link('NeoTreeIndentMarker', 'NvimTreeIndentMarker', 'NonText')
+  link('NeoTreeFileIcon', 'NvimTreeFileIcon', 'Normal')
+  link('NeoTreeGitModified', 'NvimTreeGitDirty', 'DiffChange')
+  link('NeoTreeGitAdded', 'NvimTreeGitNew', 'DiffAdd')
+  link('NeoTreeGitDeleted', 'NvimTreeGitDeleted', 'DiffDelete')
+end
+
+local neotree_theme_augroup = vim.api.nvim_create_augroup('kickstart-neotree-theme', { clear = true })
+
+vim.api.nvim_create_autocmd('ColorScheme', {
+  group = neotree_theme_augroup,
+  callback = set_neotree_highlights,
+})
+
+set_neotree_highlights()
 
 -- Modeline
 -- vim: ts=4 sts=4 sw=4 et
