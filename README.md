@@ -42,14 +42,19 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
 
 ## Tmux
 
-- Entry command: `t` (attach to `dev`, or create it)
-- Reset/rebuild layout: `treset`
+- Entry command: `t` (create or attach to `dev`)
+- Detach/reattach:
+  - Detach: `Ctrl+Space` then `d`
+  - Reattach: run `t` again
+  - If already inside tmux, `t` switches your client to `dev`
 - Default session/window: `dev` / `environment`
-- New page/window: `Ctrl+Space` then `c` (creates a new `environment` window with `nvim`, `opencode`, and a bottom shell pane)
+- Reset/rebuild layout: `treset`
+- New page/window: `Ctrl+Space` then `c` (creates a new `environment` window with the same layout)
 - Default layout:
   - left pane: `nvim`
-  - right pane: `opencode`
-  - bottom pane: terminal shell (default `TMUX_BOTTOM_LINES=15`)
+  - right pane: `opencode` (`TMUX_RIGHT_PANE_PERCENT=60`)
+  - bottom pane: terminal shell (`TMUX_BOTTOM_PANE_PERCENT=22`)
+- Status bar spacing: two-line top status bar with a blank second line for visual padding above panes
 
 ### Management Commands
 
