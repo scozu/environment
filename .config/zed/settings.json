@@ -30,18 +30,5 @@
     "mode": "system",
     "light": "Karasu Snow",
     "dark": "Karasu Night",
-  },
-
-  // MCP
-  "context_servers": {
-    "Sanity": {
-      "settings": {},
-
-      "url": "https://mcp.sanity.io",
-      "headers": {
-        "Authorization": "Bearer skvFuGab47YphVeBkCWCaxQBL8BPfJgiEiwqD5UjcbAczt7beE0b44IUIMwyksaPLEJDboXQlAtNcXhoZ",
-      },
-      //"settings": {},
-    },
-  },
+  }
 }
