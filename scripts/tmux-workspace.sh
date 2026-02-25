@@ -5,10 +5,10 @@ set -euo pipefail
 SESSION_NAME="${TMUX_SESSION_NAME:-dev}"
 WINDOW_NAME="${TMUX_WINDOW_NAME:-environment}"
 WORKDIR="${TMUX_WORKDIR:-$HOME/Developer/environment}"
-BOTTOM_LINES="${TMUX_BOTTOM_LINES:-15}"
+RIGHT_PANE_PERCENT="${TMUX_RIGHT_PANE_PERCENT:-60}"
+BOTTOM_PANE_PERCENT="${TMUX_BOTTOM_PANE_PERCENT:-22}"
 RESET_LAYOUT="${TMUX_RESET_LAYOUT:-0}"
 WINDOW_TARGET="$SESSION_NAME:$WINDOW_NAME"
-BOTTOM_PANE_TARGET="$WINDOW_TARGET.3"
 
 if [ "${1:-}" = "--reset-layout" ]; then
   RESET_LAYOUT=1
@@ -31,21 +31,15 @@ fi
 if [ -n "$editor_pane" ]; then
   tmux send-keys -t "$editor_pane" "nvim" C-m
 
-  ai_pane=$(tmux split-window -t "$editor_pane" -h -p 50 -c "$WORKDIR" -P -F '#{pane_id}')
+  ai_pane=$(tmux split-window -t "$editor_pane" -h -p "$RIGHT_PANE_PERCENT" -c "$WORKDIR" -P -F '#{pane_id}')
   tmux send-keys -t "$ai_pane" "opencode" C-m
 
-  tmux split-window -t "$editor_pane" -v -f -l "$BOTTOM_LINES" -c "$WORKDIR"
+  tmux split-window -t "$editor_pane" -v -f -p "$BOTTOM_PANE_PERCENT" -c "$WORKDIR"
   tmux select-pane -t "$editor_pane"
 fi
 
-if tmux list-panes -t "$WINDOW_TARGET" >/dev/null 2>&1; then
-  tmux set-hook -t "$SESSION_NAME" client-attached "resize-pane -t '$BOTTOM_PANE_TARGET' -y $BOTTOM_LINES"
-  tmux set-hook -t "$SESSION_NAME" client-resized "resize-pane -t '$BOTTOM_PANE_TARGET' -y $BOTTOM_LINES"
-
-  if [ -n "${TMUX:-}" ]; then
-    tmux resize-pane -t "$BOTTOM_PANE_TARGET" -y "$BOTTOM_LINES" >/dev/null 2>&1 || true
-  fi
-fi
+tmux set-hook -u -t "$SESSION_NAME" client-attached
+tmux set-hook -u -t "$SESSION_NAME" client-resized
 
 if [ -n "${TMUX:-}" ]; then
   tmux switch-client -t "$SESSION_NAME"
