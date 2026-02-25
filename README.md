@@ -52,7 +52,7 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
 - New page/window: `Ctrl+Space` then `c` (creates a new `environment` window with the same layout)
 - Default layout:
   - left pane: `nvim`
-  - right pane: `opencode` (`TMUX_RIGHT_PANE_PERCENT=60`)
+  - right pane: `opencode` (`TMUX_RIGHT_PANE_PERCENT=50`)
   - bottom pane: terminal shell (`TMUX_BOTTOM_PANE_PERCENT=22`)
 - Status bar spacing: two-line top status bar with a blank second line for visual padding above panes
 
