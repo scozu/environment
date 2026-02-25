@@ -73,5 +73,9 @@ yarn-error.log*
 # Opencode binary
 .opencode/bin/
 
-# Codex
-.codex/
+# Codex: commit reproducible config/rules only
+.codex/*
+!.codex/AGENTS.md
+!.codex/config.toml
+!.codex/rules/
+!.codex/rules/**

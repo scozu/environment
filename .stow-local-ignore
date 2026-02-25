@@ -6,6 +6,5 @@
 ^README\.md$
 ^\.DS_Store$
 ^\.stow-local-ignore$
-^\.codex$
 ^scripts$
 ^Library$
