@@ -7,6 +7,9 @@
     "border_size": 0.0,
   },
   "agent_servers": {
+    "factory-droid": {
+      "type": "registry"
+    },
     "opencode": {
       "type": "custom",
       "command": "opencode",
