@@ -1,3 +1,18 @@
 {
-  "$schema": "https://opencode.ai/config.json"
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "skill": {
+      "*": "ask",
+      "find-skills": "allow",
+      "frontend-design": "allow",
+      "uncodixfy": "allow",
+      "vercel-react-best-practices": "allow",
+      "vercel-composition-patterns": "allow",
+      "next-best-practices": "allow",
+      "ai-sdk": "allow",
+      "convex": "allow",
+      "convex-best-practices": "allow",
+      "convex-functions": "allow"
+    }
+  }
 }
