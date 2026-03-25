@@ -65,3 +65,6 @@ treset() {
   "$HOME/Developer/environment/scripts/tmux-workspace.sh" --reset-layout
 }
 export PATH=/Users/scozu/.local/bin:$PATH
+
+# Vite+ bin (https://viteplus.dev)
+. "$HOME/.vite-plus/env"

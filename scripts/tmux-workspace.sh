@@ -6,7 +6,6 @@ SESSION_NAME="${TMUX_SESSION_NAME:-dev}"
 WINDOW_NAME="${TMUX_WINDOW_NAME:-environment}"
 WORKDIR="${TMUX_WORKDIR:-$HOME/Developer/environment}"
 RIGHT_PANE_PERCENT="${TMUX_RIGHT_PANE_PERCENT:-50}"
-BOTTOM_PANE_PERCENT="${TMUX_BOTTOM_PANE_PERCENT:-22}"
 RESET_LAYOUT="${TMUX_RESET_LAYOUT:-0}"
 WINDOW_TARGET="$SESSION_NAME:$WINDOW_NAME"
 
@@ -34,7 +33,6 @@ if [ -n "$editor_pane" ]; then
   ai_pane=$(tmux split-window -t "$editor_pane" -h -p "$RIGHT_PANE_PERCENT" -c "$WORKDIR" -P -F '#{pane_id}')
   tmux send-keys -t "$ai_pane" "opencode" C-m
 
-  tmux split-window -t "$editor_pane" -v -f -p "$BOTTOM_PANE_PERCENT" -c "$WORKDIR"
   tmux select-pane -t "$editor_pane"
 fi
 

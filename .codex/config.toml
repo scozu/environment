@@ -15,3 +15,6 @@ url = "https://mcp.notion.com/mcp"
 
 [mcp_servers.figma]
 url = "https://mcp.figma.com/mcp"
+
+[features]
+multi_agent = true
