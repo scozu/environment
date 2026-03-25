@@ -1,0 +1,10 @@
+---
+description: Prefer bun over npm and pnpm for JS tooling
+alwaysApply: true
+---
+
+# Tooling defaults
+
+- Use `bun` for installs and scripts unless the project or user explicitly requires another runner.
+- Do not default to `npm` or `pnpm` when `bun` is sufficient.
+- Canonical patterns: `bun install`, `bun run test`, `bun run lint`, `bun run format`, `bun run build`.

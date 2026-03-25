@@ -8,3 +8,4 @@
 ^\.stow-local-ignore$
 ^scripts$
 ^Library$
+^\.codex$

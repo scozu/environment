@@ -5,7 +5,8 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
 - **Shell**: zsh
 - **Terminal**: Ghostty
 - **Multiplexer**: tmux
-- **Agents**: OpenCode
+- **Agent (primary)**: Cursor (rules in `./.cursor/rules/`)
+- **Optional agents**: OpenCode (tmux pane), Codex CLI (`./.codex/` — not stowed by default)
 - **Editors**: Neovim, Zed
 
 ## Installation
@@ -21,13 +22,13 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
    mv ~/.zshrc ~/.zshrc.backup
    mv ~/.gitconfig ~/.gitconfig.backup
    mv ~/.config/nvim ~/.config/nvim.backup
-    mv ~/.config/ghostty ~/.config/ghostty.backup
-    mv ~/.config/tmux ~/.config/tmux.backup
-    mv ~/.config/opencode ~/.config/opencode.backup
-    mv ~/.config/zed ~/.config/zed.backup
-    mv ~/.codex ~/.codex.backup
-    mv ~/.ssh/config ~/.ssh/config.backup
+   mv ~/.config/ghostty ~/.config/ghostty.backup
+   mv ~/.config/tmux ~/.config/tmux.backup
+   mv ~/.config/opencode ~/.config/opencode.backup
+   mv ~/.config/zed ~/.config/zed.backup
+   mv ~/.ssh/config ~/.ssh/config.backup
    ```
+   `~/.codex` is optional; only back it up if you already use Codex and plan to re-link it manually.
 
 3. **Create symlinks with Stow:**
    ```bash
@@ -37,8 +38,9 @@ Dotfiles setup using Stow. Yes, everything is in `~/Developer` just to get the f
 
 4. **Verify symlinks:**
    ```bash
-   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/tmux ~/.config/opencode ~/.config/zed ~/.codex ~/.ssh/config
+   ls -la ~/.zshrc ~/.gitconfig ~/.config/nvim ~/.config/ghostty ~/.config/tmux ~/.config/opencode ~/.config/zed ~/.ssh/config
    ```
+   Cursor picks up `./.cursor/rules/` when this repo is the workspace; Stow may also link `~/.cursor/rules` to `./.cursor/rules` from this package.
 
 ## Tmux
 
@@ -68,7 +70,7 @@ cd ~/Developer && stow -D -t ~ environment
 cd ~/Developer && stow -R -t ~ environment
 
 # Check what would be symlinked (dry run)
-cd ~/Developer && stow -n -v -t ~ environment
+stow -n -v -t ~ environment
 ```
 
 ### Adding New Configs
