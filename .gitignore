@@ -1,2 +1,16 @@
 .DS_Store
 **/.DS_Store
+
+# SSH private keys and machine-specific data
+home/.ssh/id_*
+home/.ssh/authorized_keys
+home/.ssh/known_hosts
+
+# Local shell settings
+home/.zshrc.local
+home/.zshenv.local
+
+# OpenCode secrets and generated dependencies
+home/.config/opencode/auth.json
+home/.config/opencode/.env*
+home/.config/opencode/node_modules/
