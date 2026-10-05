@@ -5,6 +5,8 @@
 home/.ssh/id_*
 home/.ssh/authorized_keys
 home/.ssh/known_hosts
+home/.ssh/config.local
+home/.ssh/control/
 
 # Local shell settings
 home/.zshrc.local
