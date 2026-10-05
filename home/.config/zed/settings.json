@@ -15,4 +15,11 @@
     "light": "Gruvbox Light",
     "dark": "Gruvbox Dark",
   },
+  // Remote development: ghost (https://zed.dev/docs/remote-development)
+  "ssh_connections": [
+    {
+      "host": "ghost",
+      "projects": [{ "paths": ["~/Developer/environment"] }],
+    },
+  ],
 }
