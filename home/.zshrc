@@ -1,1 +1,2 @@
-export PATH="$HOME/.local/bin:$PATH"
+# Interactive-shell config lives here.
+# PATH and other environment setup are in .zshenv (sourced by all shells).

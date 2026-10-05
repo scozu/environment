@@ -12,5 +12,6 @@ home/.zshenv.local
 
 # OpenCode secrets and generated dependencies
 home/.config/opencode/auth.json
+home/.config/opencode/service.json
 home/.config/opencode/.env*
 home/.config/opencode/node_modules/
