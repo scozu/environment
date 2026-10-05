@@ -10,7 +10,8 @@ home/.ssh/known_hosts
 home/.zshrc.local
 home/.zshenv.local
 
-# OpenCode secrets and generated dependencies
+# OpenCode secrets and machine-local state
+# (credentials auth.json live in ~/.local/share/opencode, outside this repo)
 home/.config/opencode/auth.json
 home/.config/opencode/service.json
 home/.config/opencode/.env*
