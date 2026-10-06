@@ -7,13 +7,22 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "agent_servers": {
+    // Custom agent: use our OpenCode v2 install (the Zed registry entry is v1
+    // and fails against the v2 database). opencode resolves via shell PATH.
+    "opencode": {
+      "type": "custom",
+      "command": "opencode",
+      "args": ["acp"]
+    }
+  },
   "vim_mode": true,
   "ui_font_size": 16,
   "buffer_font_size": 15,
   "theme": {
     "mode": "system",
     "light": "Gruvbox Light",
-    "dark": "Gruvbox Dark",
+    "dark": "Gruvbox Dark Soft",
   },
   // Remote development: ghost (https://zed.dev/docs/remote-development)
   "ssh_connections": [
