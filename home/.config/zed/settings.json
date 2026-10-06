@@ -11,6 +11,9 @@
     // Custom agent: use our OpenCode v2 install (the Zed registry entry is v1
     // and fails against the v2 database). opencode resolves via shell PATH.
     "opencode": {
+      "default_config_options": {
+        "model": "opencode-go/deepseek-v4-pro"
+      },
       "type": "custom",
       "command": "opencode",
       "args": ["acp"]
