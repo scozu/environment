@@ -25,8 +25,24 @@ idempotent where possible.
 1. Finish the macOS setup assistant, create the user account (username does not
    matter — configs are `$HOME`-relative, and `User scozu` in the SSH config
    describes *ghost's* account, correct from any client).
-2. System Settings → General → About → set the computer **Name** to `silence`
-   *before* installing Tailscale, so the Tailscale node gets the right name.
+2. Set the computer name to `silence` *before* installing Tailscale, so the
+   Tailscale node gets the right name. Either System Settings → General →
+   About → Name, or in Terminal with the trio of `scutil` commands (covers all
+   three name slots — the GUI only sets the first):
+   ```sh
+   sudo scutil --set ComputerName "silence"
+   sudo scutil --set LocalHostName "silence"
+   sudo scutil --set HostName "silence"
+   ```
+   Verify:
+   ```sh
+   scutil --get ComputerName    # friendly name — this is the one Tailscale uses for the node
+   scutil --get LocalHostName   # Bonjour .local name
+   scutil --get HostName        # shell prompt / hostname
+   ```
+   New terminals pick the names up; no reboot required. (If Tailscale gets
+   installed *before* the rename, fix the node name afterwards with
+   `tailscale set --hostname silence`.)
 3. Run Software Update until current.
 4. Install Xcode Command Line Tools (needed for `git`, `make`, `cc`):
    ```sh
