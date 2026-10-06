@@ -1,9 +1,9 @@
-# Bootstrap `silence` — replace its dotfiles with this system
+# Bootstrap `silence` — fresh macOS install, day 1
 
-Goal: make `silence` (MacBook Pro) a clean client of this environment system,
-replacing whatever dotfiles setup it currently has. Everything below is
-deliberate, ordered, and safe (nothing is deleted — old configs are moved to a
-backup folder first).
+Goal: set up `silence` (MacBook Pro) from a **totally fresh macOS install** as a
+clean client of this environment system. It replaces the old dotfiles flow —
+nothing to back up on a wiped machine. Everything is deliberate, ordered, and
+idempotent where possible.
 
 ## Facts this system relies on
 
@@ -20,62 +20,64 @@ backup folder first).
   `authorized_keys`, OpenCode `service.json`/auth/data dirs, launchd plists,
   app state. `silence` generates its own key and gets its own copies.
 
-## Step 0 — power on, Tailscale, identity
+## Step 0 — macOS basics
 
-1. Power on, join network. Confirm Tailscale: `tailscale status` should show
-   `ghost`, `silence`, `wraith`. Confirm MagicDNS:
-   `ping -c1 ghost.tail483f5.ts.net`.
-2. Set git identity (same as ghost):
+1. Finish the macOS setup assistant, create the user account (username does not
+   matter — configs are `$HOME`-relative, and `User scozu` in the SSH config
+   describes *ghost's* account, correct from any client).
+2. System Settings → General → About → set the computer **Name** to `silence`
+   *before* installing Tailscale, so the Tailscale node gets the right name.
+3. Run Software Update until current.
+4. Install Xcode Command Line Tools (needed for `git`, `make`, `cc`):
    ```sh
-   git config --global user.name "Jason Scholtz"
-   git config --global user.email "33293669+scozu@users.noreply.github.com"
+   xcode-select --install
    ```
-3. Note the local username (`whoami`) — irrelevant to the configs: everything is
-   `$HOME`-relative, and `User scozu` in the SSH config describes *ghost's*
-   account, which is correct from any client.
 
-## Step 1 — preserve the old dotfiles system (backup, not delete)
+## Step 1 — Tailscale from scratch
 
-1. Make a timestamped backup dir: `mkdir -p ~/dotfiles-backup-$(date +%Y%m%d)`.
-2. If the old system is GNU Stow-based: find its repo and run
-   `stow -D -t "$HOME" <packages>` inside it first (unstow), so no stale
-   symlinks remain.
-3. Move every old config file/dir into the backup dir (they must not stay in
-   place or they will conflict with Stow later). Typical candidates:
-   `~/.zshrc`, `~/.zshenv`, `~/.zprofile`, `~/.gitconfig`, `~/.ssh/config`,
-   `~/.config/nvim`, `~/.config/zed`, `~/.config/ghostty`, `~/.config/opencode`,
-   `~/.vimrc`, `~/.tmux.conf`, etc.
-4. Leave `~/.ssh/` itself in place if it already has keys you want to keep — but
-   this system expects a fresh `~/.ssh/id_ed25519` (generate in Step 3). Old
-   `authorized_keys`/`known_hosts` can stay local; they are never shared.
+1. Download the macOS app from tailscale.com, install, sign in.
+2. Verify: `tailscale status` shows `silence` and `ghost`;
+   `ping -c1 ghost.tail483f5.ts.net` resolves (MagicDNS working).
 
-## Step 2 — direct-install the CLI tools (mirror ghost)
+## Step 2 — GUI apps
 
-Pattern: install to `~/.local/opt/<tool>`, symlink into `~/.local/bin`.
+Download from official sites, drag to /Applications:
 
-1. **GNU Stow** (needed first):
-   ```sh
-   curl -O https://ftp.gnu.org/gnu/stow/stow-latest.tar.gz
-   tar xzf stow-latest.tar.gz && cd stow-*/
-   ./configure --prefix="$HOME/.local/opt/stow" && make && make install
-   ln -s "$HOME/.local/opt/stow/bin/stow" "$HOME/.local/bin/stow"
-   ```
-2. **Neovim** (match `uname -m`: arm64 = Apple Silicon, x86_64 = Intel):
-   ```sh
-   curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-macos-$(uname -m).tar.gz
-   tar xzf nvim-macos-$(uname -m).tar.gz
-   mv nvim-macos-$(uname -m) "$HOME/.local/opt/nvim"
-   ln -s "$HOME/.local/opt/nvim/bin/nvim" "$HOME/.local/bin/nvim"
-   ```
-3. **OpenCode CLI** (same installer as ghost → `~/.opencode/bin/opencode`):
-   ```sh
-   curl -fsSL https://opencode.ai/install | bash
-   opencode --version   # expect 2.0.23 or newer, matching ghost
-   ```
-4. **Apps** (drag to /Applications): Zed (zed.dev), Cursor (cursor.com),
-   Ghostty (ghostty.org).
+- Ghostty (ghostty.org)
+- Zed (zed.dev)
+- Cursor (cursor.com)
 
-## Step 3 — SSH key for silence (machine-local)
+Remote Login on silence is NOT needed — it is only a client.
+
+## Step 3 — CLI tools (direct installs, mirroring ghost)
+
+```sh
+mkdir -p ~/.local/bin ~/.local/opt
+
+# GNU Stow (build from source — this is the tricky one)
+curl -O https://ftp.gnu.org/gnu/stow/stow-latest.tar.gz
+tar xzf stow-latest.tar.gz && cd stow-*/
+./configure --prefix="$HOME/.local/opt/stow" && make && make install
+ln -s "$HOME/.local/opt/stow/bin/stow" "$HOME/.local/bin/stow"
+cd .. && stow --version                      # expect 2.4.x
+
+# Neovim (arch-matched release tarball)
+uname -m                                     # arm64 = Apple Silicon, x86_64 = Intel
+curl -LO "https://github.com/neovim/neovim/releases/latest/download/nvim-macos-$(uname -m).tar.gz"
+tar xzf "nvim-macos-$(uname -m).tar.gz"
+mv "nvim-macos-$(uname -m)" "$HOME/.local/opt/nvim"
+ln -s "$HOME/.local/opt/nvim/bin/nvim" "$HOME/.local/bin/nvim"
+
+# OpenCode CLI (official installer, same as ghost → ~/.opencode/bin)
+curl -fsSL https://opencode.ai/install | bash
+
+# Until Stow applies .zshenv, export the PATH for this session:
+export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+
+stow --version && nvim --version | head -1 && opencode --version
+```
+
+## Step 4 — SSH key for silence (machine-local)
 
 ```sh
 ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519   # no passphrase, or one + keychain
@@ -84,14 +86,17 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519   # no passphrase, or one + keychain
 - Add the `.pub` to **GitHub** (for cloning/pushing): Settings → SSH keys.
 - Add the `.pub` to **ghost's `authorized_keys`** (needed before Stow, since the
   `ghost` alias lives in the repo). Either:
-  - from silence, with password auth (Remote Login is on):
+  - from silence, with password auth (Remote Login is on ghost):
     `ssh scozu@ghost.tail483f5.ts.net 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys' < ~/.ssh/id_ed25519.pub`
   - or paste the `.pub` into a terminal on ghost:
     `cat >> ~/.ssh/authorized_keys` (then paste, ctrl-D).
 
-## Step 4 — clone the repo and Stow
+## Step 5 — clone the repo and Stow
 
 ```sh
+git config --global user.name "Jason Scholtz"
+git config --global user.email "33293669+scozu@users.noreply.github.com"
+
 mkdir -p ~/Developer
 git clone git@github.com:scozu/environment.git ~/Developer/environment
 cd ~/Developer/environment
@@ -100,12 +105,12 @@ stow --no-folding -v -t "$HOME" home      # real run (fix any leftover conflicts
 mkdir -p ~/.ssh/control && chmod 700 ~/.ssh/control   # for SSH multiplexing
 ```
 
-- If the dry run reports conflicts with anything still in `$HOME`, move that
-  item to the backup dir and re-run.
+- If the dry run reports conflicts with anything in `$HOME`, resolve them
+  (on a fresh install there should be none).
 - Create local override files only if needed (they are gitignored):
   `~/.zshrc.local`, `~/.zshenv.local`, `~/.ssh/config.local`.
 
-## Step 5 — verify each layer, in order
+## Step 6 — verify each layer, in order
 
 1. `zsh -c 'command -v stow nvim opencode'` — all three resolve (PATH from `.zshenv`).
 2. `ssh ghost 'echo ok'` — passwordless, key auth.
@@ -135,11 +140,11 @@ mkdir -p ~/.ssh/control && chmod 700 ~/.ssh/control   # for SSH multiplexing
 6. **Cursor v3**: Add repo → Use existing → Connect via SSH → `ghost` →
    select `~/Developer/…`. Agents then run on ghost ("remote machine" option).
 7. **Git**: `git config --global user.name && git config --global user.email`
-   should show the identity from Step 0.
+   should show the identity from Step 5.
 
-## Step 6 — clean up
+## Step 7 — clean up
 
-- Live with it for a few days, then delete `~/dotfiles-backup-…`.
+- Live with it for a few days before deleting anything from the setup.
 - Never copy secrets or machine state from ghost; if something needs to be
   machine-specific, use the `.local` override files (gitignored) or
   `~/.ssh/config.local`.
@@ -151,7 +156,7 @@ mkdir -p ~/.ssh/control && chmod 700 ~/.ssh/control   # for SSH multiplexing
 - OpenCode client 401 → wrong/missing `OPENCODE_SERVER_PASSWORD`.
 - Zed custom ACP agent "command not found" → Zed was started before the
   `.zshenv` PATH change; quit Zed fully and reopen. Check `dev: open acp logs`.
-- Stow conflict → the item still exists in `$HOME`; move it to the backup dir.
+- Stow conflict → the item still exists in `$HOME`; move it out of the way.
 - `git status` in the environment repo shows edits you didn't make → a GUI app
   rewrote a stowed file (known behavior for Zed/OpenCode state fields); review
   the diff, commit real choices, `git restore` noise.
