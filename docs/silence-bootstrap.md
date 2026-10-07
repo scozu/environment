@@ -70,6 +70,10 @@ Remote Login on silence is NOT needed — it is only a client.
 ```sh
 mkdir -p ~/.local/bin ~/.local/opt
 
+# Until Stow applies .zshenv, export the PATH for this session FIRST —
+# otherwise newly installed commands are invisible to this shell:
+export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+
 # GNU Stow (build from source — this is the tricky one)
 curl -O https://ftp.gnu.org/gnu/stow/stow-latest.tar.gz
 tar xzf stow-latest.tar.gz && cd stow-*/
@@ -86,9 +90,6 @@ ln -s "$HOME/.local/opt/nvim/bin/nvim" "$HOME/.local/bin/nvim"
 
 # OpenCode CLI (official installer, same as ghost → ~/.opencode/bin)
 curl -fsSL https://opencode.ai/install | bash
-
-# Until Stow applies .zshenv, export the PATH for this session:
-export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 
 stow --version && nvim --version | head -1 && opencode --version
 ```
