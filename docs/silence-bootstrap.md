@@ -69,7 +69,8 @@ happens on ghost too. Approve each app once: right-click it in Finder →
 **Open** → **Open** again in the dialog (or System Settings → Privacy &
 Security → "Open Anyway"). Terminal fallback for stubborn cases:
 `xattr -dr com.apple.quarantine "/Applications/<App>.app"`.
-(CLI tools installed via `curl` do not get this stamp.)
+CLI tools downloaded with `curl` can trip the same check when the binary is
+**unsigned** — Neovim's release binary is a known case (see Step 3).
 
 Remote Login on silence is NOT needed — it is only a client.
 
@@ -95,6 +96,11 @@ curl -LO "https://github.com/neovim/neovim/releases/latest/download/nvim-macos-$
 tar xzf "nvim-macos-$(uname -m).tar.gz"
 mv "nvim-macos-$(uname -m)" "$HOME/.local/opt/nvim"
 ln -s "$HOME/.local/opt/nvim/bin/nvim" "$HOME/.local/bin/nvim"
+# Neovim's release binary is unsigned → macOS blocks the first run
+# ("Apple could not verify ..."). Approve once: run `nvim --version` (blocked),
+# then System Settings → Privacy & Security → "Allow Anyway", then run again.
+# Terminal alternative:
+#   xattr -d com.apple.provenance ~/.local/opt/nvim/bin/nvim
 
 # OpenCode CLI (official installer, same as ghost → ~/.opencode/bin)
 curl -fsSL https://opencode.ai/install | bash
