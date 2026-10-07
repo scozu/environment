@@ -63,6 +63,14 @@ Download from official sites, drag to /Applications:
 - Zed (zed.dev)
 - Cursor (cursor.com)
 
+macOS Gatekeeper will block browser-downloaded apps on first open ("Apple could
+not verify it is free of malware"). That is normal for direct downloads and
+happens on ghost too. Approve each app once: right-click it in Finder →
+**Open** → **Open** again in the dialog (or System Settings → Privacy &
+Security → "Open Anyway"). Terminal fallback for stubborn cases:
+`xattr -dr com.apple.quarantine "/Applications/<App>.app"`.
+(CLI tools installed via `curl` do not get this stamp.)
+
 Remote Login on silence is NOT needed — it is only a client.
 
 ## Step 3 — CLI tools (direct installs, mirroring ghost)
