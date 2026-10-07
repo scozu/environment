@@ -138,8 +138,9 @@ mkdir -p ~/.ssh/control && chmod 700 ~/.ssh/control   # for SSH multiplexing
 
 - If the dry run reports conflicts with anything in `$HOME`, resolve them
   (on a fresh install there should be none).
-- Create local override files only if needed (they are gitignored):
-  `~/.zshrc.local`, `~/.zshenv.local`, `~/.ssh/config.local`.
+- Create local override files only if needed (they are gitignored and sourced
+  automatically by the stowed `.zshrc`/`.zshenv`):
+  `~/.zshrc.local` (aliases), `~/.zshenv.local` (env vars), `~/.ssh/config.local`.
 
 ## Step 6 — verify each layer, in order
 
