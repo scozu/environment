@@ -18,3 +18,21 @@ home/.config/opencode/auth.json
 home/.config/opencode/service.json
 home/.config/opencode/.env*
 home/.config/opencode/node_modules/
+
+# Cursor app state, if it is ever copied into the package tree.
+# argv.json carries a per-machine crash-reporter id. cli-config.json is
+# rewritten by the CLI (same reason OpenCode cli.json stays unstowed).
+home/.cursor/argv.json
+home/.cursor/cli-config.json
+home/.cursor/mcp.json
+home/.cursor/agent-cli-state.json
+home/.cursor/statsig-cache.json
+home/.cursor/plugins/
+home/.cursor/projects/
+home/.cursor/extensions/
+home/.cursor/skills-cursor/
+home/.cursor/ai-tracking/
+home/.cursor/sandbox-policies/
+home/Library/Application Support/Cursor/User/globalStorage/
+home/Library/Application Support/Cursor/User/workspaceStorage/
+home/Library/Application Support/Cursor/User/History/

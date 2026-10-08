@@ -28,14 +28,18 @@ unclear; update it when workflows change.
   cd ~/Developer/environment && stow --no-folding -t "$HOME" home
   ```
 - **Shared via Stow**: `.zshenv` (PATH), `.zshrc`, `~/.ssh/config`, Neovim
-  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`.
+  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`, Cursor
+  user `settings.json`, and Cursor rules (`~/.cursor/rules/*.mdc`).
 - **Machine-local — NEVER committed or copied between machines**: SSH private
   keys, `known_hosts`, `authorized_keys`, OpenCode `service.json` + data
   (`~/.local/share/opencode`, `~/.local/state/opencode`), the launchd plist on
   ghost, app state, and the gitignored override files:
   `~/.zshrc.local` (aliases), `~/.zshenv.local` (env vars),
   `~/.ssh/config.local` (ssh overrides) — all auto-sourced by the stowed
-  configs.
+  configs. Cursor app state is in this bucket too: `~/.cursor` caches,
+  plugins, projects, extensions, `skills-cursor`, `argv.json` (per-machine
+  crash-reporter id), `cli-config.json` (the CLI rewrites it), and
+  `~/Library/Application Support/Cursor/User/` except `settings.json`.
 
 ## Daily workflows
 
@@ -68,6 +72,19 @@ unclear; update it when workflows change.
 - On silence: Add repo → Use existing → **Connect via SSH** → `ghost`.
   Agents run on ghost ("remote machine" option). Cursor auto-installed its
   server on ghost (`~/.cursor-server`).
+- Shared Cursor config is stowed the same way as Zed and Ghostty, with
+  `--no-folding` so the parent directories stay real and the app can keep
+  writing state beside the links:
+  - `~/Library/Application Support/Cursor/User/settings.json` — editor
+    settings, including `remote.SSH.remotePlatform` for `ghost`.
+  - `~/.cursor/rules/*.mdc` — user rules, one symlink per file. `~/.cursor`
+    itself is never a symlink; plugins, projects, and caches stay on the
+    machine.
+- Left unstowed on purpose, same call as OpenCode `cli.json`: anything Cursor
+  or the CLI rewrites as state (`cli-config.json`, `argv.json`,
+  `skills-cursor`, extension and plugin caches, History / globalStorage /
+  workspaceStorage). A `keybindings.json` would be stowed next to
+  `settings.json` if one is added later.
 
 ### 4. Working offline on silence
 
@@ -83,8 +100,11 @@ unclear; update it when workflows change.
 3. `git add/commit/push`; on the other machine: `git pull` (symlinks update
    in place — no re-stow needed).
 4. `git status` habit: GUI apps rewrite their own files through symlinks
-   (Zed settings, OpenCode `cli.json` — the latter is un-stowed for that
-   reason). Commit real changes, `git restore` noise.
+   (Zed settings, Cursor `settings.json`, OpenCode `cli.json` — `cli.json`
+   and Cursor `cli-config.json` are un-stowed for that reason). Commit real
+   changes, `git restore` noise. The first time Cursor config is adopted on
+   a machine, move any existing real file aside and stow; after that, pull
+   updates the symlinks in place.
 5. Machine-specific values go in the `.local` files, never in the repo.
 
 ### 6. Terminal / SSH

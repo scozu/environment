@@ -1,0 +1,8 @@
+// Stow-managed. Only this file is shared; the rest of User/ is app state.
+{
+    "window.autoDetectColorScheme": true,
+    "cursor.general.reduceTransparency": true,
+    "remote.SSH.remotePlatform": {
+        "ghost": "macOS"
+    }
+}
