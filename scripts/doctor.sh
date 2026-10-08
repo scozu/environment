@@ -35,11 +35,11 @@ echo "doctor ($ROLE) — $REPO"
 echo "repo"
 check "working tree clean" test -z "$(git -C "$REPO" status --porcelain)"
 check "in sync with origin" test "$(git -C "$REPO" rev-parse HEAD)" = "$(git -C "$REPO" rev-parse '@{u}' 2>/dev/null)"
-check "no secret-looking files tracked" test -z "$(git -C "$REPO" ls-files | grep -E '(^|/)(id_[^/]*|authorized_keys|known_hosts|service\.json|auth\.json)$|\.local$')"
+check "no obvious secret-named files tracked" test -z "$(git -C "$REPO" ls-files | grep -E '(^|/)(id_[^/]*|authorized_keys|known_hosts|service\.json|auth\.json)$|\.local$')"
 
 echo "tools"
 check "stow installed" command -v stow
-check "stow dry run has no conflicts" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
+check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
 check "stow/nvim/opencode resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode'
 
 if [ "$ROLE" = silence ]; then
