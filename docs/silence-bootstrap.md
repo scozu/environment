@@ -148,9 +148,7 @@ mkdir -p ~/.ssh/control && chmod 700 ~/.ssh/control   # for SSH multiplexing
 ```
 
 - If the dry run reports conflicts with anything in `$HOME`, resolve them.
-  A fresh install has none, unless Cursor was opened in Step 2. That launch
-  writes `~/Library/Application Support/Cursor/User/settings.json`. Move that
-  file aside, then stow. The package copy replaces it.
+  A fresh install has none.
 - Create local override files only if needed (they are gitignored and sourced
   automatically by the stowed `.zshrc`/`.zshenv`):
   `~/.zshrc.local` (aliases), `~/.zshenv.local` (env vars), `~/.ssh/config.local`.
@@ -182,12 +180,12 @@ mkdir -p ~/.ssh/control && chmod 700 ~/.ssh/control   # for SSH multiplexing
    Optional port forwarding for a dev server on ghost:
    `"port_forwards": [{ "local_port": 8080, "remote_port": 3000 }]` inside the
    ghost `ssh_connections` entry.
-6. **Cursor v3**: quit Cursor fully and reopen so it reads the stowed user
-   settings and rules. Add repo → Use existing → Connect via SSH → `ghost` →
-   select `~/Developer/…`. Agents then run on ghost ("remote machine" option).
-   `remote.SSH.remotePlatform` for `ghost` is already in the stowed
-   `settings.json`. `~/.cursor` stays a real directory (`--no-folding`);
-   only `settings.json` and files under `~/.cursor/rules/` are links.
+6. **Cursor v3**: quit Cursor fully and reopen so it reads the stowed rules.
+   Add repo → Use existing → Connect via SSH → `ghost` → select
+   `~/Developer/…`. Agents then run on ghost ("remote machine" option).
+   Cursor's own `settings.json` stays machine-local (the app rewrites it;
+   `remote.SSH.remotePlatform` gets added automatically when you connect).
+   Only files under `~/.cursor/rules/` are Stow links.
 7. **Git**: `git config --global user.name && git config --global user.email`
    should show the identity from Step 5.
 

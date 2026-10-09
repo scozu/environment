@@ -28,8 +28,8 @@ unclear; update it when workflows change.
   cd ~/Developer/environment && stow --no-folding -t "$HOME" home
   ```
 - **Shared via Stow**: `.zshenv` (PATH), `.zshrc`, `~/.ssh/config`, Neovim
-  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`, Cursor
-  user `settings.json`, and Cursor rules (`~/.cursor/rules/*.mdc`).
+  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`, and
+  Cursor rules (`~/.cursor/rules/*.mdc`).
 - **Machine-local — NEVER committed or copied between machines**: SSH private
   keys, `known_hosts`, `authorized_keys`, OpenCode `service.json` + data
   (`~/.local/share/opencode`, `~/.local/state/opencode`), the launchd plist on
@@ -39,7 +39,8 @@ unclear; update it when workflows change.
   configs. Cursor app state is in this bucket too: `~/.cursor` caches,
   plugins, projects, extensions, `skills-cursor`, `argv.json` (per-machine
   crash-reporter id), `cli-config.json` (the CLI rewrites it), and
-  `~/Library/Application Support/Cursor/User/` except `settings.json`.
+  `~/Library/Application Support/Cursor/User/` including its `settings.json`
+  (the app rewrites it — never Stowed).
 
 ## Daily workflows
 
