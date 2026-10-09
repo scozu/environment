@@ -105,7 +105,18 @@ ln -s "$HOME/.local/opt/nvim/bin/nvim" "$HOME/.local/bin/nvim"
 # OpenCode CLI (official installer, same as ghost → ~/.opencode/bin)
 curl -fsSL https://opencode.ai/install | bash
 
-stow --version && nvim --version | head -1 && opencode --version
+# pnpm (pinned release tarball — NOT the curl installer, which would install
+# to ~/Library/pnpm and edit shell env files; this keeps the direct-install pattern)
+PNPM_VERSION=12.10.1
+ARCH=$(uname -m | sed 's/x86_64/x64/')
+rm -rf "$HOME/.local/opt/pnpm"
+mkdir -p "$HOME/.local/opt/pnpm"
+curl -fL -o "/tmp/pnpm-$PNPM_VERSION.tar.gz" \
+  "https://github.com/pnpm/pnpm/releases/download/v$PNPM_VERSION/pnpm-darwin-$ARCH.tar.gz"
+tar -xzf "/tmp/pnpm-$PNPM_VERSION.tar.gz" -C "$HOME/.local/opt/pnpm"
+ln -sf "$HOME/.local/opt/pnpm/pnpm" "$HOME/.local/bin/pnpm"
+
+stow --version && nvim --version | head -1 && opencode --version && pnpm --version
 ```
 
 ## Step 4 — SSH key for silence (machine-local)
