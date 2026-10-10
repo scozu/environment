@@ -71,6 +71,7 @@ update the inventory.
 | stow | source build (GNU tarball) | 2.4.1 | `~/.local/opt/stow` | `stow` | `./configure --prefix=… && make && make install` |
 | nvim | release tarball | 0.12.5 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`. Unsigned → quarantine approval (step 6). Currently installed as "latest" — pin the version at the next update. |
 | pnpm | release tarball (standalone build) | 12.10.1 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node — no system Node exists on these machines. Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use`. |
+| bun | release tarball (zip) | 1.4.3 | `~/.local/opt/bun` | `bun`, `bunx` | Single binary from `bun-darwin-$(uname -m).zip`; checksums in `SHASUMS256.txt`. `bunx` is a symlink to `bun`. Global installs land in `~/.bun/bin` — not on PATH by default. |
 | opencode | official installer | v2.0.26 | `~/.opencode/bin` | `opencode` | Exception to the opt/ pattern; self-updates. ghost runs it as a service (launchd `ai.opencode.service`). |
 | postgres | source build | 16.10 | `~/.local/opt/postgres` | `postgres`, `psql`, `pg_ctl`, `initdb`, `pg_isready` | Built `--without-icu`. The only server tool — see below. |
 
