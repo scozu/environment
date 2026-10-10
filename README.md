@@ -1,55 +1,103 @@
-# Apply this environment
+# environment — dotfiles and tools for ghost and silence
 
-This repo is the shared config for ghost and silence. The Stow package is `home`. The target is `$HOME`. Stow links each shared file. Secrets and app state stay on the machine that created them.
+One repo that defines both Macs: **ghost** (Mac Studio, the always-on compute
+machine) and **silence** (MacBook Pro, the portable client). Config is shared
+through Stow. Programs are installed directly — no Homebrew. Each machine
+keeps its own secrets and app state.
 
-## Stow the package
+## The machines
 
-Run the dry run, read it, then run Stow for real.
+- **ghost** — always on. Owns all projects, the OpenCode service, Postgres,
+  the SSH host, and the Zed/Cursor remote servers. Work happens here.
+- **silence** — portable client. UIs run here; files, tools, and agents act
+  on ghost over Tailscale + SSH. silence is set up; its ongoing job is to
+  stay in sync with ghost.
+
+## What this repo contains
+
+- `home/` — the Stow package (dotfiles), target `$HOME`
+- `scripts/doctor.sh` — read-only health check for the current machine
+- `docs/tools.md` — how programs are installed and updated (read this before
+  touching any tool)
+- `docs/workflows.md` — the daily operating manual
+
+## How programs are installed (no Homebrew)
+
+Every CLI tool lives at `~/.local/opt/<tool>/` with symlinks to its
+executables in `~/.local/bin`, which `.zshenv` puts first on `PATH`. Runtime
+state (Postgres data, logs) lives in `~/.local/var/`. One exception: OpenCode
+installs itself to `~/.opencode/bin`.
+
+To install or update **any** program — "install bun", "update nvim", anything
+— follow the playbook in [docs/tools.md](docs/tools.md). It is the same
+procedure for every tool. This README and that file together are the
+source of truth: when you change a tool, update its entry in the inventory
+in the same commit.
+
+## The three loops
+
+### 1. Stow loop — edit shared config
 
 ```sh
 cd ~/Developer/environment
-stow --no-folding -n -t "$HOME" home
-stow --no-folding -t "$HOME" home
+stow --no-folding -n -t "$HOME" home   # dry run — read it
+stow --no-folding -t "$HOME" home      # apply
 ```
 
-`--no-folding` links files and leaves parent directories real. `~/.cursor` and `~/Library/Application Support/Cursor/User` must stay real directories. Cursor writes caches and session state into them.
+`--no-folding` links files but leaves parent directories real (`~/.cursor`
+and the Cursor `User` directory must stay real; the apps write state into
+them).
 
-If the dry run reports a conflict, move that file out of `$HOME` and run Stow again.
+- Edit files under `home/` in this repo. A GUI may rewrite a linked file
+  (Zed settings, Cursor settings, OpenCode config): commit real setting
+  changes, `git restore` the noise.
+- Stowed files: `.zshenv` (PATH), `.zshrc`, `.ssh/config`, Neovim config,
+  Ghostty config, Zed settings, OpenCode `opencode.jsonc`, Cursor rules and
+  `User/settings.json`.
+- Machine-specific values go in the gitignored `.local` files, which the
+  stowed configs source automatically: `~/.zshrc.local` (aliases),
+  `~/.zshenv.local` (env vars), `~/.ssh/config.local` (SSH overrides).
+- On the other machine: `git pull` — existing symlinks update in place, no
+  re-stow needed. On a machine without the links yet, run Stow after pulling.
+- If the dry run reports a conflict, move that file out of `$HOME` and retry.
 
-## Edit shared files
+### 2. Tool loop — install or update a program
 
-Edit the copy under `home/` in this repo. A GUI may rewrite a linked file such as Zed or Cursor `settings.json`. Commit a real setting change. Run `git restore` on edits you did not mean to keep.
+Pin a version, put the program in `~/.local/opt/<tool>`, symlink its entry
+points into `~/.local/bin`, record the version in the tools inventory,
+verify with `doctor.sh`, repeat on the other machine. Full procedure:
+[docs/tools.md](docs/tools.md).
 
-- `~/.zshenv` and `~/.zshrc` source `~/.zshenv.local` and `~/.zshrc.local` when those files exist.
-- `~/.ssh/config` includes `~/.ssh/config.local` when that file exists.
-- Neovim config under `~/.config/nvim/`.
-- `~/.config/ghostty/config.ghostty`
-- `~/.config/zed/settings.json`
-- `~/.config/opencode/opencode.jsonc`
-- `~/Library/Application Support/Cursor/User/settings.json`
-- Rule files under `~/.cursor/rules/`. The current file is `pstack-models.mdc`.
+### 3. Doctor — verify the machine
 
-`git pull` updates a link that already exists. On a machine that does not have the link yet, run Stow after the pull.
+```sh
+cd ~/Developer/environment && scripts/doctor.sh
+```
 
-## Keep machine-local files out
+A clean run means the Stow tree is settled and this machine's checks passed.
+Run it after every change, and on both machines.
 
-Do not commit these. `.gitignore` blocks the copies that would land inside `home/`.
+## Never commit these
 
-- SSH private keys, `known_hosts`, and `authorized_keys`.
-- `~/.zshrc.local`, `~/.zshenv.local`, and `~/.ssh/config.local`.
-- OpenCode `service.json`, `cli.json`, and the data under `~/.local/share/opencode`.
-- Cursor `argv.json`. It holds this machine's crash-reporter id.
-- Cursor `cli-config.json`. The CLI rewrites it.
-- Cursor plugins, extensions, `skills-cursor`, project caches, History, globalStorage, and workspaceStorage.
+`.gitignore` blocks the copies that would land inside `home/`:
 
-To share keybindings later, add `keybindings.json` next to `settings.json` in the package and stow it the same way.
+- SSH private keys, `known_hosts`, `authorized_keys`
+- the `.local` override files
+- OpenCode `service.json`, `auth.json`, and `~/.local/share/opencode` data
+- Cursor `argv.json` (per-machine crash-reporter id), `cli-config.json`,
+  plugins, extensions, project caches, and other app state the apps rewrite
 
-## Check this machine
+## Rules that keep this working
 
-Run `scripts/doctor.sh` from the repo. A clean run means the Stow tree has no pending links and the checks for this machine passed.
+1. No Homebrew. Every tool follows the direct-install pattern, or documents
+   its exception in `docs/tools.md`.
+2. Docs are part of the system. Any tool change updates the inventory in
+   `docs/tools.md` in the same commit.
+3. Secrets and app state never enter the repo. Machine-specific config goes
+   in the `.local` files.
+4. ghost and silence run the same tool versions. Doctor runs clean on both.
 
 ## Read the longer docs
 
-[Bootstrap silence](docs/silence-bootstrap.md) is the fresh-install sequence.
-
-[Two-Mac workflow](docs/workflows.md) is the operating manual.
+- [Tools — install, update, inventory](docs/tools.md)
+- [Two-Mac workflow — operating manual](docs/workflows.md)

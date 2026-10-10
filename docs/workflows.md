@@ -6,7 +6,8 @@ unclear; update it when workflows change.
 ## The machines
 
 - **ghost** (Mac Studio) — always on. Owns: all projects, the OpenCode v2
-  service, the SSH host, Zed/Cursor remote servers. The compute/state machine.
+  service, Postgres, the SSH host, Zed/Cursor remote servers. The
+  compute/state machine.
 - **silence** (MacBook Pro) — portable client. UIs run here; files, tools, and
   agent actions run on ghost. Can work offline via deliberate local clones.
 
@@ -30,6 +31,10 @@ unclear; update it when workflows change.
 - **Shared via Stow**: `.zshenv` (PATH), `.zshrc`, `~/.ssh/config`, Neovim
   baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`, and
   Cursor rules (`~/.cursor/rules/*.mdc`).
+- **Tools (no Homebrew)**: `~/.local/opt/<tool>/` + symlinks in
+  `~/.local/bin` (PATH from `.zshenv`); Postgres data in
+  `~/.local/var/postgres`. Install/update via the playbook in
+  [tools.md](tools.md) — never edit PATH per tool.
 - **Machine-local — NEVER committed or copied between machines**: SSH private
   keys, `known_hosts`, `authorized_keys`, OpenCode `service.json` + data
   (`~/.local/share/opencode`, `~/.local/state/opencode`), the launchd plist on
@@ -122,15 +127,24 @@ unclear; update it when workflows change.
 4. silence is a client: no local OpenCode service, no launchd there.
 5. The service password lives in one place: ghost's
    `~/.config/opencode/service.json`.
+6. Tools follow the direct-install pattern. Every install or update goes
+   through the playbook in [tools.md](tools.md) and updates its inventory in
+   the same commit; ghost and silence stay at the same versions (Postgres is
+   ghost-only).
 
 ## Status checks & maintenance
 
 - OpenCode service: on ghost `opencode service status` (launchd job:
   `ai.opencode.service`).
+- Postgres (ghost): start on demand — `pg_ctl -D ~/.local/var/postgres start`
+  when working on the local app, `stop` when done. No launchd job by design;
+  ghost-only.
 - Tailscale proxy: `tailscale serve status`.
 - SSH server: socket-activated — `ssh ghost 'echo ok'` is the test.
 - Updates: opencode self-updates (its launchd job picks up new versions on
-  restart), Zed/Cursor/Tailscale auto-update themselves.
+  restart), Zed/Cursor/Tailscale auto-update themselves. stow, nvim, pnpm,
+  and Postgres update through the tool playbook in
+  [tools.md](tools.md) — pin the version and update the inventory there.
 
 ## Known quirks / parked items
 

@@ -7,6 +7,8 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 SERVICE_URL="https://ghost.tail483f5.ts.net"   # update here if the tailnet is renamed
 ROLE=silence
 [ "$(scutil --get LocalHostName 2>/dev/null)" = ghost ] && ROLE=ghost
+PEER=ghost
+[ "$ROLE" = ghost ] && PEER=silence
 fails=0
 
 check() { # check "description" command...
@@ -40,7 +42,39 @@ check "no obvious secret-named files tracked" test -z "$(git -C "$REPO" ls-files
 echo "tools"
 check "stow installed" command -v stow
 check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
-check "stow/nvim/opencode resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode'
+check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm'
+
+# Postgres is ghost-only and start-on-demand (one local app, no network).
+# A stopped server is a valid state, so this reports instead of failing.
+if [ "$ROLE" = ghost ]; then
+  check "postgres binaries resolve" sh -c 'command -v psql && command -v pg_ctl && command -v initdb'
+  if pg_ctl -D "$HOME/.local/var/postgres" status >/dev/null 2>&1; then
+    echo "  info  postgres running (started on demand)"
+  else
+    echo "  info  postgres stopped — start on demand: pg_ctl -D ~/.local/var/postgres start"
+  fi
+fi
+
+# Version parity with the other machine, for every direct-installed tool.
+# opencode is exempt (it self-updates). postgres is ghost-only, so only
+# ghost compares it. Unreachable peer = skip, not fail (silence sleeps).
+echo "version sync (with $PEER)"
+parity() { # parity "label" "version command" — the same command runs on both machines
+  local label=$1 cmd=$2 local_ver remote_ver
+  local_ver=$(eval "$cmd" 2>/dev/null) || { echo "  FAIL  $label: cannot read local version"; fails=$((fails+1)); return; }
+  remote_ver=$(ssh -o BatchMode=yes -o ConnectTimeout=6 "$PEER" "$cmd" 2>/dev/null) \
+    || { echo "  skip  $label: $PEER unreachable"; return; }
+  if [ "$local_ver" = "$remote_ver" ]; then
+    echo "  ok    $label $local_ver (matches $PEER)"
+  else
+    echo "  FAIL  $label: local $local_ver, $PEER $remote_ver"
+    fails=$((fails+1))
+  fi
+}
+parity "stow"     'stow --version | awk "{print \$NF}"'
+parity "nvim"     'nvim --version | head -1 | sed "s/^NVIM //"'
+parity "pnpm"     'pnpm --version'
+[ "$ROLE" = ghost ] && parity "postgres" 'postgres --version | awk "{print \$NF}"'
 
 if [ "$ROLE" = silence ]; then
   echo "silence"
