@@ -57,7 +57,10 @@ fi
 
 # Version parity with the other machine, for every direct-installed tool.
 # opencode is exempt (it self-updates). postgres is ghost-only, so only
-# ghost compares it. Unreachable peer = skip, not fail (silence sleeps).
+# ghost compares it. Parity is verified from silence: silence is SSH-client
+# only (Remote Login off), so ghost can never reach it — the ghost-side
+# checks skip by design, and doctor on silence does the real comparison
+# against ghost.
 echo "version sync (with $PEER)"
 parity() { # parity "label" "version command" — the same command runs on both machines
   local label=$1 cmd=$2 local_ver remote_ver

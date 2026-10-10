@@ -52,11 +52,14 @@ The same steps install a new tool and upgrade an existing one. Skip nothing.
    Neovim's release binary is the known case.
 7. **Verify**: `<tool> --version`, then `scripts/doctor.sh` from the repo.
 8. **Record**: update the inventory table below (version) in the same commit.
-9. **Sync the other machine.** silence exists to stay in sync with ghost:
-   run this playbook on silence too (`ssh silence`, from a session there),
-   then doctor there. Run the playbook — never copy `~/.local/opt` wholesale.
-   Data under `~/.local/var` is machine-local, never copied. Exception:
-   server tools live on one machine only — see Server tools below.
+9. **Sync the other machine.** silence exists to stay in sync with ghost, and
+   syncs run **from silence** — silence is SSH-client only (Remote Login is
+   off), so ghost can never reach it. When silence is awake, run this
+   playbook on silence itself, then doctor there: `ssh ghost` works from
+   silence, and doctor on silence checks version parity against ghost.
+   Run the playbook — never copy `~/.local/opt` wholesale. Data under
+   `~/.local/var` is machine-local, never copied. Exception: server tools
+   live on one machine only — see Server tools below.
 
 **Remove**: delete the symlinks from `~/.local/bin`, then the directory in
 `~/.local/opt`, update the inventory, doctor both machines.

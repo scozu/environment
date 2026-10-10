@@ -10,6 +10,8 @@ unclear; update it when workflows change.
   compute/state machine.
 - **silence** (MacBook Pro) — portable client. UIs run here; files, tools, and
   agent actions run on ghost. Can work offline via deliberate local clones.
+  SSH-client only (Remote Login off): ghost cannot reach silence, so tool
+  syncs and doctor parity checks run **from silence, against ghost**.
 
 ## The connective tissue
 
