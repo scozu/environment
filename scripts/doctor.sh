@@ -42,7 +42,7 @@ check "no obvious secret-named files tracked" test -z "$(git -C "$REPO" ls-files
 echo "tools"
 check "stow installed" command -v stow
 check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
-check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun'
+check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh'
 
 # Postgres is ghost-only and start-on-demand (one local app, no network).
 # A stopped server is a valid state, so this reports instead of failing.
@@ -78,6 +78,8 @@ parity "stow"     'stow --version | awk "{print \$NF}"'
 parity "nvim"     'nvim --version | head -1 | sed "s/^NVIM //"'
 parity "pnpm"     'pnpm --version'
 parity "bun"      'bun --version'
+parity "node"     'node --version'
+parity "gh"       'gh --version | head -1'
 [ "$ROLE" = ghost ] && parity "postgres" 'postgres --version | awk "{print \$NF}"'
 
 if [ "$ROLE" = silence ]; then
