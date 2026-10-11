@@ -131,8 +131,8 @@ unclear; update it when workflows change.
    `~/.config/opencode/service.json`.
 6. Tools follow the direct-install pattern. Every install or update goes
    through the playbook in [tools.md](tools.md) and updates its inventory in
-   the same commit; ghost and silence stay at the same versions (Postgres is
-   ghost-only).
+   the same commit (tarball tools are scripted in `scripts/sync-tools.sh`);
+   ghost and silence stay at the same versions (Postgres is ghost-only).
 
 ## Status checks & maintenance
 
@@ -144,9 +144,10 @@ unclear; update it when workflows change.
 - Tailscale proxy: `tailscale serve status`.
 - SSH server: socket-activated — `ssh ghost 'echo ok'` is the test.
 - Updates: opencode self-updates (its launchd job picks up new versions on
-  restart), Zed/Cursor/Tailscale auto-update themselves. stow, nvim, pnpm,
-  and Postgres update through the tool playbook in
-  [tools.md](tools.md) — pin the version and update the inventory there.
+  restart), Zed/Cursor/Tailscale auto-update themselves. The tarball tools
+  (nvim, pnpm, bun, node, gh) update via `scripts/sync-tools.sh`; stow and
+  Postgres stay manual per [tools.md](tools.md) — pin the version and
+  update the inventory there.
 
 ## Known quirks / parked items
 

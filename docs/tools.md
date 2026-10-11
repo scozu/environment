@@ -32,8 +32,10 @@ The same steps install a new tool and upgrade an existing one. Skip nothing.
      exists (stow and Postgres are the existing examples).
    - **Official installer script** — last resort; only when it installs to a
      known prefix and does not edit shell files (OpenCode is the exception).
-2. **Pin the version.** Never install "latest". Write the exact version into
-   the command and record it in the inventory below in the same commit.
+2. **Pin the version.** Never install "latest". For the tarball tools the
+   authoritative pin lives in `scripts/sync-tools.sh` — edit it there and
+   mirror the change in the inventory below in the same commit. Source
+   builds and installers pin at install time.
 3. **Download and verify.** When the project publishes checksums (GitHub
    releases publish sha256 files), verify before extracting.
 4. **Install into `~/.local/opt`**:
@@ -57,6 +59,10 @@ The same steps install a new tool and upgrade an existing one. Skip nothing.
    off), so ghost can never reach it. When silence is awake, run this
    playbook on silence itself, then doctor there: `ssh ghost` works from
    silence, and doctor on silence checks version parity against ghost.
+   For the five tarball tools the playbook is scripted — on silence run
+   `git pull && scripts/sync-tools.sh && scripts/doctor.sh`; the script
+   compares installed versions against the pins and downloads only what
+   differs. stow and Postgres remain manual playbook steps.
    Run the playbook — never copy `~/.local/opt` wholesale. Data under
    `~/.local/var` is machine-local, never copied. Exception: server tools
    live on one machine only — see Server tools below.
@@ -69,11 +75,14 @@ update the inventory.
 
 ## Inventory
 
+The authoritative pins for the tarball tools live in `scripts/sync-tools.sh`;
+this table mirrors them and is updated in the same commit.
+
 | Tool | Source | Version | Location | Entry points in `~/.local/bin` | Notes |
 |---|---|---|---|---|---|
 | stow | source build (GNU tarball) | 2.4.1 | `~/.local/opt/stow` | `stow` | `./configure --prefix=… && make && make install` |
-| nvim | release tarball | 0.12.5 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`. Unsigned → quarantine approval (step 6). Currently installed as "latest" — pin the version at the next update. |
-| pnpm | release tarball (standalone build) | 12.10.1 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node. Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use` — the global Node on PATH is the tarball below. |
+| nvim | release tarball | 0.12.5 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`. Unsigned → quarantine approval (step 6; the sync script strips quarantine xattrs best-effort). No checksums published. |
+| pnpm | release tarball (standalone build) | 12.10.1 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node. Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use` — the global Node on PATH is the tarball below. No checksums published. |
 | bun | release tarball (zip) | 1.4.3 | `~/.local/opt/bun` | `bun`, `bunx` | Single binary from `bun-darwin-aarch64.zip` (Apple Silicon) or `bun-darwin-x64.zip` (Intel) — bun's macOS arm64 asset is named `aarch64`, not `arm64`. Checksums in `SHASUMS256.txt`. `bunx` is a symlink to `bun`. Global installs land in `~/.bun/bin` — not on PATH by default. |
 | node | release tarball | 24.21.0 (LTS) | `~/.local/opt/node` | `node`, `npm`, `npx` | Official `node-v24.21.0-darwin-$(uname -m).tar.gz`; checksums in `SHASUMS256.txt`. Global Node; project Node comes from `pnpm env use`. `corepack` intentionally not linked (deprecated). |
 | gh | release tarball (zip) | 2.102.0 | `~/.local/opt/gh` | `gh` | Official `gh_2.102.0_macOS_arm64.zip`; checksums in `gh_2.102.0_checksums.txt`. Single binary + man pages. |

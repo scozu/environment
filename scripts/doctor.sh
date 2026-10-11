@@ -43,6 +43,7 @@ echo "tools"
 check "stow installed" command -v stow
 check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
 check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh'
+check "tools match pinned versions" "$REPO/scripts/sync-tools.sh" --check
 
 # Postgres is ghost-only and start-on-demand (one local app, no network).
 # A stopped server is a valid state, so this reports instead of failing.
