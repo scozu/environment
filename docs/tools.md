@@ -74,7 +74,7 @@ update the inventory.
 | stow | source build (GNU tarball) | 2.4.1 | `~/.local/opt/stow` | `stow` | `./configure --prefix=… && make && make install` |
 | nvim | release tarball | 0.12.5 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`. Unsigned → quarantine approval (step 6). Currently installed as "latest" — pin the version at the next update. |
 | pnpm | release tarball (standalone build) | 12.10.1 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node. Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use` — the global Node on PATH is the tarball below. |
-| bun | release tarball (zip) | 1.4.3 | `~/.local/opt/bun` | `bun`, `bunx` | Single binary from `bun-darwin-$(uname -m).zip`; checksums in `SHASUMS256.txt`. `bunx` is a symlink to `bun`. Global installs land in `~/.bun/bin` — not on PATH by default. |
+| bun | release tarball (zip) | 1.4.3 | `~/.local/opt/bun` | `bun`, `bunx` | Single binary from `bun-darwin-aarch64.zip` (Apple Silicon) or `bun-darwin-x64.zip` (Intel) — bun's macOS arm64 asset is named `aarch64`, not `arm64`. Checksums in `SHASUMS256.txt`. `bunx` is a symlink to `bun`. Global installs land in `~/.bun/bin` — not on PATH by default. |
 | node | release tarball | 24.21.0 (LTS) | `~/.local/opt/node` | `node`, `npm`, `npx` | Official `node-v24.21.0-darwin-$(uname -m).tar.gz`; checksums in `SHASUMS256.txt`. Global Node; project Node comes from `pnpm env use`. `corepack` intentionally not linked (deprecated). |
 | gh | release tarball (zip) | 2.102.0 | `~/.local/opt/gh` | `gh` | Official `gh_2.102.0_macOS_arm64.zip`; checksums in `gh_2.102.0_checksums.txt`. Single binary + man pages. |
 | opencode | official installer | v2.0.26 | `~/.opencode/bin` | `opencode` | Exception to the opt/ pattern; self-updates. ghost runs it as a service (launchd `ai.opencode.service`). |
@@ -120,7 +120,9 @@ Postgres is the only server tool. Data: `~/.local/var/postgres`, log:
 with prebuilt binaries (preferred source), so:
 
 1. Pin: pick the exact version from the releases page.
-2. Download `bun-darwin-$(uname -m).zip` (or `.tar.gz`), verify the checksum.
+2. Download the macOS zip — mind bun's naming: `bun-darwin-aarch64.zip` on
+   Apple Silicon (not `arm64`), `bun-darwin-x64.zip` on Intel — and verify
+   the checksum.
 3. Extract and move to `~/.local/opt/bun` (keep the old version dir when
    upgrading).
 4. Symlink: `ln -sf "$HOME/.local/opt/bun/bun" "$HOME/.local/bin/bun"` — plus
