@@ -89,6 +89,33 @@ this table mirrors them and is updated in the same commit.
 | opencode | official installer | v2.0.26 | `~/.opencode/bin` | `opencode` | Exception to the opt/ pattern; self-updates. ghost runs it as a service (launchd `ai.opencode.service`). |
 | postgres | source build | 16.10 | `~/.local/opt/postgres` | `postgres`, `psql`, `pg_ctl`, `initdb`, `pg_isready` | Built `--without-icu`. The only server tool — see below. |
 
+## GUI apps — the /Applications exception
+
+Desktop apps are macOS `.app` bundles, not CLI programs, so they install to
+`/Applications` instead of `~/.local/opt`. Spotlight, Launchpad, login items,
+and the apps' own updaters all expect that location, and no symlinks are
+needed. The playbook still applies, with these substitutions:
+
+1. **Source**: the vendor's direct download. No Homebrew, no mirrors. Pin the
+   version and its SHA-256 from the vendor's release feed or Homebrew's cask
+   for that app (used as a pin record only, never installed through brew).
+2. **Verify** before installing. Check the zip's SHA-256 against the pin, then
+   on the unpacked bundle: `codesign --verify --deep --strict` and
+   `spctl -a -vv -t exec` must show `Notarized Developer ID` from the vendor's
+   team.
+3. **Install** with `ditto` (it keeps signatures intact), never `cp`:
+   `ditto ChatGPT.app /Applications/ChatGPT.app`.
+4. **Record** the version in the table below, in the same commit.
+5. **No pinned rollback.** These apps self-update, like Zed, Cursor, and
+   Tailscale. The version column records what was installed, not what is
+   enforced. Sign-in state lives under `~/Library` and is never copied between
+   machines.
+6. Repeat on silence. Doctor does not check GUI apps.
+
+| App | Source | Version | Location | Updates | Notes |
+|---|---|---|---|---|---|
+| ChatGPT | `ChatGPT-darwin-arm64-<ver>.zip` from `persistent.oaistatic.com/codex-app-prod/` (feed: `appcast.xml`) | 26.1007.30912 (build 20156) | `/Applications/ChatGPT.app` | Sparkle, self-updating | Bundle id `com.openai.codex`. Intel uses `ChatGPT-darwin-x64-<ver>.zip`. Verified: SHA-256 `b699a8c2…f815a3` (matches the Homebrew cask pin); signed `Developer ID Application: OpenAI OpCo, LLC (2DC432GLL2)`, notarized and stapled. The app is named ChatGPT; the older app is "ChatGPT Classic". |
+
 ## Server tools
 
 A program with a persistent data directory (today: Postgres) follows the

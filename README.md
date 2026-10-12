@@ -25,8 +25,9 @@ keeps its own secrets and app state.
 
 Every CLI tool lives at `~/.local/opt/<tool>/` with symlinks to its
 executables in `~/.local/bin`, which `.zshenv` puts first on `PATH`. Runtime
-state (Postgres data, logs) lives in `~/.local/var/`. One exception: OpenCode
-installs itself to `~/.opencode/bin`.
+state (Postgres data, logs) lives in `~/.local/var/`. Two exceptions: OpenCode
+installs itself to `~/.opencode/bin`, and desktop apps are `.app` bundles in
+`/Applications` (see the GUI apps section of `docs/tools.md`).
 
 To install or update **any** program — "install bun", "update nvim", anything
 — follow the playbook in [docs/tools.md](docs/tools.md). It is the same
