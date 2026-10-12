@@ -30,8 +30,8 @@ mac="${arch/x86_64/x64}"  # the x64 naming GitHub/node use for Intel
 TOOLS="nvim pnpm bun node gh"
 
 pin() { case "$1" in    # exact pinned version
-  nvim) echo v0.12.5 ;;
-  pnpm) echo 12.10.1 ;;
+  nvim) echo v0.12.6 ;;
+  pnpm) echo 12.11.2 ;;
   bun)  echo 1.4.3 ;;
   node) echo v24.21.0 ;;
   gh)   echo 2.102.0 ;;
@@ -55,7 +55,7 @@ esac; }
 
 url() { case "$1" in
   nvim) echo "https://github.com/neovim/neovim/releases/download/$(pin nvim)/$(asset "$1")" ;;
-  pnpm) echo "https://github.com/pnpm/pnpm/releases/download/$(pin pnpm)/$(asset "$1")" ;;
+  pnpm) echo "https://github.com/pnpm/pnpm/releases/download/v$(pin pnpm)/$(asset "$1")" ;;
   bun)  echo "https://github.com/oven-sh/bun/releases/download/bun-$(pin bun)/$(asset "$1")" ;;
   node) echo "https://nodejs.org/dist/$(pin node)/$(asset "$1")" ;;
   gh)   echo "https://github.com/cli/cli/releases/download/$(pin gh)/$(asset "$1")" ;;

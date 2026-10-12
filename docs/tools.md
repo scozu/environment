@@ -81,13 +81,13 @@ this table mirrors them and is updated in the same commit.
 | Tool | Source | Version | Location | Entry points in `~/.local/bin` | Notes |
 |---|---|---|---|---|---|
 | stow | source build (GNU tarball) | 2.4.1 | `~/.local/opt/stow` | `stow` | `./configure --prefix=… && make && make install` |
-| nvim | release tarball | 0.12.5 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`. Unsigned → quarantine approval (step 6; the sync script strips quarantine xattrs best-effort). No checksums published. |
-| pnpm | release tarball (standalone build) | 12.10.1 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node. Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use` — the global Node on PATH is the tarball below. No checksums published. |
+| nvim | release tarball | 0.12.6 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`. Unsigned → quarantine approval (step 6; the sync script strips quarantine xattrs best-effort). No checksums published. |
+| pnpm | release tarball (standalone build) | 12.11.2 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node. Release tags carry a `v` prefix (`v12.11.2`) — `sync-tools.sh` must build the URL as `/download/v$(pin pnpm)/…`. Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use` — the global Node on PATH is the tarball below. No checksums published. |
 | bun | release tarball (zip) | 1.4.3 | `~/.local/opt/bun` | `bun`, `bunx` | Single binary from `bun-darwin-aarch64.zip` (Apple Silicon) or `bun-darwin-x64.zip` (Intel) — bun's macOS arm64 asset is named `aarch64`, not `arm64`. Checksums in `SHASUMS256.txt`. `bunx` is a symlink to `bun`. Global installs land in `~/.bun/bin` — not on PATH by default. |
 | node | release tarball | 24.21.0 (LTS) | `~/.local/opt/node` | `node`, `npm`, `npx` | Official `node-v24.21.0-darwin-$(uname -m).tar.gz`; checksums in `SHASUMS256.txt`. Global Node; project Node comes from `pnpm env use`. `corepack` intentionally not linked (deprecated). |
 | gh | release tarball (zip) | 2.102.0 | `~/.local/opt/gh` | `gh` | Official `gh_2.102.0_macOS_arm64.zip`; checksums in `gh_2.102.0_checksums.txt`. Single binary + man pages. |
 | opencode | official installer | v2.0.26 | `~/.opencode/bin` | `opencode` | Exception to the opt/ pattern; self-updates. ghost runs it as a service (launchd `ai.opencode.service`). |
-| postgres | source build | 16.10 | `~/.local/opt/postgres` | `postgres`, `psql`, `pg_ctl`, `initdb`, `pg_isready` | Built `--without-icu`. The only server tool — see below. |
+| postgres | source build | 16.15 | `~/.local/opt/postgres` | `postgres`, `psql`, `pg_ctl`, `initdb`, `pg_isready` | Built `--without-icu`. The only server tool — see below. Minor updates rebuild in place (no dump, no `pg_upgrade`, but the configure `--prefix` must be the final path). 16.15 fixes many CVEs; note the new `output_plugin_libraries` whitelist if logical decoding is ever used. |
 
 ## GUI apps — the /Applications exception
 
@@ -145,8 +145,19 @@ Postgres is the only server tool. Data: `~/.local/var/postgres`, log:
   app, stop when done:
   `pg_ctl -D ~/.local/var/postgres start|stop|status`.
 - Back up with `pg_dump` if it matters.
-- Upgrade: a new minor/patch is the same playbook (rebuild into
-  `~/.local/opt/postgres`, `pg_ctl restart` against the existing data dir).
+- Upgrade (minor/patch): a minor bump keeps the on-disk format, so no dump and
+  no `pg_upgrade` — but the `--prefix` must be the **final** path
+  (`~/.local/opt/postgres`) at configure time, or the Mach-O binaries embed the
+  staging path in their `libpq` install name and clients fail with
+  "Library not loaded". Sequence:
+  1. Download `postgresql-<v>.tar.bz2` and its `.sha256` from
+     `ftp.postgresql.org/pub/source/v<v>/`; verify.
+  2. Extract to a scratch tree; `./configure --prefix="$HOME/.local/opt/postgres"
+     --without-icu`; `make -j8 && make install` (it overwrites in place —
+     never configure a temporary `opt/postgres.new` prefix).
+  3. `pg_ctl -D ~/.local/var/postgres -m fast stop`, back up the data dir
+     (`cp -a`), start again, run `psql … "select version();"` to confirm.
+  4. Update the inventory row above.
   A major version change needs `pg_upgrade`, not a rebuild — do that
   deliberately.
 

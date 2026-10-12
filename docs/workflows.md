@@ -80,19 +80,15 @@ unclear; update it when workflows change.
 - On silence: Add repo → Use existing → **Connect via SSH** → `ghost`.
   Agents run on ghost ("remote machine" option). Cursor auto-installed its
   server on ghost (`~/.cursor-server`).
-- Shared Cursor config is stowed the same way as Zed and Ghostty, with
-  `--no-folding` so the parent directories stay real and the app can keep
-  writing state beside the links:
-  - `~/Library/Application Support/Cursor/User/settings.json` — editor
-    settings, including `remote.SSH.remotePlatform` for `ghost`.
-  - `~/.cursor/rules/*.mdc` — user rules, one symlink per file. `~/.cursor`
-    itself is never a symlink; plugins, projects, and caches stay on the
-    machine.
+- Only Cursor **rules** are shared: `~/.cursor/rules/*.mdc`, one symlink per
+  file, stowed with `--no-folding` so parent directories stay real. `~/.cursor`
+  itself is never a symlink; plugins, projects, and caches stay on the machine.
 - Left unstowed on purpose, same call as OpenCode `cli.json`: anything Cursor
-  or the CLI rewrites as state (`cli-config.json`, `argv.json`,
-  `skills-cursor`, extension and plugin caches, History / globalStorage /
-  workspaceStorage). A `keybindings.json` would be stowed next to
-  `settings.json` if one is added later.
+  or the CLI rewrites as state. That includes `User/settings.json` (commit
+  `bef14ba` un-stowed it for this reason), `cli-config.json`, `argv.json`,
+  `skills-cursor`, extension and plugin caches, and History / globalStorage /
+  workspaceStorage. Editor settings and `remote.SSH.remotePlatform` for
+  `ghost` live in that local `settings.json`; set them per machine.
 
 ### 4. Working offline on silence
 
@@ -144,10 +140,10 @@ unclear; update it when workflows change.
 - Tailscale proxy: `tailscale serve status`.
 - SSH server: socket-activated — `ssh ghost 'echo ok'` is the test.
 - Updates: opencode self-updates (its launchd job picks up new versions on
-  restart), Zed/Cursor/Tailscale auto-update themselves. The tarball tools
-  (nvim, pnpm, bun, node, gh) update via `scripts/sync-tools.sh`; stow and
-  Postgres stay manual per [tools.md](tools.md) — pin the version and
-  update the inventory there.
+  restart), and the GUI apps (Zed, Cursor, Tailscale, ChatGPT) auto-update
+  themselves. The tarball tools (nvim, pnpm, bun, node, gh) update via
+  `scripts/sync-tools.sh`; stow and Postgres stay manual per
+  [tools.md](tools.md) — pin the version and update the inventory there.
 
 ## Known quirks / parked items
 
