@@ -116,6 +116,34 @@ needed. The playbook still applies, with these substitutions:
 |---|---|---|---|---|---|
 | ChatGPT | `ChatGPT-darwin-arm64-<ver>.zip` from `persistent.oaistatic.com/codex-app-prod/` (feed: `appcast.xml`) | 26.1007.30912 (build 20156) | `/Applications/ChatGPT.app` | Sparkle, self-updating | Bundle id `com.openai.codex`. Intel uses `ChatGPT-darwin-x64-<ver>.zip`. Verified: SHA-256 `b699a8c2…f815a3` (matches the Homebrew cask pin); signed `Developer ID Application: OpenAI OpCo, LLC (2DC432GLL2)`, notarized and stapled. The app is named ChatGPT; the older app is "ChatGPT Classic". |
 
+## Retention and upstream checks
+
+The lifecycle of a pinned tool has four steps, each with one owner:
+
+1. **Detect (automatic, read-only).** `scripts/check-upstream.sh` compares
+   each pin against upstream and reports `current` or `behind`. It installs
+   nothing. On ghost, launchd job `dev.scozu.check-upstream` runs it every
+   Monday at 09:00; the log is `~/.local/var/check-upstream.log`. The plist
+   lives in `~/Library/LaunchAgents` on ghost only, like the OpenCode plist —
+   it is machine-local, not in the repo. Doctor on ghost checks that the job
+   is loaded. Silence has no launchd (rule 4); its parity is checked by doctor.
+2. **Propose (manual, reviewed).** A `behind` line becomes a commit that
+   changes the pin in `sync-tools.sh` and the inventory row here.
+3. **Apply.** `scripts/sync-tools.sh` on each machine, when it is awake.
+4. **Retain.** After a verified install, `sync-tools.sh` prunes every older
+   `~/.local/opt/<tool>-*` and keeps exactly one rollback copy (the version it
+   just replaced). The rollback copy is removed by the next upgrade. Nothing
+   is pruned unless the new version verified first.
+
+Stow and Postgres are outside this loop by design. Postgres's data directory
+is tied to its build, so its old installs are removed by hand, once the
+upgrade is verified.
+
+Auto-applying pinned CLIs is deliberately not done. nvim and pnpm publish no
+checksums, so TLS to GitHub is their only integrity check, and silence sleeps,
+so unattended bumps would drift the two machines. Self-updating apps (OpenCode,
+ChatGPT, Zed, Cursor, Tailscale) keep their own update channels.
+
 ## Server tools
 
 A program with a persistent data directory (today: Postgres) follows the

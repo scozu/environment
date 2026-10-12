@@ -144,6 +144,9 @@ unclear; update it when workflows change.
   themselves. The tarball tools (nvim, pnpm, bun, node, gh) update via
   `scripts/sync-tools.sh`; stow and Postgres stay manual per
   [tools.md](tools.md) — pin the version and update the inventory there.
+  Upstream drift is reported weekly on ghost; the log is
+  `~/.local/var/check-upstream.log`, and `scripts/check-upstream.sh` runs it
+  on demand.
 
 ## Known quirks / parked items
 

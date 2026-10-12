@@ -97,6 +97,7 @@ if [ "$ROLE" = ghost ]; then
   check "service answers with auth on loopback" test "$(http_code http://127.0.0.1:4096/api/info)" = 200
   check "tailscale serve proxy active" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | grep -q proxy'
   check "tailnet URL answers with auth" test "$(http_code $SERVICE_URL/api/info)" = 200
+  check "upstream check job loaded (weekly report)" sh -c 'launchctl list | grep -q dev.scozu.check-upstream'
 fi
 
 echo

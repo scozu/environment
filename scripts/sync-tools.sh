@@ -6,6 +6,11 @@
 #   scripts/sync-tools.sh          install/update anything missing or stale
 #   scripts/sync-tools.sh --check  read-only; exit 1 if anything differs
 #                                  (doctor.sh uses this)
+#   scripts/sync-tools.sh --pins   read-only; prints "tool version" per pin
+#                                  (check-upstream.sh uses this)
+#
+# Retention: after a verified install, every older opt/<tool>-* is pruned,
+# except the one rollback copy moved aside by this run.
 #
 # Covers the five tarball tools: nvim, pnpm, bun, node, gh. Out of scope by
 # design: stow and postgres (source builds — see docs/tools.md), opencode
@@ -90,6 +95,21 @@ esac; }
 # ---------------------------------------------------------------- engine
 die() { echo "sync-tools: $1" >&2; exit 1; }
 
+# prune_old TOOL KEEP: remove superseded installs; KEEP is this run's rollback
+prune_old() {
+  local d
+  for d in "$OPT/$1"-*; do
+    [ -e "$d" ] || continue
+    [ "$d" = "${2:-}" ] && continue
+    rm -rf "$d" && echo "  pruned $(basename "$d")"
+  done
+}
+
+if [ "${1:-}" = "--pins" ]; then
+  for t in $TOOLS; do echo "$t $(pin "$t")"; done
+  exit 0
+fi
+
 if [ "${1:-}" = "--check" ]; then
   rc=0
   for t in $TOOLS; do
@@ -127,6 +147,7 @@ for t in $TOOLS; do
 
   echo "  install into $OPT/$t"
   target="$OPT/$t"
+  rollback=""
   if [ -e "$target" ]; then
     if [ -n "$have" ]; then
       keep="$target-$(echo "$have" | tr -cd '[:alnum:].')"
@@ -136,6 +157,7 @@ for t in $TOOLS; do
     rm -rf "$keep" && mv "$target" "$keep" \
       || die "$t: could not move old install aside"
     echo "  (old install kept for rollback at $keep)"
+    rollback="$keep"
   fi
 
   if [ "$t" = "pnpm" ]; then
@@ -167,6 +189,7 @@ for t in $TOOLS; do
   have="$(installed "$t")"
   if [ "$have" = "$(pin "$t")" ]; then
     echo "  installed $t $have"
+    prune_old "$t" "$rollback"
   else
     die "$t: installed but version reads '${have:-nothing}' — check PATH and quarantine"
   fi
