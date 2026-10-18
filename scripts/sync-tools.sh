@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # sync-tools — install or update the direct-installed tools on THIS machine
 # to the pinned versions below. Idempotent: tools already at the pinned
-# version are skipped without downloading. Runs on ghost or silence.
+# version are skipped without downloading. Runs on ghost, silence (macOS),
+# or the box (Linux, x86_64 or aarch64) — asset() picks the platform build.
 #
 #   scripts/sync-tools.sh          install/update anything missing or stale
 #   scripts/sync-tools.sh --check  read-only; exit 1 if anything differs
@@ -30,8 +31,16 @@ trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$OPT" "$BIN"
 PATH="$BIN:$PATH"   # the post-install version check must see what we just linked
 
-arch="$(uname -m)"        # arm64 | x86_64
+os="$(uname -s)"          # Darwin (ghost, silence) | Linux (the box)
+arch="$(uname -m)"        # arm64 | x86_64 (macOS); x86_64 | aarch64 (Linux)
 mac="${arch/x86_64/x64}"  # the x64 naming GitHub/node use for Intel
+if [ "$os" = Linux ]; then
+  case "$arch" in
+    x86_64)        lx=x64;   lgh=amd64; lnv=x86_64; lbun=x64 ;;
+    aarch64|arm64) lx=arm64; lgh=arm64; lnv=arm64;  lbun=aarch64 ;;
+    *) echo "sync-tools: unsupported Linux arch $arch" >&2; exit 1 ;;
+  esac
+fi
 
 # ---------------------------------------------------------------- config
 TOOLS="nvim pnpm bun node gh"
@@ -60,12 +69,22 @@ installed() { case "$1" in    # prints this machine's bare version, or nothing
   gh)   gh --version 2>/dev/null | head -1 | awk '{print $3}' ;;
 esac; }
 
-asset() { case "$1" in        # archive filename, arch-aware
+asset() {                     # archive filename, platform- and arch-aware
+  if [ "$os" = Linux ]; then asset_linux "$1"; return; fi
+  case "$1" in
   nvim) echo "nvim-macos-$arch.tar.gz" ;;
   pnpm) echo "pnpm-darwin-$mac.tar.gz" ;;
   bun)  echo "bun-darwin-${mac/arm64/aarch64}.zip" ;;   # bun says aarch64
   node) echo "node-v$(pin node)-darwin-$mac.tar.gz" ;;
   gh)   echo "gh_$(pin gh)_macOS_${mac/x64/amd64}.zip" ;;
+esac; }
+
+asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
+  nvim) echo "nvim-linux-$lnv.tar.gz" ;;
+  pnpm) echo "pnpm-linux-$lx.tar.gz" ;;
+  bun)  echo "bun-linux-$lbun.zip" ;;
+  node) echo "node-v$(pin node)-linux-$lx.tar.gz" ;;
+  gh)   echo "gh_$(pin gh)_linux_$lgh.tar.gz" ;;
 esac; }
 
 url() { case "$1" in
