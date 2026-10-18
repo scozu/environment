@@ -1,9 +1,10 @@
-# environment — dotfiles and tools for ghost and silence
+# environment — dotfiles and tools for ghost, silence, and the box
 
-One repo that defines both Macs: **ghost** (Mac Studio, the always-on compute
-machine) and **silence** (MacBook Pro, the portable client). Config is shared
-through Stow. Programs are installed directly — no Homebrew. Each machine
-keeps its own secrets and app state.
+One repo that defines three machines: **ghost** (Mac Studio, the always-on
+compute machine), **silence** (MacBook Pro, the portable client), and **the
+box** (a Linux agent machine). Config is shared through Stow. Programs are
+installed directly — no Homebrew. Each machine keeps its own secrets and app
+state.
 
 ## The machines
 
@@ -12,6 +13,11 @@ keeps its own secrets and app state.
 - **silence** — portable client. UIs run here; files, tools, and agents act
   on ghost over Tailscale + SSH. silence is set up; its ongoing job is to
   stay in sync with ghost.
+- **the box** — Linux (Debian, x86_64) agent machine with Claude Code +
+  pstack. Same Stow tree and pinned tools as the Macs, Linux builds. Runs no
+  OpenCode service and no Postgres; not on the tailnet, so doctor's parity
+  checks against ghost skip there. Linux-only behavior sits behind
+  `uname -s` checks in the scripts or in the gitignored `.local` files.
 
 ## What this repo contains
 
@@ -67,12 +73,13 @@ them).
 
 Pin a version, put the program in `~/.local/opt/<tool>`, symlink its entry
 points into `~/.local/bin`, record the version in the tools inventory,
-verify with `doctor.sh`, repeat on the other machine. Full procedure:
+verify with `doctor.sh`, repeat on the other machines. Full procedure:
 [docs/tools.md](docs/tools.md).
 
 The five tarball tools (nvim, pnpm, bun, node, gh) are scripted:
 `scripts/sync-tools.sh` installs or updates them to the pinned versions on
-whichever machine it runs (`--check` is read-only; doctor uses it). stow
+whichever machine it runs, macOS or Linux (`--check` is read-only; doctor
+uses it). stow
 and postgres (source builds) and opencode (self-updating) stay manual by
 design.
 
@@ -83,7 +90,8 @@ cd ~/Developer/environment && scripts/doctor.sh
 ```
 
 A clean run means the Stow tree is settled and this machine's checks passed.
-Run it after every change, and on both machines.
+Run it after every change, on every machine. It detects its role: ghost by
+hostname, the box by `uname -s` = Linux, otherwise silence.
 
 ## Never commit these
 
@@ -103,9 +111,10 @@ Run it after every change, and on both machines.
    `docs/tools.md` in the same commit.
 3. Secrets and app state never enter the repo. Machine-specific config goes
    in the `.local` files.
-4. ghost and silence run the same tool versions. Doctor runs clean on both.
+4. ghost, silence, and the box run the same tool versions. Doctor runs clean
+   on all three.
 
 ## Read the longer docs
 
 - [Tools — install, update, inventory](docs/tools.md)
-- [Two-Mac workflow — operating manual](docs/workflows.md)
+- [Workflow — operating manual for all three machines](docs/workflows.md)

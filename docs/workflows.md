@@ -1,4 +1,4 @@
-# Two-Mac Workflow Reference
+# Workflow Reference — ghost, silence, and the box
 
 The operating manual for this environment. Refer back whenever something is
 unclear; update it when workflows change.
@@ -12,6 +12,11 @@ unclear; update it when workflows change.
   agent actions run on ghost. Can work offline via deliberate local clones.
   SSH-client only (Remote Login off): ghost cannot reach silence, so tool
   syncs and doctor parity checks run **from silence, against ghost**.
+- **the box** (Linux, Debian x86_64) — agent machine. Runs Claude Code with
+  the pstack plugin; same Stow tree and pinned tool versions as the Macs
+  (Linux builds via `scripts/sync-tools.sh`). No OpenCode service, no
+  Postgres, no launchd. Not on the tailnet today, so it cannot `ssh ghost`
+  and doctor's parity lines skip there. Repo at `~/Developer/environment`.
 
 ## The connective tissue
 
@@ -111,7 +116,27 @@ unclear; update it when workflows change.
    updates the symlinks in place.
 5. Machine-specific values go in the `.local` files, never in the repo.
 
-### 6. Terminal / SSH
+### 6. The box (Linux)
+
+- Bootstrap (once): system packages from apt — `zsh` (doctor and the stowed
+  `.zshenv` need it), `make` (to build stow), `openssh-client`. Everything
+  else follows the playbook: build stow 2.4.1 into `~/.local/opt/stow`, then
+  `stow --no-folding -n -v -t "$HOME" home` → move conflicts aside as
+  `<file>.pre-stow` → apply, then `scripts/sync-tools.sh`, then
+  `scripts/doctor.sh`.
+- `~/.ssh/config.local` on the box holds `IgnoreUnknown UseKeychain`: the
+  shared `~/.ssh/config` uses the Apple-only `UseKeychain` option, which
+  Linux OpenSSH rejects otherwise. `~/.ssh` must be mode 700.
+- Login shell stays bash; `~/.bashrc` already puts `~/.local/bin` first on
+  PATH. The stowed `.zshenv` covers zsh and doctor.
+- Pre-existing system copies (`/usr/bin/node`, `/usr/local/bin/{gh,bun,npm}`)
+  are left alone; `~/.local/bin` shadows them.
+- Claude Code installs itself (native installer, self-updating) to
+  `~/.local/share/claude/versions/<ver>` with `~/.local/bin/claude` → that
+  version; pstack comes from the `cursor-plugins` marketplace. Login is
+  interactive and per machine; after it, run `/pstack:setup-pstack`.
+
+### 7. Terminal / SSH
 
 - `ssh ghost` — passwordless, fast (multiplexed).
 - Copy files: `scp`/`rsync` over the alias; tunnels if ever needed:
@@ -128,7 +153,8 @@ unclear; update it when workflows change.
 6. Tools follow the direct-install pattern. Every install or update goes
    through the playbook in [tools.md](tools.md) and updates its inventory in
    the same commit (tarball tools are scripted in `scripts/sync-tools.sh`);
-   ghost and silence stay at the same versions (Postgres is ghost-only).
+   ghost, silence, and the box stay at the same versions (Postgres is
+   ghost-only).
 
 ## Status checks & maintenance
 

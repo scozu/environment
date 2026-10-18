@@ -46,7 +46,7 @@ The same steps install a new tool and upgrade an existing one. Skip nothing.
    - source: `./configure --prefix="$HOME/.local/opt/<tool>" && make -j && make install`.
 5. **Symlink entry points** — one link per executable you want on PATH:
    `ln -sf "$HOME/.local/opt/<tool>/bin/<name>" "$HOME/.local/bin/<name>"`.
-6. **Approve unsigned binaries.** macOS blocks the first run of unsigned
+6. **Approve unsigned binaries (macOS only).** macOS blocks the first run of unsigned
    binaries ("Apple could not verify … is free of malware"). Run it once
    (blocked), then System Settings → Privacy & Security → "Allow Anyway",
    then run again. Terminal fallback:
@@ -66,6 +66,10 @@ The same steps install a new tool and upgrade an existing one. Skip nothing.
    Run the playbook — never copy `~/.local/opt` wholesale. Data under
    `~/.local/var` is machine-local, never copied. Exception: server tools
    live on one machine only — see Server tools below.
+   **The box** (Linux) runs the same playbook on itself:
+   `git pull && scripts/sync-tools.sh && scripts/doctor.sh`. sync-tools
+   picks the Linux build by `uname -s`/`uname -m` (x86_64 or aarch64); stow
+   is source-built the same way. Step 6 does not apply on Linux.
 
 **Remove**: delete the symlinks from `~/.local/bin`, then the directory in
 `~/.local/opt`, update the inventory, doctor both machines.
@@ -80,13 +84,14 @@ this table mirrors them and is updated in the same commit.
 
 | Tool | Source | Version | Location | Entry points in `~/.local/bin` | Notes |
 |---|---|---|---|---|---|
-| stow | source build (GNU tarball) | 2.4.1 | `~/.local/opt/stow` | `stow` | `./configure --prefix=… && make && make install` |
+| stow | source build (GNU tarball) | 2.4.1 | `~/.local/opt/stow` | `stow` | `./configure --prefix=… && make && make install` (same on the box; needs `make` from apt) |
 | nvim | release tarball | 0.12.6 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`; box: `nvim-linux-{x86_64,arm64}.tar.gz`. Unsigned → quarantine approval (step 6; the sync script strips quarantine xattrs best-effort). No checksums published. |
 | pnpm | release tarball (standalone build) | 12.11.2 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node; box: `pnpm-linux-{x64,arm64}.tar.gz` (glibc, not `-musl`). Pins are bare semver; `tag()` in `sync-tools.sh` adds the upstream tag prefix (`v12.11.2`). Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use` — the global Node on PATH is the tarball below. No checksums published. |
 | bun | release tarball (zip) | 1.4.3 | `~/.local/opt/bun` | `bun`, `bunx` | Single binary from `bun-darwin-aarch64.zip` (Apple Silicon) or `bun-darwin-x64.zip` (Intel) — bun's macOS arm64 asset is named `aarch64`, not `arm64`. Box: `bun-linux-x64.zip` / `bun-linux-aarch64.zip` (not `-baseline`/`-musl`). Checksums in `SHASUMS256.txt`. `bunx` is a symlink to `bun`. Global installs land in `~/.bun/bin` — not on PATH by default. |
 | node | release tarball | 24.21.0 (LTS) | `~/.local/opt/node` | `node`, `npm`, `npx` | Official `node-v24.21.0-darwin-$(uname -m).tar.gz` (box: `node-v24.21.0-linux-{x64,arm64}.tar.gz`); checksums in `SHASUMS256.txt`. Global Node; project Node comes from `pnpm env use`. `corepack` intentionally not linked (deprecated). |
 | gh | release tarball (zip) | 2.102.0 | `~/.local/opt/gh` | `gh` | Official `gh_2.102.0_macOS_arm64.zip` (box: `gh_2.102.0_linux_{amd64,arm64}.tar.gz`); checksums in `gh_2.102.0_checksums.txt`. Single binary + man pages. |
-| opencode | official installer | v2.0.26 | `~/.opencode/bin` | `opencode` | Exception to the opt/ pattern; self-updates. ghost runs it as a service (launchd `ai.opencode.service`). |
+| opencode | official installer | v2.0.26 | `~/.opencode/bin` | `opencode` | Exception to the opt/ pattern; self-updates. ghost runs it as a service (launchd `ai.opencode.service`). Not installed on the box (doctor does not require it there). |
+| claude (box) | official native installer | 2.1.302 | `~/.local/share/claude/versions/<ver>` | `claude` | Box only. Exception to the opt/ pattern like opencode: the installer manages its own prefix and the `~/.local/bin/claude` link, and self-updates. Plugin: `pstack@cursor-plugins` 0.15.26 (marketplace `cursor-plugins`). Login is per machine, never copied. |
 | postgres | source build | 16.15 | `~/.local/opt/postgres` | `postgres`, `psql`, `pg_ctl`, `initdb`, `pg_isready` | Built `--without-icu`. The only server tool — see below. Minor updates rebuild in place (no dump, no `pg_upgrade`, but the configure `--prefix` must be the final path). 16.15 fixes many CVEs; note the new `output_plugin_libraries` whitelist if logical decoding is ever used. |
 
 ## GUI apps — the /Applications exception
