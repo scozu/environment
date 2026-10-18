@@ -4,22 +4,22 @@ alwaysApply: true
 ---
 # pstack model configuration. One line per role. Delete a line to fall back to the skill default.
 # `inherit-parent` or `auto` as a value: the role runs on the parent chat model (omit Task `model`). Alias entries in a panel list still count toward its fan-out.
-# budget: small (medium)
+# budget: medium (high)
 # grok-4.7 does the real work; composer-2.5 is the small, cheap model (haiku tier), used only for read-only fan-out.
 feature, refactoring: grok-4.7-high-fast
 bug-fix: grok-4.7-high-fast
 perf-issue: grok-4.7-high-fast
 hillclimb: grok-4.7-high-fast
-judgment and prose: grok-4.7-xhigh-fast
-hardest tasks: grok-4.7-xhigh-fast
+judgment and prose: grok-4.7-high-fast
+hardest tasks: grok-4.7-high-fast
 how explorer: composer-2.5
 how explainer: grok-4.7-high-fast
 why investigators: composer-2.5
-why synthesizer: grok-4.7-xhigh-fast
+why synthesizer: grok-4.7-high-fast
 reflect tooling: composer-2.5
-reflect judgment, divergent, synthesizer: grok-4.7-xhigh-fast
+reflect judgment, divergent, synthesizer: grok-4.7-high-fast
 arena runners: grok-4.7-high-fast, grok-4.7-high-fast, composer-2.5
-arena cross-judge pool: grok-4.7-xhigh-fast
+arena cross-judge pool: grok-4.7-high-fast
 swarm workers: grok-4.7-high-fast
-architect runners: grok-4.7-xhigh-fast, grok-4.7-high-fast
-interrogate reviewers: grok-4.7-xhigh-fast, composer-2.5
+architect runners: grok-4.7-high-fast, grok-4.7-high-fast
+interrogate reviewers: grok-4.7-high-fast, composer-2.5
