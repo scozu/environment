@@ -7,6 +7,7 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 SERVICE_URL="https://ghost.tail483f5.ts.net"   # update here if the tailnet is renamed
 ROLE=silence
 [ "$(scutil --get LocalHostName 2>/dev/null)" = ghost ] && ROLE=ghost
+[ "$(uname -s)" = Linux ] && ROLE=box   # the box: the only Linux machine
 PEER=ghost
 [ "$ROLE" = ghost ] && PEER=silence
 fails=0
@@ -42,7 +43,12 @@ check "no obvious secret-named files tracked" test -z "$(git -C "$REPO" ls-files
 echo "tools"
 check "stow installed" command -v stow
 check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
-check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh'
+if [ "$ROLE" = box ]; then
+  # The box runs no OpenCode (ghost owns the service), so opencode is not core here.
+  check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh'
+else
+  check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh'
+fi
 check "tools match pinned versions" "$REPO/scripts/sync-tools.sh" --check
 
 # Postgres is ghost-only and start-on-demand (one local app, no network).
@@ -61,7 +67,8 @@ fi
 # ghost compares it. Parity is verified from silence: silence is SSH-client
 # only (Remote Login off), so ghost can never reach it — the ghost-side
 # checks skip by design, and doctor on silence does the real comparison
-# against ghost.
+# against ghost. The box also compares against ghost; while it has no
+# tailnet route to ghost those lines skip, like ghost's do.
 echo "version sync (with $PEER)"
 parity() { # parity "label" "version command" — the same command runs on both machines
   local label=$1 cmd=$2 local_ver remote_ver
@@ -88,6 +95,18 @@ if [ "$ROLE" = silence ]; then
   check "ssh ghost works without a password" ssh -o BatchMode=yes -o ConnectTimeout=5 ghost true
   check "OpenCode service reachable over tailnet" test "$(http_code $SERVICE_URL/api/info)" = 200
   check "OPENCODE_SERVER_PASSWORD is set" test -n "${OPENCODE_SERVER_PASSWORD:-}"
+fi
+
+if [ "$ROLE" = box ]; then
+  echo "box"
+  check "\$HOME/.local/bin is first on PATH in zsh" zsh -c 'test "${PATH%%:*}" = "$HOME/.local/bin"'
+  check "tools resolve from ~/.local/bin, not the system" zsh -c 'for t in stow nvim pnpm bun node npm gh; do case "$(command -v $t)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac; done'
+  check "ssh config parses (UseKeychain ignored via ~/.ssh/config.local)" ssh -G ghost
+  check "claude resolves" command -v claude
+  check "pstack plugin enabled in Claude Code" sh -c 'claude plugin list 2>/dev/null | grep -A3 "pstack@cursor-plugins" | grep -q enabled'
+  if claude auth status 2>/dev/null | grep -q '"loggedIn": *false'; then
+    echo "  info  claude not logged in — sign in, then run /pstack:setup-pstack"
+  fi
 fi
 
 if [ "$ROLE" = ghost ]; then
