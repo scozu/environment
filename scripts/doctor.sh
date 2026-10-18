@@ -43,12 +43,7 @@ check "no obvious secret-named files tracked" test -z "$(git -C "$REPO" ls-files
 echo "tools"
 check "stow installed" command -v stow
 check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
-if [ "$ROLE" = box ]; then
-  # The box runs no OpenCode (ghost owns the service), so opencode is not core here.
-  check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh'
-else
-  check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh'
-fi
+check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh'
 check "tools match pinned versions" "$REPO/scripts/sync-tools.sh" --check
 
 # Postgres is ghost-only and start-on-demand (one local app, no network).
@@ -67,8 +62,8 @@ fi
 # ghost compares it. Parity is verified from silence: silence is SSH-client
 # only (Remote Login off), so ghost can never reach it — the ghost-side
 # checks skip by design, and doctor on silence does the real comparison
-# against ghost. The box also compares against ghost; while it has no
-# tailnet route to ghost those lines skip, like ghost's do.
+# against ghost. The box also compares against ghost over its own
+# tailscaled; until it is logged in to the tailnet those lines skip.
 echo "version sync (with $PEER)"
 parity() { # parity "label" "version command" — the same command runs on both machines
   local label=$1 cmd=$2 local_ver remote_ver
@@ -104,6 +99,16 @@ if [ "$ROLE" = box ]; then
   check "ssh config parses (UseKeychain ignored via ~/.ssh/config.local)" ssh -G ghost
   check "claude resolves" command -v claude
   check "pstack plugin enabled in Claude Code" sh -c 'claude plugin list 2>/dev/null | grep -A3 "pstack@cursor-plugins" | grep -q enabled'
+  check "tailscale installed" command -v tailscale
+  # No systemd on the box: tailscaled is started by ~/.local/bin/box-tailscaled
+  # (machine-local). Not running / not logged in is reported, not failed.
+  if ! tailscale status >/dev/null 2>&1; then
+    if pgrep -x tailscaled >/dev/null; then
+      echo "  info  tailscale not logged in — run: tailscale up --hostname=box --accept-dns=false"
+    else
+      echo "  info  tailscaled not running — start it: box-tailscaled"
+    fi
+  fi
   if claude auth status 2>/dev/null | grep -q '"loggedIn": *false'; then
     echo "  info  claude not logged in — sign in, then run /pstack:setup-pstack"
   fi

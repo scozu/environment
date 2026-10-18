@@ -14,9 +14,10 @@ state.
   on ghost over Tailscale + SSH. silence is set up; its ongoing job is to
   stay in sync with ghost.
 - **the box** — Linux (Debian, x86_64) agent machine with Claude Code +
-  pstack. Same Stow tree and pinned tools as the Macs, Linux builds. Runs no
-  OpenCode service and no Postgres; not on the tailnet, so doctor's parity
-  checks against ghost skip there. Linux-only behavior sits behind
+  pstack, plus the OpenCode CLI. Same Stow tree and pinned tools as the Macs,
+  Linux builds. Runs no OpenCode service and no Postgres. Joins the tailnet
+  as `box` through its own tailscaled (no systemd there), so `ssh ghost` and
+  doctor's parity checks against ghost work once it is logged in. Linux-only behavior sits behind
   `uname -s` checks in the scripts or in the gitignored `.local` files.
 
 ## What this repo contains

@@ -13,10 +13,11 @@ unclear; update it when workflows change.
   SSH-client only (Remote Login off): ghost cannot reach silence, so tool
   syncs and doctor parity checks run **from silence, against ghost**.
 - **the box** (Linux, Debian x86_64) — agent machine. Runs Claude Code with
-  the pstack plugin; same Stow tree and pinned tool versions as the Macs
-  (Linux builds via `scripts/sync-tools.sh`). No OpenCode service, no
-  Postgres, no launchd. Not on the tailnet today, so it cannot `ssh ghost`
-  and doctor's parity lines skip there. Repo at `~/Developer/environment`.
+  the pstack plugin, plus the OpenCode CLI; same Stow tree and pinned tool
+  versions as the Macs (Linux builds via `scripts/sync-tools.sh`). No
+  OpenCode service, no Postgres, no launchd. On the tailnet as `box` via its
+  own tailscaled, so `ssh ghost` and doctor's parity lines work once it is
+  logged in. Repo at `~/Developer/environment`.
 
 ## The connective tissue
 
@@ -127,6 +128,18 @@ unclear; update it when workflows change.
 - `~/.ssh/config.local` on the box holds `IgnoreUnknown UseKeychain`: the
   shared `~/.ssh/config` uses the Apple-only `UseKeychain` option, which
   Linux OpenSSH rejects otherwise. `~/.ssh` must be mode 700.
+- Tailscale: apt package from the official repo. PID 1 is not systemd, so
+  start the daemon with `box-tailscaled` (machine-local script in
+  `~/.local/bin`, idempotent; run it after a box restart), then once:
+  `sudo tailscale up --hostname=box --accept-dns=false --operator=box` and
+  open the login URL it prints. `--accept-dns=false` leaves the box's
+  resolver alone; `~/.ssh/config.local` adds `ProxyCommand tailscale nc %h %p`
+  for `Host ghost`, so MagicDNS names resolve inside tailscaled. Fallback:
+  the SOCKS5 proxy on `localhost:1055`. The box's key is `~/.ssh/id_ed25519`
+  (comment `box`); add its `.pub` to ghost's `~/.ssh/authorized_keys`.
+- OpenCode: CLI only on the box, installed with the v2 installer (see the
+  inventory in [tools.md](tools.md)). No service; the Stowed
+  `opencode.jsonc` applies. `~/.bashrc` also puts `~/.opencode/bin` on PATH.
 - Login shell stays bash; `~/.bashrc` already puts `~/.local/bin` first on
   PATH. The stowed `.zshenv` covers zsh and doctor.
 - Pre-existing system copies (`/usr/bin/node`, `/usr/local/bin/{gh,bun,npm}`)
