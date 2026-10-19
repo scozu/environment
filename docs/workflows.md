@@ -144,6 +144,13 @@ unclear; update it when workflows change.
   PATH. The stowed `.zshenv` covers zsh and doctor.
 - Pre-existing system copies (`/usr/bin/node`, `/usr/local/bin/{gh,bun,npm}`)
   are left alone; `~/.local/bin` shadows them.
+- Rex: no Linux build yet. The stowed `~/.local/bin/rex` shim runs ghost's
+  rex over `ssh ghost` (newest `RexServer/Versions/*`), so `rex ls`,
+  `rex capture -s <session>`, `rex send` work from the box and `rex attach`
+  works from an interactive terminal (`ssh -t` only when on a tty).
+  `REX_SSH_HOST=<host>` targets another Mac. On the Macs the same file just
+  execs the local rex. Doctor checks `rex ls` over ssh (warns if ghost is
+  unreachable).
 - Claude Code installs itself (native installer, self-updating) to
   `~/.local/share/claude/versions/<ver>` with `~/.local/bin/claude` → that
   version; pstack comes from the `cursor-plugins` marketplace. Login is

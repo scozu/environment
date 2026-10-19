@@ -100,6 +100,12 @@ if [ "$ROLE" = box ]; then
   check "claude resolves" command -v claude
   check "pstack plugin enabled in Claude Code" sh -c 'claude plugin list 2>/dev/null | grep -A3 "pstack@cursor-plugins" | grep -q enabled'
   check "tailscale installed" command -v tailscale
+  # rex shim (home/.local/bin/rex) drives ghost's Rex over ssh; warn only.
+  if ssh -o BatchMode=yes -o ConnectTimeout=6 ghost true 2>/dev/null; then
+    check "rex ls over ssh ghost works" sh -c 'rex ls </dev/null >/dev/null 2>&1'
+  else
+    echo "  warn  rex over ssh: ghost unreachable"
+  fi
   # No systemd on the box: tailscaled is started by ~/.local/bin/box-tailscaled
   # (machine-local). Not running / not logged in is reported, not failed.
   if ! tailscale status >/dev/null 2>&1; then

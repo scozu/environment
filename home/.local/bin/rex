@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# rex — Rex (superlogical) CLI shim, stowed to ~/.local/bin on every machine.
+#   macOS (ghost, silence): never shadows a real rex — execs the first other
+#     rex on PATH (Rex terminals add one), else the newest Rex Server bundle.
+#   Linux (the box): no Linux Rex build yet, so run ghost's rex over ssh.
+#     REX_SSH_HOST overrides the host (default ghost). Exit codes pass through.
+set -u
+bundle_glob='Library/Application Support/com.superlogical.rex/RexServer/Versions'
+
+case "$(uname -s)" in
+Darwin)
+  self=$(cd "$(dirname "$0")" && pwd -P)/$(basename "$0")
+  IFS=: read -r -a dirs <<<"$PATH"
+  for d in "${dirs[@]}"; do
+    c="$d/rex"
+    [ -x "$c" ] || continue
+    [ "$(cd "$(dirname "$c")" && pwd -P)/rex" = "$self" ] && continue
+    # shellcheck disable=SC2093  # exec only returns if it failed; try the next one
+    exec "$c" "$@"
+  done
+  v=
+  for p in "$HOME/$bundle_glob"/*; do
+    n=${p##*/}
+    case $n in '' | *[!0-9]*) continue ;; esac
+    if [ -z "$v" ] || [ "$n" -gt "$v" ]; then v=$n; fi
+  done
+  c="$HOME/$bundle_glob/$v/Rex Server.app/Contents/MacOS/rex"
+  [ -n "$v" ] && [ -x "$c" ] && exec "$c" "$@"
+  echo "rex: no local Rex install found (open Rex Beta.app once)" >&2
+  exit 127
+  ;;
+Linux)
+  host=${REX_SSH_HOST:-ghost}
+  args=
+  [ $# -gt 0 ] && args=$(printf ' %q' "$@")
+  # Remote side: resolve the newest numeric Versions/* rex, then run it.
+  remote="d=\"\$HOME/$bundle_glob\"; v=\$(ls \"\$d\" 2>/dev/null | grep -E '^[0-9]+\$' | sort -n | tail -1); r=\"\$d/\$v/Rex Server.app/Contents/MacOS/rex\"; [ -n \"\$v\" ] && [ -x \"\$r\" ] || { echo 'rex: no Rex install on $host' >&2; exit 127; }; exec \"\$r\"$args"
+  tty=-T
+  [ -t 0 ] && [ -t 1 ] && tty=-t
+  exec ssh $tty -o ConnectTimeout=10 "$host" "$remote"
+  ;;
+*)
+  echo "rex: unsupported OS $(uname -s)" >&2
+  exit 1
+  ;;
+esac
