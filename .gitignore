@@ -37,3 +37,8 @@ home/Library/Application Support/Cursor/User/settings.json
 home/Library/Application Support/Cursor/User/globalStorage/
 home/Library/Application Support/Cursor/User/workspaceStorage/
 home/Library/Application Support/Cursor/User/History/
+
+# Claude Code machine-local state. Only settings.json is shared;
+# settings.local.json is the per-machine override file.
+home/.claude/*
+!home/.claude/settings.json

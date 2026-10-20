@@ -37,8 +37,11 @@ unclear; update it when workflows change.
   cd ~/Developer/environment && stow --no-folding -t "$HOME" home
   ```
 - **Shared via Stow**: `.zshenv` (PATH), `.zshrc`, `~/.ssh/config`, Neovim
-  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`, and
-  Cursor rules (`~/.cursor/rules/*.mdc`).
+  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`, Claude
+  Code `~/.claude/settings.json`, and Cursor rules (`~/.cursor/rules/*.mdc`).
+  `~/.claude` itself stays a real directory: sessions, projects, plugins,
+  caches, and `settings.local.json` (per-machine overrides) never leave the
+  machine.
 - **Tools (no Homebrew)**: `~/.local/opt/<tool>/` + symlinks in
   `~/.local/bin` (PATH from `.zshenv`); Postgres data in
   `~/.local/var/postgres`. Install/update via the playbook in
@@ -110,11 +113,11 @@ unclear; update it when workflows change.
 3. `git add/commit/push`; on the other machine: `git pull` (symlinks update
    in place — no re-stow needed).
 4. `git status` habit: GUI apps rewrite their own files through symlinks
-   (Zed settings, Cursor `settings.json`, OpenCode `cli.json` — `cli.json`
-   and Cursor `cli-config.json` are un-stowed for that reason). Commit real
-   changes, `git restore` noise. The first time Cursor config is adopted on
-   a machine, move any existing real file aside and stow; after that, pull
-   updates the symlinks in place.
+   (Zed settings, Claude Code `settings.json`, Cursor `settings.json`,
+   OpenCode `cli.json` — `cli.json` and Cursor `cli-config.json` are
+   un-stowed for that reason). Commit real changes, `git restore` noise.
+   The first time Cursor config is adopted on a machine, move any existing
+   real file aside and stow; after that, pull updates the symlinks in place.
 5. Machine-specific values go in the `.local` files, never in the repo.
 
 ### 6. The box (Linux)
