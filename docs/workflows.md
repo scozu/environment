@@ -11,7 +11,9 @@ unclear; update it when workflows change.
 - **silence** (MacBook Pro) — portable client. UIs run here; files, tools, and
   agent actions run on ghost. Can work offline via deliberate local clones.
   SSH-client only (Remote Login off): ghost cannot reach silence, so tool
-  syncs and doctor parity checks run **from silence, against ghost**.
+  syncs and doctor parity checks run **from silence, against ghost**. Also
+  runs the proofer web app (see Tailnet ports), so proof runs can go to
+  either Mac.
 - **the box** (Linux, Debian x86_64) — agent machine. Runs Claude Code with
   the pstack plugin, plus the OpenCode CLI; same Stow tree and pinned tool
   versions as the Macs (Linux builds via `scripts/sync-tools.sh`). No
@@ -28,6 +30,25 @@ unclear; update it when workflows change.
 - **OpenCode service**: `https://ghost.tail483f5.ts.net` — tailnet-only, TLS,
   HTTP basic auth (username `opencode`, password in ghost's
   `~/.config/opencode/service.json`).
+- **Tailnet ports**: every app on the tailnet listens on `127.0.0.1` only and
+  is reached through Tailscale Serve (HTTPS, tailnet-only, never Funnel).
+  Each app gets one HTTPS port, the same on every machine that runs it, so an
+  address differs between machines only by name. 443 belongs to the
+  machine's main app. A new app takes the next free port in the table below,
+  and gets a row in the same commit.
+
+  | HTTPS port | App | Machines | Local port |
+  | --- | --- | --- | --- |
+  | 443 | OpenCode service (launchd `ai.opencode.service`) | ghost | 4096 |
+  | 8443 | proofer (studiopendleton/proofer, LaunchAgent `com.studiopendleton.proofer-web`) | ghost, silence | 8787 |
+  | 8444+ | next free port | | |
+
+  Check with `tailscale serve status` on each machine. Only ghost is ever
+  shared, never silence. People ghost is shared with get a grant for one
+  app's port only (proofer: `tcp:8443`), never 443, and no other rule may
+  match `autogroup:shared` (the default `"src": ["*"]` rule does), or the
+  limit means nothing. The policy lives in the Tailscale admin console, not
+  in this repo.
 
 ## Where things live
 
@@ -170,7 +191,9 @@ unclear; update it when workflows change.
 1. Never commit secrets or app state (keys, `service.json`, auth, caches).
 2. Machine-specific → `.local` override files (gitignored, auto-sourced).
 3. Always Stow dry-run before real runs; review diffs before committing.
-4. silence is a client: no local OpenCode service, no launchd there.
+4. silence is a client: no local OpenCode service and no tool launchd jobs
+   there. The one exception is app LaunchAgents listed under Tailnet ports
+   (today the proofer).
 5. The service password lives in one place: ghost's
    `~/.config/opencode/service.json`.
 6. Tools follow the direct-install pattern. Every install or update goes
@@ -178,6 +201,8 @@ unclear; update it when workflows change.
    the same commit (tarball tools are scripted in `scripts/sync-tools.sh`);
    ghost, silence, and the box stay at the same versions (Postgres is
    ghost-only).
+7. Tailnet apps listen on `127.0.0.1` and go through Tailscale Serve on the
+   port in Tailnet ports. Never Funnel: it makes a page public.
 
 ## Status checks & maintenance
 

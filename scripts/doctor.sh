@@ -125,7 +125,7 @@ if [ "$ROLE" = ghost ]; then
   check "launchd job ai.opencode.service loaded" sh -c 'launchctl list | grep -q ai.opencode.service'
   check "service listens on loopback only" sh -c 'lsof -nP -iTCP:4096 -sTCP:LISTEN | grep -q 127.0.0.1:4096'
   check "service answers with auth on loopback" test "$(http_code http://127.0.0.1:4096/api/info)" = 200
-  check "tailscale serve proxy active" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | grep -q proxy'
+  check "tailscale serve proxies OpenCode" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | grep -q "proxy http://127.0.0.1:4096"'
   check "tailnet URL answers with auth" test "$(http_code $SERVICE_URL/api/info)" = 200
   check "upstream check job loaded (weekly report)" sh -c 'launchctl list | grep -q dev.scozu.check-upstream'
 fi

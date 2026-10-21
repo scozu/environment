@@ -133,7 +133,8 @@ The lifecycle of a pinned tool has four steps, each with one owner:
    Monday at 09:00; the log is `~/.local/var/check-upstream.log`. The plist
    lives in `~/Library/LaunchAgents` on ghost only, like the OpenCode plist —
    it is machine-local, not in the repo. Doctor on ghost checks that the job
-   is loaded. Silence has no launchd (rule 4); its parity is checked by doctor.
+   is loaded. Silence has no tool launchd jobs (rule 4); its parity is checked
+   by doctor.
 2. **Propose (manual, reviewed).** A `behind` line becomes a commit that
    changes the pin in `sync-tools.sh` and the inventory row here.
 3. **Apply.** `scripts/sync-tools.sh` on each machine, when it is awake.
