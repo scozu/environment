@@ -190,6 +190,13 @@ unclear; update it when workflows change.
   and run doctor as
   `ALL_PROXY=socks5h://localhost:1055 HTTPS_PROXY=socks5h://localhost:1055 scripts/doctor.sh`
   so its tailnet checks can resolve MagicDNS names.
+- OpenCode on ghost from the box: `opencode run --server https://ghost.tail483f5.ts.net:4096 "<task>"`
+  with `OPENCODE_PASSWORD` from `~/.config/opencode/ghost-server.env` (machine-local,
+  mode 600). opencode's client (bun) can't use tailscaled's proxy, so
+  `box-opencode-fwd` (machine-local, `~/.local/bin`, idempotent; run after a box
+  restart) forwards `127.0.0.1:4096` to ghost via `tailscale nc`, and `/etc/hosts`
+  maps `ghost.tail483f5.ts.net` to `127.0.0.1` so TLS names match. Sessions live
+  on ghost's server and show up in the desktop and iOS apps.
 - OpenCode: CLI only on the box, installed with the v2 installer (see the
   inventory in [tools.md](tools.md)). No service; the Stowed
   `opencode.jsonc` applies. `~/.bashrc` also puts `~/.opencode/bin` on PATH.
