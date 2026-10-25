@@ -13,7 +13,7 @@
 # Retention: after a verified install, every older opt/<tool>-* is pruned,
 # except the one rollback copy moved aside by this run.
 #
-# Covers the five tarball tools: nvim, pnpm, bun, node, gh. Out of scope by
+# Covers direct release tools: nvim, pnpm, bun, node, gh, claude. Out of scope by
 # design: stow and postgres (source builds — see docs/tools.md), opencode
 # (self-updating installer). Run after `git pull`; doctor.sh verifies.
 #
@@ -43,7 +43,9 @@ if [ "$os" = Linux ]; then
 fi
 
 # ---------------------------------------------------------------- config
-TOOLS="nvim pnpm bun node gh"
+TOOLS="nvim pnpm bun node gh claude"
+# the box keeps claude on its native installer (docs/tools.md), so skip it there
+[ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh"
 
 pin() { case "$1" in    # pinned version, bare semver
   nvim) echo 0.12.6 ;;
@@ -51,6 +53,7 @@ pin() { case "$1" in    # pinned version, bare semver
   bun)  echo 1.4.3 ;;
   node) echo 24.21.0 ;;
   gh)   echo 2.102.0 ;;
+  claude) echo 2.1.303 ;;
 esac; }
 
 tag() { case "$1" in    # upstream release tag for the pinned version
@@ -67,6 +70,7 @@ installed() { case "$1" in    # prints this machine's bare version, or nothing
   bun)  bun --version 2>/dev/null ;;
   node) node --version 2>/dev/null | sed 's/^v//' ;;
   gh)   gh --version 2>/dev/null | head -1 | awk '{print $3}' ;;
+  claude) claude --version 2>/dev/null | awk '{print $1}' ;;
 esac; }
 
 asset() {                     # archive filename, platform- and arch-aware
@@ -77,6 +81,7 @@ asset() {                     # archive filename, platform- and arch-aware
   bun)  echo "bun-darwin-${mac/arm64/aarch64}.zip" ;;   # bun says aarch64
   node) echo "node-v$(pin node)-darwin-$mac.tar.gz" ;;
   gh)   echo "gh_$(pin gh)_macOS_${mac/x64/amd64}.zip" ;;
+  claude) echo claude ;;
 esac; }
 
 asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
@@ -93,6 +98,7 @@ url() { case "$1" in
   bun)  echo "https://github.com/oven-sh/bun/releases/download/$(tag bun)/$(asset "$1")" ;;
   node) echo "https://nodejs.org/dist/$(tag node)/$(asset "$1")" ;;
   gh)   echo "https://github.com/cli/cli/releases/download/$(tag gh)/$(asset "$1")" ;;
+  claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/darwin-$mac/claude" ;;
 esac; }
 
 sums() { case "$1" in     # checksums-file URL, or - when none is published
@@ -101,6 +107,7 @@ sums() { case "$1" in     # checksums-file URL, or - when none is published
   bun)  echo "https://github.com/oven-sh/bun/releases/download/$(tag bun)/SHASUMS256.txt" ;;
   node) echo "https://nodejs.org/dist/$(tag node)/SHASUMS256.txt" ;;
   gh)   echo "https://github.com/cli/cli/releases/download/$(tag gh)/gh_$(pin gh)_checksums.txt" ;;
+  claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/manifest.json" ;;
 esac; }
 
 entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
@@ -109,6 +116,7 @@ entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
   bun)  echo "bun:bun bunx:bun" ;;
   node) echo "node:bin/node npm:bin/npm npx:bin/npx" ;;
   gh)   echo "gh:bin/gh" ;;
+  claude) echo "claude:bin/claude" ;;
 esac; }
 
 # ---------------------------------------------------------------- engine
@@ -156,7 +164,19 @@ for t in $TOOLS; do
   curl -fL --retry 2 -o "$TMP/$file" "$(url "$t")" \
     || die "$t: download failed: $(url "$t")"
 
-  if [ "$(sums "$t")" != "-" ]; then
+  if [ "$t" = "claude" ]; then
+    echo "  verify Claude release manifest and macOS signature"
+    curl -fsSL "$(sums "$t")" -o "$TMP/manifest.json" \
+      || die "$t: manifest download failed"
+    checksum=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["platforms"][sys.argv[2]]["checksum"])' "$TMP/manifest.json" "darwin-$mac") \
+      || die "$t: invalid manifest"
+    printf '%s  claude\n' "$checksum" | (cd "$TMP" && shasum -a 256 -c -) \
+      || die "$t: checksum verification failed"
+    chmod +x "$TMP/$file"
+    codesign --verify --strict "$TMP/$file" || die "$t: code signature verification failed"
+    codesign -dv "$TMP/$file" 2>&1 | grep -q 'TeamIdentifier=Q6L2SF6YDW' \
+      || die "$t: unexpected signing team"
+  elif [ "$(sums "$t")" != "-" ]; then
     echo "  verify $file"
     curl -fsSL "$(sums "$t")" | grep "$file" | (cd "$TMP" && shasum -a 256 -c -) \
       || die "$t: checksum verification failed"
@@ -179,7 +199,10 @@ for t in $TOOLS; do
     rollback="$keep"
   fi
 
-  if [ "$t" = "pnpm" ]; then
+  if [ "$t" = "claude" ]; then
+    mkdir -p "$target/bin"
+    mv "$TMP/$file" "$target/bin/claude" || die "$t: move failed"
+  elif [ "$t" = "pnpm" ]; then
     # pnpm's archive has no top-level dir; extract straight into opt/pnpm
     mkdir -p "$target"
     tar -xzf "$TMP/$file" -C "$target" || die "$t: extract failed"

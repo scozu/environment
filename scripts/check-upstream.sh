@@ -20,6 +20,7 @@ latest_of() { # latest_of TOOL -> bare upstream version, or nothing
     pnpm) gh_latest pnpm/pnpm | sed 's/^v//' ;;
     bun)  gh_latest oven-sh/bun | sed 's/^bun-v//' ;;
     gh)   gh_latest cli/cli | sed 's/^v//' ;;
+    claude) curl -fsSL https://downloads.claude.ai/claude-code-releases/latest ;;
     # node stays on the 24.x LTS line; index.json is newest-first
     node) curl -fsSL https://nodejs.org/dist/index.json \
             | python3 -c 'import json,sys; print([e["version"] for e in json.load(sys.stdin) if e["version"].startswith("v24.")][0].lstrip("v"))' ;;

@@ -78,7 +78,7 @@ points into `~/.local/bin`, record the version in the tools inventory,
 verify with `doctor.sh`, repeat on the other machines. Full procedure:
 [docs/tools.md](docs/tools.md).
 
-The five tarball tools (nvim, pnpm, bun, node, gh) are scripted:
+The six direct release tools (nvim, pnpm, bun, node, gh, claude) are scripted:
 `scripts/sync-tools.sh` installs or updates them to the pinned versions on
 whichever machine it runs, macOS or Linux (`--check` is read-only; doctor
 uses it). stow

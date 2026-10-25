@@ -95,11 +95,21 @@ unclear; update it when workflows change.
 
 - **On ghost**: run `opencode` (TUI) or the desktop app — both auto-connect to
   the local service.
-- **On silence**: `ocg` (alias defined in `~/.zshrc.local`) — TUI on silence,
+- **On silence (desktop)**: connect OpenCode Desktop to ghost over Tailscale.
+  Verified working on 2026-10-19. In silence's terminal, run:
+  ```sh
+  ssh ghost 'opencode pair --url https://ghost.tail483f5.ts.net:4096'
+  ```
+  Paste the complete printed pairing link into the app's server address field.
+  Links work once and expire after five minutes; never commit or share them.
+  Open projects on ghost; no local service or SSH tunnel is needed.
+- **On silence (TUI)**: `ocg` (alias defined in `~/.zshrc.local`) — TUI on silence,
   but the agent acts **on ghost**. Remember: the directory you launch `ocg`
   from is interpreted as a path on ghost, not silence.
-- **From anywhere (browser)**: `https://ghost.tail483f5.ts.net:4096`, login
-  `opencode` + password.
+- **From any Tailscale-connected device (browser)**:
+  `https://ghost.tail483f5.ts.net:4096`, login `opencode` + password. Alternatively,
+  generate a fresh pairing link with the command above and open it in the
+  browser to sign in automatically.
 - The service runs under launchd on ghost (`ai.opencode.service`), survives
   reboots and client disconnects; all clients share the same sessions and
   data. On silence with no network, the service is unreachable — use local
@@ -234,8 +244,6 @@ unclear; update it when workflows change.
 
 ## Known quirks / parked items
 
-- OpenCode **desktop app on silence** hits upstream auth bug (#51076) for
-  non-loopback servers — use the TUI or web UI there until fixed.
 - Zed **OpenCode provider** (API key) path parked — console has no personal
   API keys yet; ACP covers it meanwhile.
 - Neovim customization and Herdr: next stage, deliberately not started.
