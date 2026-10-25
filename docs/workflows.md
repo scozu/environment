@@ -17,7 +17,7 @@ unclear; update it when workflows change.
 - **the box** (Linux, Debian x86_64) — agent machine. Runs Claude Code with
   the pstack plugin, plus the OpenCode CLI; same Stow tree and pinned tool
   versions as the Macs (Linux builds via `scripts/sync-tools.sh`). No
-  OpenCode service, no Postgres, no launchd. On the tailnet as `box` via its
+  OpenCode service, no Postgres, no launchd. On the tailnet as `grokbox` via its
   own tailscaled, so `ssh ghost` and doctor's parity lines work once it is
   logged in. Repo at `~/Developer/environment`.
 
@@ -27,19 +27,20 @@ unclear; update it when workflows change.
   (IP `100.69.59.88`). MagicDNS gives the stable name.
 - **SSH**: `ssh ghost` (alias in the stowed config; key auth, connection
   multiplexing, keepalive).
-- **OpenCode service**: `https://ghost.tail483f5.ts.net` — tailnet-only, TLS,
+- **OpenCode service**: `https://ghost.tail483f5.ts.net:4096` — tailnet-only, TLS,
   HTTP basic auth (username `opencode`, password in ghost's
   `~/.config/opencode/service.json`).
 - **Tailnet ports**: every app on the tailnet listens on `127.0.0.1` only and
   is reached through Tailscale Serve (HTTPS, tailnet-only, never Funnel).
   Each app gets one HTTPS port, the same on every machine that runs it, so an
-  address differs between machines only by name. 443 belongs to the
-  machine's main app. A new app takes the next free port in the table below,
+  address differs between machines only by name. 443 (the bare address) is
+  left unassigned so no app owns the front door; an app's HTTPS port matches
+  its local port where it can. A new app takes the next free port in the table below,
   and gets a row in the same commit.
 
   | HTTPS port | App | Machines | Local port |
   | --- | --- | --- | --- |
-  | 443 | OpenCode service (launchd `ai.opencode.service`) | ghost | 4096 |
+  | 4096 | OpenCode service (launchd `ai.opencode.service`) | ghost | 4096 |
   | 8443 | proofer (studiopendleton/proofer, LaunchAgent `com.studiopendleton.proofer-web`) | ghost, silence | 8787 |
   | 8444+ | next free port | | |
 
@@ -88,7 +89,7 @@ unclear; update it when workflows change.
 - **On silence**: `ocg` (alias defined in `~/.zshrc.local`) — TUI on silence,
   but the agent acts **on ghost**. Remember: the directory you launch `ocg`
   from is interpreted as a path on ghost, not silence.
-- **From anywhere (browser)**: `https://ghost.tail483f5.ts.net`, login
+- **From anywhere (browser)**: `https://ghost.tail483f5.ts.net:4096`, login
   `opencode` + password.
 - The service runs under launchd on ghost (`ai.opencode.service`), survives
   reboots and client disconnects; all clients share the same sessions and
@@ -155,7 +156,7 @@ unclear; update it when workflows change.
 - Tailscale: apt package from the official repo. PID 1 is not systemd, so
   start the daemon with `box-tailscaled` (machine-local script in
   `~/.local/bin`, idempotent; run it after a box restart), then once:
-  `sudo tailscale up --hostname=box --accept-dns=false --operator=box` and
+  `sudo tailscale up --hostname=grokbox --accept-dns=false --operator=box` and
   open the login URL it prints. `--accept-dns=false` leaves the box's
   resolver alone; `~/.ssh/config.local` adds `ProxyCommand tailscale nc %h %p`
   for `Host ghost`, so MagicDNS names resolve inside tailscaled. Fallback:

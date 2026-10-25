@@ -16,7 +16,7 @@ state.
 - **the box** — Linux (Debian, x86_64) agent machine with Claude Code +
   pstack, plus the OpenCode CLI. Same Stow tree and pinned tools as the Macs,
   Linux builds. Runs no OpenCode service and no Postgres. Joins the tailnet
-  as `box` through its own tailscaled (no systemd there), so `ssh ghost` and
+  as `grokbox` through its own tailscaled (no systemd there), so `ssh ghost` and
   doctor's parity checks against ghost work once it is logged in. Linux-only behavior sits behind
   `uname -s` checks in the scripts or in the gitignored `.local` files.
 

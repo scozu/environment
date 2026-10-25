@@ -4,7 +4,7 @@
 set -u
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-SERVICE_URL="https://ghost.tail483f5.ts.net"   # update here if the tailnet is renamed
+SERVICE_URL="https://ghost.tail483f5.ts.net:4096"   # update here if the tailnet is renamed
 ROLE=silence
 [ "$(scutil --get LocalHostName 2>/dev/null)" = ghost ] && ROLE=ghost
 [ "$(uname -s)" = Linux ] && ROLE=box   # the box: the only Linux machine
@@ -110,7 +110,7 @@ if [ "$ROLE" = box ]; then
   # (machine-local). Not running / not logged in is reported, not failed.
   if ! tailscale status >/dev/null 2>&1; then
     if pgrep -x tailscaled >/dev/null; then
-      echo "  info  tailscale not logged in — run: tailscale up --hostname=box --accept-dns=false"
+      echo "  info  tailscale not logged in — run: tailscale up --hostname=grokbox --accept-dns=false"
     else
       echo "  info  tailscaled not running — start it: box-tailscaled"
     fi
