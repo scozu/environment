@@ -44,6 +44,15 @@ unclear; update it when workflows change.
   | 8443 | proofer (studiopendleton/proofer, LaunchAgent `com.studiopendleton.proofer-web`) | ghost, silence | 8787 |
   | 8444+ | next free port | | |
 
+- **Rex**: the one exception to the Serve rule. ghost's Rex (`Rex Beta.app`)
+  is the session master and joins the tailnet as its own node, `rex`
+  (`rex.tail483f5.ts.net`), using Rex's built-in Tailscale mode; the app's
+  bundled server can't take the `--extra-listen tailnet-serve://` option that
+  Serve needs. It only runs on ghost, so it is up exactly when ghost is.
+  Other Macs (silence) run Rex with built-in Tailscale **off** and add `rex`
+  as a remote server; sessions always live on ghost. Rename the node with
+  `rex server tailscale rename <name>`; check with `rex server status`.
+
   Check with `tailscale serve status` on each machine. Only ghost is ever
   shared, never silence. People ghost is shared with get a grant for one
   app's port only (proofer: `tcp:8443`), never 443, and no other rule may
