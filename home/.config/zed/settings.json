@@ -38,5 +38,14 @@
     "dark": "Pierre Dark Soft",
   },
   // Remote development: ghost (https://zed.dev/docs/remote-development)
-  "ssh_connections": [],
+  "ssh_connections": [
+    {
+      "host": "ghost",
+      "args": [],
+      "projects": [
+        { "paths": ["/Users/scozu/Developer/studiopendleton/proofer"] },
+        { "paths": ["~/Developer/environment"] },
+      ],
+    },
+  ],
 }
