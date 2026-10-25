@@ -180,7 +180,16 @@ unclear; update it when workflows change.
   resolver alone; `~/.ssh/config.local` adds `ProxyCommand tailscale nc %h %p`
   for `Host ghost`, so MagicDNS names resolve inside tailscaled. Fallback:
   the SOCKS5 proxy on `localhost:1055`. The box's key is `~/.ssh/id_ed25519`
-  (comment `box`); add its `.pub` to ghost's `~/.ssh/authorized_keys`.
+  (comment `box`); add its `.pub` to `~/.ssh/authorized_keys` on ghost and
+  silence.
+- The box as a client: `~/.ssh/config.local` also has a full `Host silence`
+  entry (`silence.tail483f5.ts.net`, user `scozu`, same ProxyCommand), so
+  `ssh silence` works when silence is awake, on the tailnet, and has Remote
+  Login on. HTTP to tailnet services (opencode `:4096`, proofer `:8443`)
+  goes through the SOCKS5 proxy: `curl --socks5-hostname localhost:1055 …`,
+  and run doctor as
+  `ALL_PROXY=socks5h://localhost:1055 HTTPS_PROXY=socks5h://localhost:1055 scripts/doctor.sh`
+  so its tailnet checks can resolve MagicDNS names.
 - OpenCode: CLI only on the box, installed with the v2 installer (see the
   inventory in [tools.md](tools.md)). No service; the Stowed
   `opencode.jsonc` applies. `~/.bashrc` also puts `~/.opencode/bin` on PATH.
@@ -195,7 +204,8 @@ unclear; update it when workflows change.
   `REX_SSH_HOST=<host>` targets another Mac. On the Macs the same file just
   execs the local rex. Doctor checks `rex ls` over ssh (warns if ghost is
   unreachable).
-- Claude Code installs itself (native installer, self-updating) to
+- Claude Code installs itself (native installer; self-updates are off via the
+  shared `DISABLE_UPDATES=1`, upgrade with `claude install <version>`) to
   `~/.local/share/claude/versions/<ver>` with `~/.local/bin/claude` → that
   version; pstack comes from the `cursor-plugins` marketplace. Login is
   interactive and per machine; after it, run `/pstack:setup-pstack`.
