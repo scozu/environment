@@ -2,8 +2,6 @@
   "env": {
     "DISABLE_UPDATES": "1"
   },
-  "theme": "auto",
-  "agentPushNotifEnabled": false,
   "attribution": {
     "commit": "",
     "pr": ""
@@ -18,5 +16,7 @@
         "repo": "cursor/plugins"
       }
     }
-  }
+  },
+  "theme": "auto",
+  "agentPushNotifEnabled": false
 }
