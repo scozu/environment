@@ -13,7 +13,8 @@
 # Retention: after a verified install, every older opt/<tool>-* is pruned,
 # except the one rollback copy moved aside by this run.
 #
-# Covers direct release tools: nvim, pnpm, bun, node, gh, claude. Out of scope by
+# Covers direct release tools: nvim, pnpm, bun, node, gh, cloudflared, claude. Out
+# of scope by
 # design: stow and postgres (source builds — see docs/tools.md), opencode
 # (self-updating installer). Run after `git pull`; doctor.sh verifies.
 #
@@ -43,9 +44,9 @@ if [ "$os" = Linux ]; then
 fi
 
 # ---------------------------------------------------------------- config
-TOOLS="nvim pnpm bun node gh claude"
+TOOLS="nvim pnpm bun node gh cloudflared claude"
 # the box keeps claude on its native installer (docs/tools.md), so skip it there
-[ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh"
+[ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh cloudflared"
 
 pin() { case "$1" in    # pinned version, bare semver
   nvim) echo 0.12.6 ;;
@@ -53,6 +54,7 @@ pin() { case "$1" in    # pinned version, bare semver
   bun)  echo 1.4.3 ;;
   node) echo 24.21.0 ;;
   gh)   echo 2.102.0 ;;
+  cloudflared) echo 2026.10.5 ;;   # sha256 per asset: pinsum()
   claude) echo 2.1.303 ;;
 esac; }
 
@@ -62,6 +64,7 @@ tag() { case "$1" in    # upstream release tag for the pinned version
   bun)  echo "bun-v$(pin bun)" ;;
   node) echo "v$(pin node)" ;;
   gh)   echo "v$(pin gh)" ;;
+  cloudflared) pin cloudflared ;;   # bare tag, no v
 esac; }
 
 installed() { case "$1" in    # prints this machine's bare version, or nothing
@@ -70,6 +73,7 @@ installed() { case "$1" in    # prints this machine's bare version, or nothing
   bun)  bun --version 2>/dev/null ;;
   node) node --version 2>/dev/null | sed 's/^v//' ;;
   gh)   gh --version 2>/dev/null | head -1 | awk '{print $3}' ;;
+  cloudflared) cloudflared --version 2>/dev/null | head -1 | awk '{print $3}' ;;
   claude) claude --version 2>/dev/null | awk '{print $1}' ;;
 esac; }
 
@@ -81,6 +85,7 @@ asset() {                     # archive filename, platform- and arch-aware
   bun)  echo "bun-darwin-${mac/arm64/aarch64}.zip" ;;   # bun says aarch64
   node) echo "node-v$(pin node)-darwin-$mac.tar.gz" ;;
   gh)   echo "gh_$(pin gh)_macOS_${mac/x64/amd64}.zip" ;;
+  cloudflared) echo "cloudflared-darwin-${mac/x64/amd64}.tgz" ;;
   claude) echo claude ;;
 esac; }
 
@@ -90,6 +95,7 @@ asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
   bun)  echo "bun-linux-$lbun.zip" ;;
   node) echo "node-v$(pin node)-linux-$lx.tar.gz" ;;
   gh)   echo "gh_$(pin gh)_linux_$lgh.tar.gz" ;;
+  cloudflared) echo "cloudflared-linux-$lgh" ;;   # raw binary, not an archive
 esac; }
 
 url() { case "$1" in
@@ -98,6 +104,7 @@ url() { case "$1" in
   bun)  echo "https://github.com/oven-sh/bun/releases/download/$(tag bun)/$(asset "$1")" ;;
   node) echo "https://nodejs.org/dist/$(tag node)/$(asset "$1")" ;;
   gh)   echo "https://github.com/cli/cli/releases/download/$(tag gh)/$(asset "$1")" ;;
+  cloudflared) echo "https://github.com/cloudflare/cloudflared/releases/download/$(tag cloudflared)/$(asset "$1")" ;;
   claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/darwin-$mac/claude" ;;
 esac; }
 
@@ -108,6 +115,20 @@ sums() { case "$1" in     # checksums-file URL, or - when none is published
   node) echo "https://nodejs.org/dist/$(tag node)/SHASUMS256.txt" ;;
   gh)   echo "https://github.com/cli/cli/releases/download/$(tag gh)/gh_$(pin gh)_checksums.txt" ;;
   claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/manifest.json" ;;
+  cloudflared) echo pinned ;;   # no checksums file; sha256 lives in pinsum()
+esac; }
+
+# pinsum ASSET: sha256 pinned in this repo, for tools whose sums() is "pinned".
+# cloudflared lists sha256s only in its release notes, and for the darwin .tgz
+# those notes do not match the uploaded files (the Macs build is re-signed and
+# repackaged after the notes are written). So these are GitHub's server-side
+# asset digests (API field assets[].digest), cross-checked by downloading;
+# the linux ones also match the release notes. Bump them with the pin.
+pinsum() { case "$1" in
+  cloudflared-darwin-arm64.tgz) echo 184c7d4f5f977348243a6d7ca8f6cf6073b9b2746cfe8c1fe15aa59e9a522bf0 ;;
+  cloudflared-darwin-amd64.tgz) echo 6699392fed92367808c248c2d90bed66e49bbf66e1b4ee3e4141230f3f7391b3 ;;
+  cloudflared-linux-amd64)      echo e1bc0cf084fd9e590554fe769a86b1db46701c3f847a43d902f7b974a4e16298 ;;
+  cloudflared-linux-arm64)      echo 72e0d05a67e09da87cf495e409a28c3cc5994dd23fc66a982eebea6a55923b7d ;;
 esac; }
 
 entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
@@ -116,6 +137,7 @@ entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
   bun)  echo "bun:bun bunx:bun" ;;
   node) echo "node:bin/node npm:bin/npm npx:bin/npx" ;;
   gh)   echo "gh:bin/gh" ;;
+  cloudflared) echo "cloudflared:bin/cloudflared" ;;
   claude) echo "claude:bin/claude" ;;
 esac; }
 
@@ -176,6 +198,12 @@ for t in $TOOLS; do
     codesign --verify --strict "$TMP/$file" || die "$t: code signature verification failed"
     codesign -dv "$TMP/$file" 2>&1 | grep -q 'TeamIdentifier=Q6L2SF6YDW' \
       || die "$t: unexpected signing team"
+  elif [ "$(sums "$t")" = "pinned" ]; then
+    echo "  verify $file against the pinned sha256"
+    want="$(pinsum "$file")"
+    [ -n "$want" ] || die "$t: no pinned sha256 for $file"
+    printf '%s  %s\n' "$want" "$file" | (cd "$TMP" && shasum -a 256 -c -) \
+      || die "$t: checksum verification failed"
   elif [ "$(sums "$t")" != "-" ]; then
     echo "  verify $file"
     curl -fsSL "$(sums "$t")" | grep "$file" | (cd "$TMP" && shasum -a 256 -c -) \
@@ -202,6 +230,15 @@ for t in $TOOLS; do
   if [ "$t" = "claude" ]; then
     mkdir -p "$target/bin"
     mv "$TMP/$file" "$target/bin/claude" || die "$t: move failed"
+  elif [ "$t" = "cloudflared" ]; then
+    # Linux ships the raw binary; macOS a .tgz holding just ./cloudflared
+    mkdir -p "$target/bin"
+    if [ "${file%.tgz}" != "$file" ]; then
+      tar -xzf "$TMP/$file" -C "$target/bin" cloudflared || die "$t: extract failed"
+    else
+      mv "$TMP/$file" "$target/bin/cloudflared" || die "$t: move failed"
+    fi
+    chmod +x "$target/bin/cloudflared"
   elif [ "$t" = "pnpm" ]; then
     # pnpm's archive has no top-level dir; extract straight into opt/pnpm
     mkdir -p "$target"

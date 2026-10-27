@@ -20,6 +20,7 @@ latest_of() { # latest_of TOOL -> bare upstream version, or nothing
     pnpm) gh_latest pnpm/pnpm | sed 's/^v//' ;;
     bun)  gh_latest oven-sh/bun | sed 's/^bun-v//' ;;
     gh)   gh_latest cli/cli | sed 's/^v//' ;;
+    cloudflared) gh_latest cloudflare/cloudflared ;;
     claude) curl -fsSL https://downloads.claude.ai/claude-code-releases/latest ;;
     # node stays on the 24.x LTS line; index.json is newest-first
     node) curl -fsSL https://nodejs.org/dist/index.json \

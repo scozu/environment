@@ -43,7 +43,7 @@ check "no obvious secret-named files tracked" test -z "$(git -C "$REPO" ls-files
 echo "tools"
 check "stow installed" command -v stow
 check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
-check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh && command -v claude'
+check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh && command -v cloudflared && command -v claude'
 check "tools match pinned versions" "$REPO/scripts/sync-tools.sh" --check
 
 # Postgres is ghost-only and start-on-demand (one local app, no network).
@@ -83,6 +83,7 @@ parity "pnpm"     'pnpm --version'
 parity "bun"      'bun --version'
 parity "node"     'node --version'
 parity "gh"       'gh --version | head -1'
+parity "cloudflared" 'cloudflared --version | head -1 | awk "{print \$3}"'
 [ "$ROLE" != box ] && parity "claude"   'claude --version'   # box: native installer, own version
 [ "$ROLE" = ghost ] && parity "postgres" 'postgres --version | awk "{print \$NF}"'
 
@@ -96,7 +97,7 @@ fi
 if [ "$ROLE" = box ]; then
   echo "box"
   check "\$HOME/.local/bin is first on PATH in zsh" zsh -c 'test "${PATH%%:*}" = "$HOME/.local/bin"'
-  check "tools resolve from ~/.local/bin, not the system" zsh -c 'for t in stow nvim pnpm bun node npm gh; do case "$(command -v $t)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac; done'
+  check "tools resolve from ~/.local/bin, not the system" zsh -c 'for t in stow nvim pnpm bun node npm gh cloudflared; do case "$(command -v $t)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac; done'
   check "ssh config parses (UseKeychain ignored via ~/.ssh/config.local)" ssh -G ghost
   check "claude resolves" command -v claude
   check "pstack plugin enabled in Claude Code" sh -c 'claude plugin list 2>/dev/null | grep -A3 "pstack@cursor-plugins" | grep -q enabled'
