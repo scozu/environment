@@ -18,6 +18,6 @@ local me = (r and r.ok and r.stdout or ""):gsub("%s+$", "")
 
 for _, label in ipairs({ "ghost", "silence" }) do
   if label ~= me then
-    rex.host{ id = label, label = label, endpoints = { hosts[label] } }
+    rex.host{ id = "host:" .. label, label = label, endpoints = { hosts[label] } }
   end
 end
