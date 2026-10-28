@@ -54,9 +54,14 @@ unclear; update it when workflows change.
   `ghost` and `silence`, which is why the Rex nodes can't take those names.
   Sessions live on the Mac that runs them and are reachable only while that
   Mac is awake and online (a sleeping silence means `rex -S silence` fails).
-  The remote hosts are declared in the stowed `~/.config/rex/init.lua`
-  (`rex.host`, labels `ghost` and `silence`, each Mac skips itself); apply
-  with `rex config reload` on that Mac. ghost can't ssh silence, but ghost's
+  Remote hosts are added **in the app** (Settings > Remote Hosts, Add
+  Remote Host…), not in `~/.config/rex/init.lua`: the app lists only hosts
+  added in the app (it mirrors them into its server, so `rex hosts` and
+  `rex -S <label>` see them as "stored"), never `rex.host` entries, and it
+  rejects an app host whose label init.lua already declares (409 conflict).
+  On ghost add `silence` → `https://silence-rex.tail483f5.ts.net`; on silence
+  add `ghost` → `https://ghost-rex.tail483f5.ts.net`. Doctor warns if the
+  other Mac's host is missing. ghost can't ssh silence, but ghost's
   Rex can reach silence's Rex: a Rex connection can do anything that server
   can, including starting programs as scozu.
   Access stays owner-only (admin@jasonscholtz.net): **never** enable

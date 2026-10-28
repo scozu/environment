@@ -99,6 +99,12 @@ if [ "$ROLE" != box ]; then
   else
     echo "  warn  rex node $rex_node not running (check: rex server status)"
   fi
+  # The other Mac is added as a remote host in the app (see docs/workflows.md).
+  if rex hosts --json --autostart=false --timeout 5s 2>/dev/null | grep -q "\"label\": *\"$PEER\""; then
+    echo "  ok    rex host $PEER saved"
+  else
+    echo "  warn  rex host $PEER missing — add it in Rex: Settings > Remote Hosts"
+  fi
 fi
 
 if [ "$ROLE" = silence ]; then

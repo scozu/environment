@@ -1,23 +1,12 @@
 -- Rex configuration, stowed on every machine. Each Mac's own Rex server
 -- reads it (it lives with the server, per the Rex docs).
---
--- Every Mac is both a Rex client and a Rex server. Each Mac's Rex joins the
--- tailnet as its own node `<mac>-rex` (built-in Tailscale, owner-only access;
--- see docs/workflows.md). Each Mac declares every other Mac as a remote host,
--- labeled by the Mac's name, so `rex -S ghost ...` / `rex -S silence ...`
--- and the app's host list reach the other Mac's sessions. A Mac skips itself.
 -- Check: `rex config check`; apply: `rex config reload` (on that machine).
-
-local hosts = {
-  ghost = "https://ghost-rex.tail483f5.ts.net",
-  silence = "https://silence-rex.tail483f5.ts.net",
-}
-
-local r = rex.exec({ "/usr/sbin/scutil", "--get", "LocalHostName" })
-local me = (r and r.ok and r.stdout or ""):gsub("%s+$", "")
-
-for _, label in ipairs({ "ghost", "silence" }) do
-  if label ~= me then
-    rex.host{ label = label, endpoints = { hosts[label] } }
-  end
-end
+--
+-- Remote hosts are NOT declared here. The Mac app's Settings > Remote Hosts
+-- shows only hosts added in the app (its own list, mirrored into the server),
+-- never `rex.host` entries from this file, and it refuses to add a host whose
+-- label this file already declares. So each Mac adds the other in the app
+-- (Add Remote Host…), and the CLI sees it too (`rex hosts`, source "stored"):
+--   on ghost:   label silence  https://silence-rex.tail483f5.ts.net
+--   on silence: label ghost    https://ghost-rex.tail483f5.ts.net
+-- See docs/workflows.md (Rex).
