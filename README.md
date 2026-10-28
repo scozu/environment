@@ -61,7 +61,8 @@ them).
   changes, `git restore` the noise.
 - Stowed files: `.zshenv` (PATH), `.zshrc`, `.ssh/config`, Neovim config,
   Ghostty config, Zed settings, OpenCode `opencode.jsonc`, Claude Code
-  `~/.claude/settings.json`, and Cursor rules (`~/.cursor/rules/*.mdc`).
+  `~/.claude/settings.json`, Rex `~/.config/rex/init.lua`, and Cursor rules
+  (`~/.cursor/rules/*.mdc`).
   Cursor `User/settings.json` is deliberately **not** stowed — the app
   rewrites it as state (see `docs/workflows.md`).
 - Machine-specific values go in the gitignored `.local` files, which the

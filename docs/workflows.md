@@ -50,8 +50,16 @@ unclear; update it when workflows change.
   bundled server can't take the `--extra-listen tailnet-serve://` option that
   Serve needs. It only runs on ghost, so it is up exactly when ghost is.
   Other Macs (silence) run Rex with built-in Tailscale **off** and add `rex`
-  as a remote server; sessions always live on ghost. Rename the node with
-  `rex server tailscale rename <name>`; check with `rex server status`.
+  as a remote server; sessions always live on ghost. The remote host is
+  declared in the stowed `~/.config/rex/init.lua` (`rex.host`, label `rex`,
+  skipped on ghost); apply with `rex config reload`.
+  The node name has two parts and both must say `rex`:
+  `rex server tailscale rename rex` renames the running node, but the app
+  starts the node from its preference `rex.server.tailnet-hostname`, and
+  when that is unset it uses `<computer>-rex` (`ghost-rex`), so a plain
+  rename reverts on the next app restart. Set it once on ghost:
+  `defaults write com.superlogical.rex rex.server.tailnet-hostname -string rex`.
+  Check with `rex server status` (`tailscale: running · rex.tail483f5.ts.net`).
 
   Check with `tailscale serve status` on each machine. Only ghost is ever
   shared, never silence. People ghost is shared with get a grant for one
