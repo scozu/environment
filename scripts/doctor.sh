@@ -60,7 +60,7 @@ fi
 # Version parity with the other machine, for every direct-installed tool.
 # opencode is exempt (it self-updates). postgres is ghost-only, so only
 # ghost compares it. Parity is verified from silence: silence is SSH-client
-# only (Remote Login off), so ghost can never reach it — the ghost-side
+# only (Remote Login off), so ghost can never ssh into it — the ghost-side
 # checks skip by design, and doctor on silence does the real comparison
 # against ghost. The box also compares against ghost over its own
 # tailscaled; until it is logged in to the tailnet those lines skip.
@@ -86,6 +86,20 @@ parity "gh"       'gh --version | head -1'
 parity "cloudflared" 'cloudflared --version | head -1 | awk "{print \$3}"'
 [ "$ROLE" != box ] && parity "claude"   'claude --version'   # box: native installer, own version
 [ "$ROLE" = ghost ] && parity "postgres" 'postgres --version | awk "{print \$NF}"'
+
+# Rex: each Mac's Rex is on the tailnet as node <mac>-rex (built-in
+# Tailscale, see docs/workflows.md). Warn only: the node may be awaiting
+# sign-in, and the app may not be running. Never starts a server and never
+# prints the status (it can hold a sign-in link). Skipped on the box.
+if [ "$ROLE" != box ]; then
+  echo "rex"
+  rex_node="$(scutil --get LocalHostName 2>/dev/null)-rex"
+  if rex server status --autostart=false --timeout 5s 2>/dev/null | grep -q "tailscale: running · $rex_node\."; then
+    echo "  ok    rex node $rex_node on the tailnet"
+  else
+    echo "  warn  rex node $rex_node not running (check: rex server status)"
+  fi
+fi
 
 if [ "$ROLE" = silence ]; then
   echo "silence"

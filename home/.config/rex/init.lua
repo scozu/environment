@@ -1,18 +1,23 @@
 -- Rex configuration, stowed on every machine. Each Mac's own Rex server
 -- reads it (it lives with the server, per the Rex docs).
 --
--- ghost's Rex is the session master and is on the tailnet as node `rex`
--- (built-in Tailscale). Every other machine declares it as a remote host,
--- so silence's app and `rex -S rex ...` reach ghost's sessions.
--- ghost skips the declaration so it never lists itself.
+-- Every Mac is both a Rex client and a Rex server. Each Mac's Rex joins the
+-- tailnet as its own node `<mac>-rex` (built-in Tailscale, owner-only access;
+-- see docs/workflows.md). Each Mac declares every other Mac as a remote host,
+-- labeled by the Mac's name, so `rex -S ghost ...` / `rex -S silence ...`
+-- and the app's host list reach the other Mac's sessions. A Mac skips itself.
 -- Check: `rex config check`; apply: `rex config reload` (on that machine).
 
-local name = rex.exec({ "/usr/sbin/scutil", "--get", "LocalHostName" })
-local on_ghost = name and name.ok and name.stdout:match("^ghost%s*$") ~= nil
+local hosts = {
+  ghost = "https://ghost-rex.tail483f5.ts.net",
+  silence = "https://silence-rex.tail483f5.ts.net",
+}
 
-if not on_ghost then
-  rex.host{
-    label = "rex",
-    endpoints = { "https://rex.tail483f5.ts.net" },
-  }
+local r = rex.exec({ "/usr/sbin/scutil", "--get", "LocalHostName" })
+local me = (r and r.ok and r.stdout or ""):gsub("%s+$", "")
+
+for _, label in ipairs({ "ghost", "silence" }) do
+  if label ~= me then
+    rex.host{ id = label, label = label, endpoints = { hosts[label] } }
+  end
 end

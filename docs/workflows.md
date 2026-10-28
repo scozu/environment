@@ -10,7 +10,8 @@ unclear; update it when workflows change.
   compute/state machine.
 - **silence** (MacBook Pro) — portable client. UIs run here; files, tools, and
   agent actions run on ghost. Can work offline via deliberate local clones.
-  SSH-client only (Remote Login off): ghost cannot reach silence, so tool
+  SSH-client only (Remote Login off): ghost cannot ssh silence (its Rex can
+  reach silence's Rex, see Rex below), so tool
   syncs and doctor parity checks run **from silence, against ghost**. Also
   runs the proofer web app (see Tailnet ports), so proof runs can go to
   either Mac.
@@ -44,22 +45,33 @@ unclear; update it when workflows change.
   | 8443 | proofer (studiopendleton/proofer, LaunchAgent `com.studiopendleton.proofer-web`) | ghost, silence | 8787 |
   | 8444+ | next free port | | |
 
-- **Rex**: the one exception to the Serve rule. ghost's Rex (`Rex Beta.app`)
-  is the session master and joins the tailnet as its own node, `rex`
-  (`rex.tail483f5.ts.net`), using Rex's built-in Tailscale mode; the app's
+- **Rex**: the one exception to the Serve rule. Every Mac is both a Rex
+  client and a Rex server: each Mac's Rex (`Rex Beta.app`) joins the tailnet
+  as its own node `<mac>-rex` using Rex's built-in Tailscale mode
+  (`ghost-rex.tail483f5.ts.net`, `silence-rex.tail483f5.ts.net`); the app's
   bundled server can't take the `--extra-listen tailnet-serve://` option that
-  Serve needs. It only runs on ghost, so it is up exactly when ghost is.
-  Other Macs (silence) run Rex with built-in Tailscale **off** and add `rex`
-  as a remote server; sessions always live on ghost. The remote host is
-  declared in the stowed `~/.config/rex/init.lua` (`rex.host`, label `rex`,
-  skipped on ghost); apply with `rex config reload`.
-  The node name has two parts and both must say `rex`:
-  `rex server tailscale rename rex` renames the running node, but the app
-  starts the node from its preference `rex.server.tailnet-hostname`, and
-  when that is unset it uses `<computer>-rex` (`ghost-rex`), so a plain
-  rename reverts on the next app restart. Set it once on ghost:
-  `defaults write com.superlogical.rex rex.server.tailnet-hostname -string rex`.
-  Check with `rex server status` (`tailscale: running · rex.tail483f5.ts.net`).
+  Serve needs. These are separate devices from the system Tailscale nodes
+  `ghost` and `silence`, which is why the Rex nodes can't take those names.
+  Sessions live on the Mac that runs them and are reachable only while that
+  Mac is awake and online (a sleeping silence means `rex -S silence` fails).
+  The remote hosts are declared in the stowed `~/.config/rex/init.lua`
+  (`rex.host`, labels `ghost` and `silence`, each Mac skips itself); apply
+  with `rex config reload` on that Mac. ghost can't ssh silence, but ghost's
+  Rex can reach silence's Rex: a Rex connection can do anything that server
+  can, including starting programs as scozu.
+  Access stays owner-only (admin@jasonscholtz.net): **never** enable
+  `--allow-tailnet-members` (or the app's tailnet-members toggle) or
+  `--allow-anonymous`.
+  The node name has two parts and both must say `<mac>-rex`:
+  `rex server tailscale rename <mac>-rex` renames the running node (and
+  `rex server tailscale on --hostname <mac>-rex` enables a new one; it is
+  runtime-only), but the app starts the node from its preference
+  `rex.server.tailnet-hostname`. Set it once per Mac:
+  `defaults write com.superlogical.rex rex.server.tailnet-hostname -string <mac>-rex`.
+  A new node signs in through the link in `rex server status`
+  (`authenticate:`), opened by Jason as admin@jasonscholtz.net.
+  Check with `rex server status` (`tailscale: running · <mac>-rex.tail483f5.ts.net`);
+  doctor warns if it doesn't.
 
   Check with `tailscale serve status` on each machine. Only ghost is ever
   shared, never silence. People ghost is shared with get a grant for one

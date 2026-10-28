@@ -56,7 +56,7 @@ The same steps install a new tool and upgrade an existing one. Skip nothing.
 8. **Record**: update the inventory table below (version) in the same commit.
 9. **Sync the other machine.** silence exists to stay in sync with ghost, and
    syncs run **from silence** — silence is SSH-client only (Remote Login is
-   off), so ghost can never reach it. When silence is awake, run this
+   off), so ghost can never ssh into it. When silence is awake, run this
    playbook on silence itself, then doctor there: `ssh ghost` works from
    silence, and doctor on silence checks version parity against ghost.
    For the direct release tools the playbook is scripted — on silence run
@@ -124,7 +124,7 @@ needed. The playbook still applies, with these substitutions:
 | App | Source | Version | Location | Updates | Notes |
 |---|---|---|---|---|---|
 | ChatGPT | `ChatGPT-darwin-arm64-<ver>.zip` from `persistent.oaistatic.com/codex-app-prod/` (feed: `appcast.xml`) | 26.1007.30912 (build 20156) | `/Applications/ChatGPT.app` | Sparkle, self-updating | Bundle id `com.openai.codex`. Intel uses `ChatGPT-darwin-x64-<ver>.zip`. Verified: SHA-256 `b699a8c2…f815a3` (matches the Homebrew cask pin); signed `Developer ID Application: OpenAI OpCo, LLC (2DC432GLL2)`, notarized and stapled. The app is named ChatGPT; the older app is "ChatGPT Classic". |
-| Rex Beta | `Rex.dmg` from the Rex beta (Superlogical; Sparkle feed `blob.superlogical.com/public/rex-app/preview/appcast.xml`) | 0.1.0 (build 1541) on silence; ghost 0.1.0 (build 1497) | `/Applications/Rex Beta.app` | Sparkle, self-updating | Bundle id `com.superlogical.rex`. Verified on silence: dmg SHA-256 `b2e6583d…07c3f3`; signed `Developer ID Application: Superlogical, Inc. (AG92C3PT77)`, notarized. The app bundles its own server and `rex` CLI under `~/Library/Application Support/com.superlogical.rex/RexServer/Versions/<build>/` (the stowed shim finds it). Config: stowed `~/.config/rex/init.lua`. ghost runs built-in Tailscale as node `rex` (pref `rex.server.tailnet-hostname`, see workflows.md); silence keeps built-in Tailscale off. Install from the dmg with `ditto`; the dmg in Downloads is left in place. |
+| Rex Beta | `Rex.dmg` from the Rex beta (Superlogical; Sparkle feed `blob.superlogical.com/public/rex-app/preview/appcast.xml`) | 0.1.0 (build 1541) on silence; ghost 0.1.0 (build 1497) | `/Applications/Rex Beta.app` | Sparkle, self-updating | Bundle id `com.superlogical.rex`. Verified on silence: dmg SHA-256 `b2e6583d…07c3f3`; signed `Developer ID Application: Superlogical, Inc. (AG92C3PT77)`, notarized. The app bundles its own server and `rex` CLI under `~/Library/Application Support/com.superlogical.rex/RexServer/Versions/<build>/` (the stowed shim finds it). Config: stowed `~/.config/rex/init.lua`. Both Macs run built-in Tailscale, owner-only, as nodes `ghost-rex` and `silence-rex` (pref `rex.server.tailnet-hostname`, see workflows.md); never enable allow-tailnet-members or allow-anonymous. Install from the dmg with `ditto`; the dmg in Downloads is left in place. |
 
 ## Retention and upstream checks
 
