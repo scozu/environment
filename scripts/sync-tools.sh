@@ -51,12 +51,12 @@ TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg"
 
 pin() { case "$1" in    # pinned version, bare semver
   nvim) echo 0.12.6 ;;
-  pnpm) echo 12.11.2 ;;
-  bun)  echo 1.4.3 ;;
-  node) echo 24.21.0 ;;
-  gh)   echo 2.102.0 ;;
-  cloudflared) echo 2026.10.5 ;;   # sha256 per asset: pinsum()
-  claude) echo 2.1.303 ;;
+  pnpm) echo 12.16.1 ;;
+  bun)  echo 1.4.4 ;;
+  node) echo 24.22.2 ;;
+  gh)   echo 2.103.3 ;;
+  cloudflared) echo 2026.10.7 ;;   # sha256 per asset: pinsum()
+  claude) echo 2.1.316 ;;
   ffmpeg) echo 9.0.2 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
 esac; }
 
@@ -133,10 +133,10 @@ esac; }
 # asset digests (API field assets[].digest), cross-checked by downloading;
 # the linux ones also match the release notes. Bump them with the pin.
 pinsum() { case "$1" in
-  cloudflared-darwin-arm64.tgz) echo 184c7d4f5f977348243a6d7ca8f6cf6073b9b2746cfe8c1fe15aa59e9a522bf0 ;;
-  cloudflared-darwin-amd64.tgz) echo 6699392fed92367808c248c2d90bed66e49bbf66e1b4ee3e4141230f3f7391b3 ;;
-  cloudflared-linux-amd64)      echo e1bc0cf084fd9e590554fe769a86b1db46701c3f847a43d902f7b974a4e16298 ;;
-  cloudflared-linux-arm64)      echo 72e0d05a67e09da87cf495e409a28c3cc5994dd23fc66a982eebea6a55923b7d ;;
+  cloudflared-darwin-arm64.tgz) echo 3586ccf397e98e5f437e60e7c307ca6ac463e110580503af8bb8e6f9ebf831bd ;;
+  cloudflared-darwin-amd64.tgz) echo 02f3edfd87684dd5b705607688e4eb4b323f6e777b81e7b3a85af556aa356848 ;;
+  cloudflared-linux-amd64)      echo 1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872 ;;
+  cloudflared-linux-arm64)      echo 3df43aedc9ff291d1735b5cb576cb97e0b157488796db2e32b28aecabb445775 ;;
   # ffmpeg 9.0.2: the build server's <zip>.sha256 files, cross-checked by downloading
   macos/arm64/ffmpeg.zip)        echo c8ed4c4e6978a03c485edbfe4e0a5dc2380f8a30bba5150531b31b094492d924 ;;
   macos/arm64/ffprobe.zip)       echo fcbe839537485eaee7a7a8bc5cbc0f90d53617e80943e8a5b2e31cb851197ea6 ;;
