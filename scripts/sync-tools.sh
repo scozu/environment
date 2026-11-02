@@ -13,7 +13,8 @@
 # Retention: after a verified install, every older opt/<tool>-* is pruned,
 # except the one rollback copy moved aside by this run.
 #
-# Covers direct release tools: nvim, pnpm, bun, node, gh, cloudflared, claude. Out
+# Covers direct release tools: nvim, pnpm, bun, node, gh, cloudflared, claude,
+# ffmpeg. Out
 # of scope by
 # design: stow and postgres (source builds — see docs/tools.md), opencode
 # (self-updating installer). Run after `git pull`; doctor.sh verifies.
@@ -44,9 +45,9 @@ if [ "$os" = Linux ]; then
 fi
 
 # ---------------------------------------------------------------- config
-TOOLS="nvim pnpm bun node gh cloudflared claude"
+TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg"
 # the box keeps claude on its native installer (docs/tools.md), so skip it there
-[ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh cloudflared"
+[ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh cloudflared ffmpeg"
 
 pin() { case "$1" in    # pinned version, bare semver
   nvim) echo 0.12.6 ;;
@@ -56,6 +57,7 @@ pin() { case "$1" in    # pinned version, bare semver
   gh)   echo 2.102.0 ;;
   cloudflared) echo 2026.10.5 ;;   # sha256 per asset: pinsum()
   claude) echo 2.1.303 ;;
+  ffmpeg) echo 9.0.2 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
 esac; }
 
 tag() { case "$1" in    # upstream release tag for the pinned version
@@ -65,6 +67,7 @@ tag() { case "$1" in    # upstream release tag for the pinned version
   node) echo "v$(pin node)" ;;
   gh)   echo "v$(pin gh)" ;;
   cloudflared) pin cloudflared ;;   # bare tag, no v
+  ffmpeg) echo "$(ffbuild)_$(pin ffmpeg)" ;;   # build-server dir, e.g. 1789931890_9.0.2
 esac; }
 
 installed() { case "$1" in    # prints this machine's bare version, or nothing
@@ -75,6 +78,7 @@ installed() { case "$1" in    # prints this machine's bare version, or nothing
   gh)   gh --version 2>/dev/null | head -1 | awk '{print $3}' ;;
   cloudflared) cloudflared --version 2>/dev/null | head -1 | awk '{print $3}' ;;
   claude) claude --version 2>/dev/null | awk '{print $1}' ;;
+  ffmpeg) ffmpeg -version 2>/dev/null | head -1 | awk '{print $3}' | sed 's/-.*//' ;;   # "9.0.2-https://www.martin-riedl.de"
 esac; }
 
 asset() {                     # archive filename, platform- and arch-aware
@@ -87,6 +91,7 @@ asset() {                     # archive filename, platform- and arch-aware
   gh)   echo "gh_$(pin gh)_macOS_${mac/x64/amd64}.zip" ;;
   cloudflared) echo "cloudflared-darwin-${mac/x64/amd64}.tgz" ;;
   claude) echo claude ;;
+  ffmpeg) echo ffmpeg.zip ;;   # plus ffprobe.zip, fetched alongside
 esac; }
 
 asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
@@ -96,6 +101,7 @@ asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
   node) echo "node-v$(pin node)-linux-$lx.tar.gz" ;;
   gh)   echo "gh_$(pin gh)_linux_$lgh.tar.gz" ;;
   cloudflared) echo "cloudflared-linux-$lgh" ;;   # raw binary, not an archive
+  ffmpeg) echo ffmpeg.zip ;;
 esac; }
 
 url() { case "$1" in
@@ -106,6 +112,7 @@ url() { case "$1" in
   gh)   echo "https://github.com/cli/cli/releases/download/$(tag gh)/$(asset "$1")" ;;
   cloudflared) echo "https://github.com/cloudflare/cloudflared/releases/download/$(tag cloudflared)/$(asset "$1")" ;;
   claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/darwin-$mac/claude" ;;
+  ffmpeg) echo "https://ffmpeg.martin-riedl.de/download/$(ffplat)/$(tag ffmpeg)/ffmpeg.zip" ;;
 esac; }
 
 sums() { case "$1" in     # checksums-file URL, or - when none is published
@@ -116,6 +123,7 @@ sums() { case "$1" in     # checksums-file URL, or - when none is published
   gh)   echo "https://github.com/cli/cli/releases/download/$(tag gh)/gh_$(pin gh)_checksums.txt" ;;
   claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/manifest.json" ;;
   cloudflared) echo pinned ;;   # no checksums file; sha256 lives in pinsum()
+  ffmpeg) echo pinned ;;        # per-zip .sha256 files exist; mirrored in pinsum()
 esac; }
 
 # pinsum ASSET: sha256 pinned in this repo, for tools whose sums() is "pinned".
@@ -129,6 +137,28 @@ pinsum() { case "$1" in
   cloudflared-darwin-amd64.tgz) echo 6699392fed92367808c248c2d90bed66e49bbf66e1b4ee3e4141230f3f7391b3 ;;
   cloudflared-linux-amd64)      echo e1bc0cf084fd9e590554fe769a86b1db46701c3f847a43d902f7b974a4e16298 ;;
   cloudflared-linux-arm64)      echo 72e0d05a67e09da87cf495e409a28c3cc5994dd23fc66a982eebea6a55923b7d ;;
+  # ffmpeg 9.0.2: the build server's <zip>.sha256 files, cross-checked by downloading
+  macos/arm64/ffmpeg.zip)        echo c8ed4c4e6978a03c485edbfe4e0a5dc2380f8a30bba5150531b31b094492d924 ;;
+  macos/arm64/ffprobe.zip)       echo fcbe839537485eaee7a7a8bc5cbc0f90d53617e80943e8a5b2e31cb851197ea6 ;;
+  linux/amd64/ffmpeg.zip)        echo fa8ecf4abbd290d98f7d188b8649cc6b391ae209a98452be955a15aab1909d7f ;;
+  linux/amd64/ffprobe.zip)       echo 3f428c49070be3d24ec338602b76d412e401ffcb8a5641ef0e729181a232fc32 ;;
+  linux/arm64/ffmpeg.zip)        echo 93a76ae90db5474eecdf951a729857c64f3de23567228d6a7d5e6e8e3cd1021b ;;
+  linux/arm64/ffprobe.zip)       echo bcbe80fb741c180083327afaf5434812e006b33cacde2016b9aeaf6936128330 ;;
+esac; }
+
+# ffmpeg: static builds from Martin Riedl's build server (ffmpeg.martin-riedl.de;
+# upstream FFmpeg publishes source only). One platform branch per supported
+# machine: macOS arm64 (ghost, silence) and Linux amd64/arm64 (the box). Each
+# release has a build-id directory per platform; bump these with the pin.
+ffplat() {
+  if [ "$os" = Linux ]; then echo "linux/$lgh"
+  elif [ "$arch" = arm64 ]; then echo macos/arm64
+  else echo unsupported; fi
+}
+ffbuild() { case "$(ffplat)" in
+  macos/arm64) echo 1789931890 ;;
+  linux/amd64) echo 1789931100 ;;
+  linux/arm64) echo 1789931697 ;;
 esac; }
 
 entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
@@ -139,6 +169,7 @@ entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
   gh)   echo "gh:bin/gh" ;;
   cloudflared) echo "cloudflared:bin/cloudflared" ;;
   claude) echo "claude:bin/claude" ;;
+  ffmpeg) echo "ffmpeg:bin/ffmpeg ffprobe:bin/ffprobe" ;;
 esac; }
 
 # ---------------------------------------------------------------- engine
@@ -182,11 +213,31 @@ for t in $TOOLS; do
   echo "== $t: ${have:-not installed} -> $(pin "$t") =="
 
   file="$(asset "$t")"
+  [ "$t" = ffmpeg ] && [ -z "$(ffbuild)" ] && die "ffmpeg: no pinned build for $os $arch (macOS arm64 or Linux only)"
   echo "  download $file"
   curl -fL --retry 2 -o "$TMP/$file" "$(url "$t")" \
     || die "$t: download failed: $(url "$t")"
 
-  if [ "$t" = "claude" ]; then
+  if [ "$t" = "ffmpeg" ]; then
+    # two single-binary zips: ffmpeg.zip (above) and ffprobe.zip beside it
+    curl -fL --retry 2 -o "$TMP/ffprobe.zip" "$(dirname "$(url "$t")")/ffprobe.zip" \
+      || die "$t: ffprobe download failed"
+    for z in ffmpeg.zip ffprobe.zip; do
+      echo "  verify $z against the pinned sha256"
+      want="$(pinsum "$(ffplat)/$z")"
+      [ -n "$want" ] || die "$t: no pinned sha256 for $(ffplat)/$z"
+      printf '%s  %s\n' "$want" "$z" | (cd "$TMP" && shasum -a 256 -c -) \
+        || die "$t: checksum verification failed ($z)"
+      unzip -q -o "$TMP/$z" -d "$TMP/ffbin" || die "$t: unzip $z failed"
+    done
+    if [ "$os" = Darwin ]; then
+      for b in ffmpeg ffprobe; do
+        codesign --verify --strict "$TMP/ffbin/$b" || die "$t: $b signature verification failed"
+        codesign -dv "$TMP/ffbin/$b" 2>&1 | grep -q 'TeamIdentifier=KU3N25YGLU' \
+          || die "$t: $b has an unexpected signing team"
+      done
+    fi
+  elif [ "$t" = "claude" ]; then
     echo "  verify Claude release manifest and macOS signature"
     curl -fsSL "$(sums "$t")" -o "$TMP/manifest.json" \
       || die "$t: manifest download failed"
@@ -230,6 +281,10 @@ for t in $TOOLS; do
   if [ "$t" = "claude" ]; then
     mkdir -p "$target/bin"
     mv "$TMP/$file" "$target/bin/claude" || die "$t: move failed"
+  elif [ "$t" = "ffmpeg" ]; then
+    mkdir -p "$target/bin"
+    mv "$TMP/ffbin/ffmpeg" "$TMP/ffbin/ffprobe" "$target/bin/" || die "$t: move failed"
+    chmod +x "$target/bin/ffmpeg" "$target/bin/ffprobe"
   elif [ "$t" = "cloudflared" ]; then
     # Linux ships the raw binary; macOS a .tgz holding just ./cloudflared
     mkdir -p "$target/bin"

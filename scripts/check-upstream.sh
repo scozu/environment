@@ -22,6 +22,10 @@ latest_of() { # latest_of TOOL -> bare upstream version, or nothing
     gh)   gh_latest cli/cli | sed 's/^v//' ;;
     cloudflared) gh_latest cloudflare/cloudflared ;;
     claude) curl -fsSL https://downloads.claude.ai/claude-code-releases/latest ;;
+    # ffmpeg: the build server's latest-release redirect names the version dir
+    # (GET without following; HEAD there answers 404 intermittently)
+    ffmpeg) curl -s -o /dev/null -D - https://ffmpeg.martin-riedl.de/redirect/latest/linux/amd64/release/ffmpeg.zip \
+              | tr -d '\r' | sed -n 's#^[Ll]ocation: .*/[0-9]*_\([^/]*\)/ffmpeg.zip$#\1#p' ;;
     # node stays on the 24.x LTS line; index.json is newest-first
     node) curl -fsSL https://nodejs.org/dist/index.json \
             | python3 -c 'import json,sys; print([e["version"] for e in json.load(sys.stdin) if e["version"].startswith("v24.")][0].lstrip("v"))' ;;
