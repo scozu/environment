@@ -93,8 +93,8 @@ unclear; update it when workflows change.
   cd ~/Developer/environment && stow --no-folding -t "$HOME" home
   ```
 - **Shared via Stow**: `.zshenv` (PATH), `.zshrc`, `~/.ssh/config`, Neovim
-  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`, Claude
-  Code `~/.claude/settings.json`, and Cursor rules (`~/.cursor/rules/*.mdc`).
+  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc` and
+  `agents/lead.md`, Claude Code `~/.claude/settings.json`, and Cursor rules (`~/.cursor/rules/*.mdc`).
   `~/.claude` itself stays a real directory: sessions, projects, plugins,
   caches, and `settings.local.json` (per-machine overrides) never leave the
   machine.
@@ -118,6 +118,12 @@ unclear; update it when workflows change.
 
 ### 1. OpenCode (agent)
 
+- **Default agent is `lead`**: Opus (`claude-agent/opus`) scopes tasks, reviews
+  the diff once, and commits. It has no edit tools. The `general` and `explore`
+  subagents do the work on `opencode/deepseek-v4.1-flash`, which needs OpenCode
+  Console signed in (`opencode auth login`); if it's signed out, every subagent
+  fails with `Reconnect OpenCode Console to continue`. Keep one long-running
+  session per project (`opencode -c`), and switch to `build` for hands-on work.
 - **On ghost**: run `opencode` (TUI) or the desktop app — both auto-connect to
   the local service.
 - **On silence (desktop)**: connect OpenCode Desktop to ghost over Tailscale.

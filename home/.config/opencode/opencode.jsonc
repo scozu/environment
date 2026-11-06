@@ -1,5 +1,12 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "shell": "zsh",
-  "autoupdate": true
+  "autoupdate": true,
+  // Opus leads and reviews, DeepSeek Flash does the work. See agents/lead.md.
+  "model": "claude-agent/opus",
+  "default_agent": "lead",
+  "agents": {
+    "general": { "model": "opencode/deepseek-v4.1-flash" },
+    "explore": { "model": "opencode/deepseek-v4.1-flash" },
+  },
 }

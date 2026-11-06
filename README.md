@@ -60,8 +60,8 @@ them).
   (Zed settings, Cursor settings, OpenCode config): commit real setting
   changes, `git restore` the noise.
 - Stowed files: `.zshenv` (PATH), `.zshrc`, `.ssh/config`, Neovim config,
-  Ghostty config, Zed settings, OpenCode `opencode.jsonc`, Claude Code
-  `~/.claude/settings.json`, Rex `~/.config/rex/init.lua`, and Cursor rules
+  Ghostty config, Zed settings, OpenCode `opencode.jsonc` and
+  `agents/lead.md`, Claude Code `~/.claude/settings.json`, Rex `~/.config/rex/init.lua`, and Cursor rules
   (`~/.cursor/rules/*.mdc`).
   Cursor `User/settings.json` is deliberately **not** stowed — the app
   rewrites it as state (see `docs/workflows.md`).
