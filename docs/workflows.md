@@ -118,12 +118,15 @@ unclear; update it when workflows change.
 
 ### 1. OpenCode (agent)
 
-- **Default agent is `lead`**: Opus (`claude-agent/opus`) scopes tasks, reviews
-  the diff once, and commits. It has no edit tools. The `general` and `explore`
-  subagents do the work on `opencode/deepseek-v4.1-flash`, which needs OpenCode
-  Console signed in (`opencode auth login`); if it's signed out, every subagent
-  fails with `Reconnect OpenCode Console to continue`. Keep one long-running
-  session per project (`opencode -c`), and switch to `build` for hands-on work.
+- **Default agent is `lead`**: Opus on the Claude subscription
+  (`claude-agent/opus`) scopes tasks, reviews the diff once, and commits. It has
+  no edit tools. The `general` and `explore` subagents and compaction run on the
+  OpenCode Go subscription (`opencode-go/deepseek-v4.1-flash`), so routine work
+  doesn't use Opus. Use `opencode-go/`, not `opencode/`, which is pay-as-you-go.
+  If Console is signed out, every subagent fails with `Reconnect OpenCode Console
+  to continue`; fix it with `opencode auth login`. Keep one long-running session
+  per project (`opencode -c`). `build` works hands-on but stays on the session's
+  model, so pick a Go model with `/models` to avoid spending Opus on it.
 - **On ghost**: run `opencode` (TUI) or the desktop app — both auto-connect to
   the local service.
 - **On silence (desktop)**: connect OpenCode Desktop to ghost over Tailscale.

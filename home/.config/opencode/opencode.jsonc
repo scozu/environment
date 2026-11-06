@@ -2,11 +2,13 @@
   "$schema": "https://opencode.ai/config.json",
   "shell": "zsh",
   "autoupdate": true,
-  // Opus leads and reviews, DeepSeek Flash does the work. See agents/lead.md.
+  // Opus on the Claude subscription leads and reviews. Everything else runs on
+  // the OpenCode Go subscription to save Opus usage. See agents/lead.md.
   "model": "claude-agent/opus",
   "default_agent": "lead",
   "agents": {
-    "general": { "model": "opencode/deepseek-v4.1-flash" },
-    "explore": { "model": "opencode/deepseek-v4.1-flash" },
+    "compaction": { "model": "opencode-go/deepseek-v4.1-flash" },
+    "general": { "model": "opencode-go/deepseek-v4.1-flash" },
+    "explore": { "model": "opencode-go/deepseek-v4.1-flash" },
   },
 }

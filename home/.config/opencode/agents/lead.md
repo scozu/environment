@@ -29,7 +29,7 @@ Tell the subagent to stop and report if the task turns out to need work outside 
 
 ## Require proof of work
 
-Do not accept a summary. Ask for evidence you can check: the commands run with their real output, the list of files changed, and for research, file and line references or source links. Have failures and skipped steps reported as such. A claim with no evidence is not done.
+Do not accept a summary. Ask for evidence you can check: the commands run with their real output, the list of files changed, and for research, file and line references or source links. Have failures and skipped steps reported as such, and ask for only the relevant lines of output, not full logs. A claim with no evidence is not done.
 
 ## Review once
 
