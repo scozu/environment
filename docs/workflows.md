@@ -13,7 +13,7 @@ unclear; update it when workflows change.
   SSH-client only (Remote Login off): ghost cannot ssh silence (its Rex can
   reach silence's Rex, see Rex below), so tool
   syncs and doctor parity checks run **from silence, against ghost**. Also
-  runs the proofer web app (see Tailnet ports), so proof runs can go to
+  runs the proofs web app (see Tailnet ports), so proof runs can go to
   either Mac.
 - **the box** (Linux, Debian x86_64) — agent machine. Runs Claude Code with
   the pstack plugin, plus the OpenCode CLI; same Stow tree and pinned tool
@@ -42,7 +42,7 @@ unclear; update it when workflows change.
   | HTTPS port | App | Machines | Local port |
   | --- | --- | --- | --- |
   | 4096 | OpenCode service (launchd `ai.opencode.service`) | ghost | 4096 |
-  | 8443 | proofer (studiopendleton/proofer, LaunchAgent `com.studiopendleton.proofer-web`) | ghost, silence | 8787 |
+  | 8443 | proofs (studiopendleton/proofs, LaunchAgent `com.studiopendleton.proofs-web`) | ghost, silence | 8787 |
   | 8444+ | next free port | | |
 
 - **Rex**: the one exception to the Serve rule. Every Mac is both a Rex
@@ -80,7 +80,7 @@ unclear; update it when workflows change.
 
   Check with `tailscale serve status` on each machine. Only ghost is ever
   shared, never silence. People ghost is shared with get a grant for one
-  app's port only (proofer: `tcp:8443`), never 443, and no other rule may
+  app's port only (proofs: `tcp:8443`), never 443, and no other rule may
   match `autogroup:shared` (the default `"src": ["*"]` rule does), or the
   limit means nothing. The policy lives in the Tailscale admin console, not
   in this repo.
@@ -229,7 +229,7 @@ unclear; update it when workflows change.
 - The box as a client: `~/.ssh/config.local` also has a full `Host silence`
   entry (`silence.tail483f5.ts.net`, user `scozu`, same ProxyCommand), so
   `ssh silence` works when silence is awake, on the tailnet, and has Remote
-  Login on. HTTP to tailnet services (opencode `:4096`, proofer `:8443`)
+  Login on. HTTP to tailnet services (opencode `:4096`, proofs `:8443`)
   goes through the SOCKS5 proxy: `curl --socks5-hostname localhost:1055 …`.
   Doctor needs no proxy variables on the box: its checks there use ssh and the
   tailscale CLI only.
@@ -278,7 +278,7 @@ unclear; update it when workflows change.
 3. Always Stow dry-run before real runs; review diffs before committing.
 4. silence is a client: no local OpenCode service and no tool launchd jobs
    there. The one exception is app LaunchAgents listed under Tailnet ports
-   (today the proofer).
+   (today the Proofs app).
 5. The service password lives in one place: ghost's
    `~/.config/opencode/service.json`.
 6. Tools follow the direct-install pattern. Every install or update goes

@@ -43,7 +43,7 @@
       "host": "ghost",
       "args": [],
       "projects": [
-        { "paths": ["/Users/scozu/Developer/studiopendleton/proofer"] },
+        { "paths": ["/Users/scozu/Developer/studiopendleton/proofs"] },
         { "paths": ["~/Developer/environment"] },
       ],
     },

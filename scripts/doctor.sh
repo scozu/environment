@@ -156,8 +156,8 @@ if [ "$ROLE" = ghost ]; then
   check "tailscale serve proxies OpenCode" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | grep -q "proxy http://127.0.0.1:4096"'
   check "tailnet URL answers with auth" test "$(http_code $SERVICE_URL/api/info)" = 200
   check "upstream check job loaded (weekly report)" sh -c 'launchctl list | grep -q dev.scozu.check-upstream'
-  check "proofer web LaunchAgent loaded" launchctl list com.studiopendleton.proofer-web
-  check "tailscale serve proxies proofer on 8443 to 8787 (tailnet only)" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | awk "/:8443 \(tailnet only\)/{f=1;next} /^https/{f=0} f && / proxy http:\/\/127\.0\.0\.1:8787\$/{ok=1} END{exit !ok}"'
+  check "proofs web LaunchAgent loaded" launchctl list com.studiopendleton.proofs-web
+  check "tailscale serve proxies proofs on 8443 to 8787 (tailnet only)" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | awk "/:8443 \(tailnet only\)/{f=1;next} /^https/{f=0} f && / proxy http:\/\/127\.0\.0\.1:8787\$/{ok=1} END{exit !ok}"'
 fi
 
 echo
