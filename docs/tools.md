@@ -55,12 +55,12 @@ The same steps install a new tool and upgrade an existing one. Skip nothing.
 7. **Verify**: `<tool> --version`, then `scripts/doctor.sh` from the repo.
 8. **Record**: update the inventory table below (version) in the same commit.
 9. **Sync the other machine.** silence exists to stay in sync with ghost, and
-   syncs run **from silence** — silence is SSH-client only (Remote Login is
-   off), so ghost can never ssh into it. When silence is awake, run this
-   playbook on silence itself, then doctor there: `ssh ghost` works from
-   silence, and doctor on silence checks version parity against ghost.
-   For the direct release tools the playbook is scripted — on silence run
-   `git pull && scripts/sync-tools.sh && scripts/doctor.sh`; the script
+   ghost runs the sync over SSH (`ssh silence` works non-interactively; see
+   [workflows.md](workflows.md)). When silence is awake, run this playbook on
+   silence from ghost, then doctor there: doctor on silence checks version
+   parity against ghost.
+   For the direct release tools the playbook is scripted — from ghost run
+   `ssh silence 'zsh -ic "cd ~/Developer/environment && git pull --ff-only && scripts/sync-tools.sh && scripts/doctor.sh"'`; the script
    compares installed versions against the pins and downloads only what
    differs. stow and Postgres remain manual playbook steps.
    Run the playbook — never copy `~/.local/opt` wholesale. Data under

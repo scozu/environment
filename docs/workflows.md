@@ -10,16 +10,16 @@ unclear; update it when workflows change.
   compute/state machine.
 - **silence** (MacBook Pro) — portable client. UIs run here; files, tools, and
   agent actions run on ghost. Can work offline via deliberate local clones.
-  SSH-client only (Remote Login off): ghost cannot ssh silence (its Rex can
-  reach silence's Rex, see Rex below), so tool
-  syncs and doctor parity checks run **from silence, against ghost**. Also
-  runs the proofs web app (see Tailnet ports), so proof runs can go to
-  either Mac.
+  ghost manages silence over SSH (`ssh silence` works non-interactively, see
+  Terminal / SSH below), so tool syncs and doctor parity checks run **from
+  ghost**. Also runs the proofs web app (see Tailnet ports), so proof runs can
+  go to either Mac.
 - **the box** (Linux, Debian x86_64) — agent machine. Runs Claude Code with
   the pstack plugin, plus the OpenCode CLI; same Stow tree and pinned tool
   versions as the Macs (Linux builds via `scripts/sync-tools.sh`). No
-  OpenCode service, no Postgres, no launchd. On the tailnet as `grokbox` via its
-  own tailscaled, so `ssh ghost` and doctor's parity lines work once it is
+  OpenCode service, no Postgres, no launchd. On the tailnet as `grokbox` (Tailscale
+  node, Linux, 100.127.67.48; no SSH alias on ghost yet) via its own
+  tailscaled, so `ssh ghost` and doctor's parity lines work once it is
   logged in. Repo at `~/Developer/environment`.
 
 ## The connective tissue
@@ -61,8 +61,8 @@ unclear; update it when workflows change.
   rejects an app host whose label init.lua already declares (409 conflict).
   On ghost add `silence` → `https://silence-rex.tail483f5.ts.net`; on silence
   add `ghost` → `https://ghost-rex.tail483f5.ts.net`. Doctor warns if the
-  other Mac's host is missing. ghost can't ssh silence, but ghost's
-  Rex can reach silence's Rex: a Rex connection can do anything that server
+  other Mac's host is missing. ghost's Rex can reach silence's
+  Rex: a Rex connection can do anything that server
   can, including starting programs as scozu.
   Access stays owner-only (admin@jasonscholtz.net): **never** enable
   `--allow-tailnet-members` (or the app's tailnet-members toggle) or
@@ -268,6 +268,13 @@ unclear; update it when workflows change.
 ### 7. Terminal / SSH
 
 - `ssh ghost` — passwordless, fast (multiplexed).
+- `ssh silence` works from ghost non-interactively (bare MagicDNS name; no alias
+  in `~/.ssh/config`). ghost manages silence over SSH. To update silence, run these from
+  ghost: `git pull --ff-only` in `~/Developer/environment`, then Stow
+  (`stow --no-folding -t "$HOME" home`), then doctor. Run doctor in a zsh
+  interactive shell, because silence sets `OPENCODE_SERVER_PASSWORD` in
+  `~/.zshrc.local`, which a plain SSH command does not load:
+  `ssh silence 'zsh -ic "cd ~/Developer/environment && scripts/doctor.sh"'`.
 - Copy files: `scp`/`rsync` over the alias; tunnels if ever needed:
   `ssh -L 4096:127.0.0.1:4096 ghost`.
 
