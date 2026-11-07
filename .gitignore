@@ -2,7 +2,8 @@
 **/.DS_Store
 
 # SSH private keys and machine-specific data
-home/.ssh/id_*
+home/.ssh/*
+!home/.ssh/config
 home/.ssh/authorized_keys
 home/.ssh/known_hosts
 home/.ssh/config.local
@@ -17,6 +18,7 @@ home/.zshenv.local
 home/.config/opencode/auth.json
 home/.config/opencode/service.json
 home/.config/opencode/.env*
+home/.config/opencode/*.env
 home/.config/opencode/node_modules/
 
 # Cursor app state, if it is ever copied into the package tree.
@@ -42,3 +44,6 @@ home/Library/Application Support/Cursor/User/History/
 # settings.local.json is the per-machine override file.
 home/.claude/*
 !home/.claude/settings.json
+!home/.claude/rules/
+home/.claude/rules/*
+!home/.claude/rules/pstack-models.md

@@ -93,8 +93,8 @@ unclear; update it when workflows change.
   cd ~/Developer/environment && stow --no-folding -t "$HOME" home
   ```
 - **Shared via Stow**: `.zshenv` (PATH), `.zshrc`, `~/.ssh/config`, Neovim
-  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc` and
-  `agents/lead.md`, Claude Code `~/.claude/settings.json`, and Cursor rules (`~/.cursor/rules/*.mdc`).
+  baseline, Ghostty, Zed `settings.json`, OpenCode `opencode.jsonc`,
+  `agents/lead.md`, and `AGENTS.md`, Claude Code `~/.claude/settings.json` and `~/.claude/rules/pstack-models.md`, and Cursor rules (`~/.cursor/rules/*.mdc`).
   `~/.claude` itself stays a real directory: sessions, projects, plugins,
   caches, and `settings.local.json` (per-machine overrides) never leave the
   machine.
@@ -118,15 +118,22 @@ unclear; update it when workflows change.
 
 ### 1. OpenCode (agent)
 
-- **Default agent is `lead`**: Opus on the Claude subscription
-  (`claude-agent/opus`) scopes tasks, reviews the diff once, and commits. It has
-  no edit tools. The `general` and `explore` subagents and compaction run on the
-  OpenCode Go subscription (`opencode-go/deepseek-v4.1-flash`), so routine work
-  doesn't use Opus. Use `opencode-go/`, not `opencode/`, which is pay-as-you-go.
-  If Console is signed out, every subagent fails with `Reconnect OpenCode Console
-  to continue`; fix it with `opencode auth login`. Keep one long-running session
-  per project (`opencode -c`). `build` works hands-on but stays on the session's
-  model, so pick a Go model with `/models` to avoid spending Opus on it.
+- **Default agent is `lead`**: pinned to Opus on the Claude subscription
+  (`claude-agent/opus`). It scopes tasks, reviews the diff once, and commits. It
+  makes edits through subagents, and its shell allows git and read-only commands
+  and asks before anything else. That limit prevents accidents; it is not a
+  security boundary.
+- **Models**: the `general` and `explore` subagents run on
+  `opencode-go/claude-haiku-5-5`. The global default (so `build` and `plan`),
+  compaction, title, and summary run on `opencode-go/deepseek-v4.1-flash`.
+  `/models` still overrides a session's model. Use `opencode-go/`, not
+  `opencode/`, which is pay-as-you-go. If Console is signed out, subagents fail
+  with `Reconnect OpenCode Console to continue`; fix it with `opencode auth login`.
+- **Long threads cost more**: every turn resends the whole history. Run
+  `/compact` after finishing a chunk of work, and start a new thread for a
+  separate task.
+- **Usage**: `claude -p "/usage"` shows Claude plan limits;
+  `opencode api get /api/experimental/usage/limits` shows OpenCode Go usage.
 - **On ghost**: run `opencode` (TUI) or the desktop app — both auto-connect to
   the local service.
 - **On silence (desktop)**: connect OpenCode Desktop to ghost over Tailscale.
@@ -198,14 +205,17 @@ unclear; update it when workflows change.
 ### 6. The box (Linux)
 
 - Bootstrap (once): system packages from apt — `zsh` (doctor and the stowed
-  `.zshenv` need it), `make` (to build stow), `openssh-client`. Everything
-  else follows the playbook: build stow 2.4.1 into `~/.local/opt/stow`, then
+  `.zshenv` need it), `make` (to build stow), `openssh-client`, `curl` and
+  `unzip` (sync-tools downloads and unpacks the tarballs), and whatever provides
+  `shasum` (sync-tools checks sha256 with `shasum -a 256`; the apt package name
+  is unverified on Linux — find it with `apt-file search /usr/bin/shasum`).
+  Everything else follows the playbook: build stow 2.4.1 into `~/.local/opt/stow`, then
   `stow --no-folding -n -v -t "$HOME" home` → move conflicts aside as
   `<file>.pre-stow` → apply, then `scripts/sync-tools.sh`, then
   `scripts/doctor.sh`.
 - `~/.ssh/config.local` on the box holds `IgnoreUnknown UseKeychain`: the
   shared `~/.ssh/config` uses the Apple-only `UseKeychain` option, which
-  Linux OpenSSH rejects otherwise. `~/.ssh` must be mode 700.
+  Linux OpenSSH rejects otherwise. `~/.ssh` must be mode 700 (doctor checks it).
 - Tailscale: apt package from the official repo. PID 1 is not systemd, so
   start the daemon with `box-tailscaled` (machine-local script in
   `~/.local/bin`, idempotent; run it after a box restart), then once:
@@ -220,10 +230,9 @@ unclear; update it when workflows change.
   entry (`silence.tail483f5.ts.net`, user `scozu`, same ProxyCommand), so
   `ssh silence` works when silence is awake, on the tailnet, and has Remote
   Login on. HTTP to tailnet services (opencode `:4096`, proofer `:8443`)
-  goes through the SOCKS5 proxy: `curl --socks5-hostname localhost:1055 …`,
-  and run doctor as
-  `ALL_PROXY=socks5h://localhost:1055 HTTPS_PROXY=socks5h://localhost:1055 scripts/doctor.sh`
-  so its tailnet checks can resolve MagicDNS names.
+  goes through the SOCKS5 proxy: `curl --socks5-hostname localhost:1055 …`.
+  Doctor needs no proxy variables on the box: its checks there use ssh and the
+  tailscale CLI only.
 - OpenCode on ghost from the box: `opencode run --server https://ghost.tail483f5.ts.net:4096 "<task>"`
   with `OPENCODE_PASSWORD` from `~/.config/opencode/ghost-server.env` (machine-local,
   mode 600). opencode's client (bun) can't use tailscaled's proxy, so
@@ -245,11 +254,16 @@ unclear; update it when workflows change.
   `REX_SSH_HOST=<host>` targets another Mac. On the Macs the same file just
   execs the local rex. Doctor checks `rex ls` over ssh (warns if ghost is
   unreachable).
-- Claude Code installs itself (native installer; self-updates are off via the
-  shared `DISABLE_UPDATES=1`, upgrade with `claude install <version>`) to
+- Claude Code installs itself (native installer) to
   `~/.local/share/claude/versions/<ver>` with `~/.local/bin/claude` → that
-  version; pstack comes from the `cursor-plugins` marketplace. Login is
-  interactive and per machine; after it, run `/pstack:setup-pstack`.
+  version. The shared `~/.claude/settings.json` sets `DISABLE_AUTOUPDATER=1`,
+  so upgrade by hand with `claude install <version>`. It also turns off the
+  claude.ai connector, skill, and plugin syncing. pstack comes from the
+  `cursor-plugins` marketplace; its model rule is the stowed
+  `~/.claude/rules/pstack-models.md`. Login is interactive and per machine.
+  **Do not run `/pstack:setup-pstack` casually**: it overwrites the tracked rule
+  file, which is a symlink into this repo. If it runs, check `git diff` and
+  `git restore home/.claude/rules/pstack-models.md`.
 
 ### 7. Terminal / SSH
 
@@ -270,8 +284,8 @@ unclear; update it when workflows change.
 6. Tools follow the direct-install pattern. Every install or update goes
    through the playbook in [tools.md](tools.md) and updates its inventory in
    the same commit (tarball tools are scripted in `scripts/sync-tools.sh`);
-   ghost, silence, and the box stay at the same versions (Postgres is
-   ghost-only).
+   ghost and silence stay at the same versions, and the box matches them
+   except Claude Code (Postgres is ghost-only).
 7. Tailnet apps listen on `127.0.0.1` and go through Tailscale Serve on the
    port in Tailnet ports. Never Funnel: it makes a page public.
 
@@ -286,8 +300,8 @@ unclear; update it when workflows change.
 - SSH server: socket-activated — `ssh ghost 'echo ok'` is the test.
 - Updates: opencode self-updates (its launchd job picks up new versions on
   restart), and the GUI apps (Zed, Cursor, Tailscale, ChatGPT) auto-update
-  themselves. The tarball tools (nvim, pnpm, bun, node, gh) update via
-  `scripts/sync-tools.sh`; stow and Postgres stay manual per
+  themselves. The tarball tools (nvim, pnpm, bun, node, gh, cloudflared,
+  claude, ffmpeg; the box skips claude) update via `scripts/sync-tools.sh`; stow and Postgres stay manual per
   [tools.md](tools.md) — pin the version and update the inventory there.
   Upstream drift is reported weekly on ghost; the log is
   `~/.local/var/check-upstream.log`, and `scripts/check-upstream.sh` runs it

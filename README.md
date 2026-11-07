@@ -60,8 +60,9 @@ them).
   (Zed settings, Cursor settings, OpenCode config): commit real setting
   changes, `git restore` the noise.
 - Stowed files: `.zshenv` (PATH), `.zshrc`, `.ssh/config`, Neovim config,
-  Ghostty config, Zed settings, OpenCode `opencode.jsonc` and
-  `agents/lead.md`, Claude Code `~/.claude/settings.json`, Rex `~/.config/rex/init.lua`, and Cursor rules
+  Ghostty config, Zed settings, OpenCode `opencode.jsonc`, `AGENTS.md`, and
+  `agents/lead.md`, Claude Code `~/.claude/settings.json` and
+  `~/.claude/rules/pstack-models.md`, Rex `~/.config/rex/init.lua`, and Cursor rules
   (`~/.cursor/rules/*.mdc`).
   Cursor `User/settings.json` is deliberately **not** stowed — the app
   rewrites it as state (see `docs/workflows.md`).
@@ -114,8 +115,11 @@ hostname, the box by `uname -s` = Linux, otherwise silence.
    `docs/tools.md` in the same commit.
 3. Secrets and app state never enter the repo. Machine-specific config goes
    in the `.local` files.
-4. ghost, silence, and the box run the same tool versions. Doctor runs clean
-   on all three.
+4. ghost and silence run the same tool versions, and the box matches them
+   except Claude Code. The box is still on 2.1.302 while the Macs are on
+   2.1.316, so the box needs upgrading (`claude install 2.1.316`). That
+   upgrade has not been done. Doctor does not compare the box's Claude version.
+   Doctor runs clean on all three.
 
 ## Read the longer docs
 

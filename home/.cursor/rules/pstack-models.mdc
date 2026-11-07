@@ -6,20 +6,20 @@ alwaysApply: true
 # `inherit-parent` or `auto` as a value: the role runs on the parent chat model (omit Task `model`). Alias entries in a panel list still count toward its fan-out.
 # budget: large (xhigh)
 # grok-4.7 does the real work; composer-2.5 is the small, cheap model (haiku tier), used only for read-only fan-out.
-feature, refactoring: grok-4.7-xhigh-fast
-bug-fix: grok-4.7-xhigh-fast
-perf-issue: grok-4.7-xhigh-fast
-hillclimb: grok-4.7-xhigh-fast
-judgment and prose: grok-4.7-xhigh-fast
-hardest tasks: grok-4.7-xhigh-fast
+feature, refactoring: grok-4.7-xhigh
+bug-fix: grok-4.7-xhigh
+perf-issue: grok-4.7-xhigh
+hillclimb: grok-4.7-xhigh
+judgment and prose: grok-4.7-xhigh
+hardest tasks: grok-4.7-xhigh
 how explorer: composer-2.5
-how explainer: grok-4.7-xhigh-fast
+how explainer: grok-4.7-xhigh
 why investigators: composer-2.5
-why synthesizer: grok-4.7-xhigh-fast
+why synthesizer: grok-4.7-xhigh
 reflect tooling: composer-2.5
-reflect judgment, divergent, synthesizer: grok-4.7-xhigh-fast
-arena runners: grok-4.7-xhigh-fast, grok-4.7-xhigh-fast, composer-2.5
-arena cross-judge pool: grok-4.7-xhigh-fast
+reflect judgment, divergent, synthesizer: grok-4.7-xhigh
+arena runners: grok-4.7-xhigh, composer-2.5
+arena cross-judge pool: grok-4.7-xhigh
 swarm workers: grok-4.7-xhigh-fast
-architect runners: grok-4.7-xhigh-fast, grok-4.7-xhigh-fast
-interrogate reviewers: grok-4.7-xhigh-fast, composer-2.5
+architect runners: grok-4.7-xhigh
+interrogate reviewers: grok-4.7-xhigh, composer-2.5

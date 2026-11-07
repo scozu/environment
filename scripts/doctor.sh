@@ -42,7 +42,7 @@ check "no obvious secret-named files tracked" test -z "$(git -C "$REPO" ls-files
 
 echo "tools"
 check "stow installed" command -v stow
-check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
+check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -v -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
 check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh && command -v cloudflared && command -v claude && command -v ffmpeg && command -v ffprobe'
 check "tools match pinned versions" "$REPO/scripts/sync-tools.sh" --check
 check "ffmpeg is the pinned static build and encodes a frame" sh -c 'case "$(command -v ffmpeg)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac && ffmpeg -v error -f lavfi -i color=c=black:s=2x2 -frames:v 1 -f rawvideo -pix_fmt rgb24 - | wc -c | grep -qx " *12"'
@@ -102,7 +102,10 @@ if [ "$ROLE" != box ]; then
     echo "  warn  rex node $rex_node not running (check: rex server status)"
   fi
   # The other Mac is added as a remote host in the app (see docs/workflows.md).
-  if rex hosts --json --autostart=false --timeout 5s 2>/dev/null | grep -q "\"label\": *\"$PEER\""; then
+  # Hosts can't be read while the Rex server is down, so skip rather than warn.
+  if ! rex server status --autostart=false --timeout 5s >/dev/null 2>&1; then
+    echo "  skip  rex host $PEER: Rex server not running"
+  elif rex hosts --json --autostart=false --timeout 5s 2>/dev/null | grep -q "\"label\": *\"$PEER\""; then
     echo "  ok    rex host $PEER saved"
   else
     echo "  warn  rex host $PEER missing — add it in Rex: Settings > Remote Hosts"
@@ -121,6 +124,7 @@ if [ "$ROLE" = box ]; then
   check "\$HOME/.local/bin is first on PATH in zsh" zsh -c 'test "${PATH%%:*}" = "$HOME/.local/bin"'
   check "tools resolve from ~/.local/bin, not the system" zsh -c 'for t in stow nvim pnpm bun node npm gh cloudflared ffmpeg ffprobe; do case "$(command -v $t)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac; done'
   check "ssh config parses (UseKeychain ignored via ~/.ssh/config.local)" ssh -G ghost
+  check "~/.ssh is mode 700" sh -c 'test "$(stat -c %a "$HOME/.ssh" 2>/dev/null || stat -f %Lp "$HOME/.ssh" 2>/dev/null)" = 700'
   check "claude resolves" command -v claude
   check "pstack plugin enabled in Claude Code" sh -c 'claude plugin list 2>/dev/null | grep -A3 "pstack@cursor-plugins" | grep -q enabled'
   check "tailscale installed" command -v tailscale
@@ -140,7 +144,7 @@ if [ "$ROLE" = box ]; then
     fi
   fi
   if claude auth status 2>/dev/null | grep -q '"loggedIn": *false'; then
-    echo "  info  claude not logged in — sign in, then run /pstack:setup-pstack"
+    echo "  info  claude not logged in — sign in. Don't run /pstack:setup-pstack casually: it overwrites the tracked rule file; if it runs, git restore home/.claude/rules/pstack-models.md"
   fi
 fi
 
@@ -152,6 +156,8 @@ if [ "$ROLE" = ghost ]; then
   check "tailscale serve proxies OpenCode" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | grep -q "proxy http://127.0.0.1:4096"'
   check "tailnet URL answers with auth" test "$(http_code $SERVICE_URL/api/info)" = 200
   check "upstream check job loaded (weekly report)" sh -c 'launchctl list | grep -q dev.scozu.check-upstream'
+  check "proofer web LaunchAgent loaded" launchctl list com.studiopendleton.proofer-web
+  check "tailscale serve proxies proofer on 8443 to 8787 (tailnet only)" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | awk "/:8443 \(tailnet only\)/{f=1;next} /^https/{f=0} f && / proxy http:\/\/127\.0\.0\.1:8787\$/{ok=1} END{exit !ok}"'
 fi
 
 echo
