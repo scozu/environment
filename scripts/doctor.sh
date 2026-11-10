@@ -131,18 +131,21 @@ if [ "$ROLE" = box ]; then
   check "~/.ssh is mode 700" sh -c 'test "$(stat -c %a "$HOME/.ssh" 2>/dev/null || stat -f %Lp "$HOME/.ssh" 2>/dev/null)" = 700'
   check "claude resolves" command -v claude
   check "pstack plugin enabled in Claude Code" sh -c 'claude plugin list 2>/dev/null | grep -A3 "pstack@cursor-plugins" | grep -q enabled'
+  ssh_banner() { timeout 4 bash -c "exec 3<>/dev/tcp/$1/22 && head -c 4 <&3" 2>/dev/null | grep -q '^SSH-'; }
   # Tailnet access comes from Grok Bot's Tailscale connector, not a local
-  # tailscale/tailscaled. Probe port 22 on each host's full MagicDNS name.
+  # tailscale/tailscaled. Probe port 22 on each host's full MagicDNS name and
+  # require an SSH banner: the box's network accepts any TCP connect, so a
+  # bare connect is not proof of reachability.
   # Short-name DNS from the shell is not promised. Ghost unreachable is a
   # fail (hint: connect Tailscale in Grok Bot). Silence is a laptop and may
   # be asleep, so unreachable is a warning.
-  if timeout 3 bash -c "exec 3<>/dev/tcp/${GHOST_TS}/22" >/dev/null 2>&1; then
+  if ssh_banner "$GHOST_TS"; then
     echo "  ok    ghost reachable on the tailnet ($GHOST_TS:22)"
   else
     echo "  FAIL  ghost reachable on the tailnet ($GHOST_TS:22) — connect Tailscale in Grok Bot"
     fails=$((fails + 1))
   fi
-  if timeout 3 bash -c "exec 3<>/dev/tcp/${SILENCE_TS}/22" >/dev/null 2>&1; then
+  if ssh_banner "$SILENCE_TS"; then
     echo "  ok    silence reachable on the tailnet ($SILENCE_TS:22)"
   else
     echo "  warn  silence unreachable on the tailnet ($SILENCE_TS:22) — laptop may be asleep"
