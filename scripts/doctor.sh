@@ -4,7 +4,10 @@
 set -u
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-SERVICE_URL="https://ghost.tail483f5.ts.net:4096"   # update here if the tailnet is renamed
+TAILNET="tail483f5.ts.net"   # update here if the tailnet is renamed
+SERVICE_URL="https://ghost.${TAILNET}:4096"
+GHOST_TS="ghost.${TAILNET}"
+SILENCE_TS="silence.${TAILNET}"
 ROLE=silence
 [ "$(scutil --get LocalHostName 2>/dev/null)" = ghost ] && ROLE=ghost
 [ "$(uname -s)" = Linux ] && ROLE=box   # the box: the only Linux machine
@@ -63,8 +66,9 @@ fi
 # ghost compares it. Parity is verified from silence: silence is SSH-client
 # only (Remote Login off), so ghost can never ssh into it — the ghost-side
 # checks skip by design, and doctor on silence does the real comparison
-# against ghost. The box also compares against ghost over its own
-# tailscaled; until it is logged in to the tailnet those lines skip.
+# against ghost. The box also compares against ghost over the Grok Bot
+# Tailscale connector (full MagicDNS name via ~/.ssh/config); until the
+# connector is connected those lines skip.
 echo "version sync (with $PEER)"
 parity() { # parity "label" "version command" — the same command runs on both machines
   local label=$1 cmd=$2 local_ver remote_ver
@@ -127,21 +131,29 @@ if [ "$ROLE" = box ]; then
   check "~/.ssh is mode 700" sh -c 'test "$(stat -c %a "$HOME/.ssh" 2>/dev/null || stat -f %Lp "$HOME/.ssh" 2>/dev/null)" = 700'
   check "claude resolves" command -v claude
   check "pstack plugin enabled in Claude Code" sh -c 'claude plugin list 2>/dev/null | grep -A3 "pstack@cursor-plugins" | grep -q enabled'
-  check "tailscale installed" command -v tailscale
+  # Tailnet access comes from Grok Bot's Tailscale connector, not a local
+  # tailscale/tailscaled. Probe port 22 on each host's full MagicDNS name.
+  # Short-name DNS from the shell is not promised. Ghost unreachable is a
+  # fail (hint: connect Tailscale in Grok Bot). Silence is a laptop and may
+  # be asleep, so unreachable is a warning.
+  if timeout 3 bash -c "exec 3<>/dev/tcp/${GHOST_TS}/22" >/dev/null 2>&1; then
+    echo "  ok    ghost reachable on the tailnet ($GHOST_TS:22)"
+  else
+    echo "  FAIL  ghost reachable on the tailnet ($GHOST_TS:22) — connect Tailscale in Grok Bot"
+    fails=$((fails + 1))
+  fi
+  if timeout 3 bash -c "exec 3<>/dev/tcp/${SILENCE_TS}/22" >/dev/null 2>&1; then
+    echo "  ok    silence reachable on the tailnet ($SILENCE_TS:22)"
+  else
+    echo "  warn  silence unreachable on the tailnet ($SILENCE_TS:22) — laptop may be asleep"
+  fi
   # rex shim (home/.local/bin/rex) drives ghost's Rex over ssh; warn only.
+  # Host ghost is mapped to $GHOST_TS in the stowed ssh config (and
+  # ~/.ssh/config.local on the box must not add a tailscale nc ProxyCommand).
   if ssh -o BatchMode=yes -o ConnectTimeout=6 ghost true 2>/dev/null; then
     check "rex ls over ssh ghost works" sh -c 'rex ls </dev/null >/dev/null 2>&1'
   else
     echo "  warn  rex over ssh: ghost unreachable"
-  fi
-  # No systemd on the box: tailscaled is started by ~/.local/bin/box-tailscaled
-  # (machine-local). Not running / not logged in is reported, not failed.
-  if ! tailscale status >/dev/null 2>&1; then
-    if pgrep -x tailscaled >/dev/null; then
-      echo "  info  tailscale not logged in — run: tailscale up --hostname=grokbox --accept-dns=false"
-    else
-      echo "  info  tailscaled not running — start it: box-tailscaled"
-    fi
   fi
   if claude auth status 2>/dev/null | grep -q '"loggedIn": *false'; then
     echo "  info  claude not logged in — sign in. Don't run /pstack:setup-pstack casually: it overwrites the tracked rule file; if it runs, git restore home/.claude/rules/pstack-models.md"

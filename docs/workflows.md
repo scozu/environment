@@ -17,15 +17,21 @@ unclear; update it when workflows change.
 - **the box** (Linux, Debian x86_64) — agent machine. Runs Claude Code with
   the pstack plugin, plus the OpenCode CLI; same Stow tree and pinned tool
   versions as the Macs (Linux builds via `scripts/sync-tools.sh`). No
-  OpenCode service, no Postgres, no launchd. On the tailnet as `grokbox` (Tailscale
-  node, Linux, 100.127.67.48; no SSH alias on ghost yet) via its own
-  tailscaled, so `ssh ghost` and doctor's parity lines work once it is
-  logged in. Repo at `~/Developer/environment`.
+  OpenCode service, no Postgres, no launchd, and no local tailscale or
+  tailscaled. Tailnet access comes from Grok Bot's Tailscale connector,
+  authenticated in the Grok Bot app. From the box, address tailnet hosts by
+  their full MagicDNS name (`ghost.tail483f5.ts.net`,
+  `silence.tail483f5.ts.net`) or `100.x` address, over HTTP(S) or TCP.
+  Short-name DNS from the shell isn't promised. `ssh ghost` and doctor's
+  parity lines work once the connector is connected. Repo at
+  `~/Developer/environment`.
 
 ## The connective tissue
 
 - **Tailscale**: private encrypted network. ghost = `ghost.tail483f5.ts.net`
-  (IP `100.69.59.88`). MagicDNS gives the stable name.
+  (IP `100.69.59.88`), silence = `silence.tail483f5.ts.net`. MagicDNS gives
+  the stable name. The box reaches those hosts through Grok Bot's Tailscale
+  connector, not a local Tailscale client.
 - **SSH**: `ssh ghost` (alias in the stowed config; key auth, connection
   multiplexing, keepalive).
 - **OpenCode service**: `https://ghost.tail483f5.ts.net:4096` — tailnet-only, TLS,
@@ -216,30 +222,32 @@ unclear; update it when workflows change.
 - `~/.ssh/config.local` on the box holds `IgnoreUnknown UseKeychain`: the
   shared `~/.ssh/config` uses the Apple-only `UseKeychain` option, which
   Linux OpenSSH rejects otherwise. `~/.ssh` must be mode 700 (doctor checks it).
-- Tailscale: apt package from the official repo. PID 1 is not systemd, so
-  start the daemon with `box-tailscaled` (machine-local script in
-  `~/.local/bin`, idempotent; run it after a box restart), then once:
-  `sudo tailscale up --hostname=grokbox --accept-dns=false --operator=box` and
-  open the login URL it prints. `--accept-dns=false` leaves the box's
-  resolver alone; `~/.ssh/config.local` adds `ProxyCommand tailscale nc %h %p`
-  for `Host ghost`, so MagicDNS names resolve inside tailscaled. Fallback:
-  the SOCKS5 proxy on `localhost:1055`. The box's key is `~/.ssh/id_ed25519`
-  (comment `box`); add its `.pub` to `~/.ssh/authorized_keys` on ghost and
-  silence.
-- The box as a client: `~/.ssh/config.local` also has a full `Host silence`
-  entry (`silence.tail483f5.ts.net`, user `scozu`, same ProxyCommand), so
-  `ssh silence` works when silence is awake, on the tailnet, and has Remote
-  Login on. HTTP to tailnet services (opencode `:4096`, proofs `:8443`)
-  goes through the SOCKS5 proxy: `curl --socks5-hostname localhost:1055 …`.
-  Doctor needs no proxy variables on the box: its checks there use ssh and the
-  tailscale CLI only.
+- Tailscale: do not install a Tailscale client or tailscaled on the box —
+  the box is replaced from time to time, and a local client would be wiped
+  with it. Tailnet access comes from Grok Bot's Tailscale connector,
+  authenticated in the Grok Bot app (Connect apps → Tailscale). Once
+  connected, shell commands on the box reach tailnet hosts by their full
+  MagicDNS name (`name.tail483f5.ts.net`) or `100.x` address, over HTTP(S)
+  or TCP. A short name or `100.x` address goes to the default tailnet;
+  prefer the full `.ts.net` name. This only works during the owner's own
+  turns and routines; disconnecting cuts connections. The box's key is
+  `~/.ssh/id_ed25519` (comment `box`); add its `.pub` to
+  `~/.ssh/authorized_keys` on ghost and silence.
+- The box as a client: the shared `~/.ssh/config` maps `Host ghost` to
+  `ghost.tail483f5.ts.net`. `~/.ssh/config.local` adds a box-only `Host
+  silence` entry (`silence.tail483f5.ts.net`, user `scozu`) so `ssh
+  silence` uses the full name too. `ssh silence` works when silence is
+  awake, on the tailnet, and has Remote Login on. HTTP to tailnet
+  services (opencode `:4096`, proofs `:8443`) goes directly to the
+  MagicDNS name — no SOCKS proxy and no local tailscaled. Doctor on the
+  box probes port 22 on both hosts' full names; ghost unreachable fails
+  with a hint to connect Tailscale in Grok Bot, and silence unreachable
+  is a warning (the laptop may be asleep).
 - OpenCode on ghost from the box: `opencode run --server https://ghost.tail483f5.ts.net:4096 "<task>"`
   with `OPENCODE_PASSWORD` from `~/.config/opencode/ghost-server.env` (machine-local,
-  mode 600). opencode's client (bun) can't use tailscaled's proxy, so
-  `box-opencode-fwd` (machine-local, `~/.local/bin`, idempotent; run after a box
-  restart) forwards `127.0.0.1:4096` to ghost via `tailscale nc`, and `/etc/hosts`
-  maps `ghost.tail483f5.ts.net` to `127.0.0.1` so TLS names match. Sessions live
-  on ghost's server and show up in the desktop and iOS apps.
+  mode 600). The connector reaches that URL directly, so no local port
+  forward or `/etc/hosts` rewrite is needed. Sessions live on ghost's
+  server and show up in the desktop and iOS apps.
 - OpenCode: CLI only on the box, installed with the v2 installer (see the
   inventory in [tools.md](tools.md)). No service; the Stowed
   `opencode.jsonc` applies. `~/.bashrc` also puts `~/.opencode/bin` on PATH.

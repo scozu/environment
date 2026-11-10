@@ -15,9 +15,13 @@ state.
   stay in sync with ghost.
 - **the box** — Linux (Debian, x86_64) agent machine with Claude Code +
   pstack, plus the OpenCode CLI. Same Stow tree and pinned tools as the Macs,
-  Linux builds. Runs no OpenCode service and no Postgres. Joins the tailnet
-  as `grokbox` through its own tailscaled (no systemd there), so `ssh ghost` and
-  doctor's parity checks against ghost work once it is logged in. Linux-only behavior sits behind
+  Linux builds. Runs no OpenCode service, no Postgres, and no local
+  tailscale or tailscaled (a client on the box is wiped when the box is
+  replaced). Tailnet access comes from Grok Bot's Tailscale connector,
+  authenticated in the Grok Bot app. Address tailnet hosts by their full
+  MagicDNS name (`ghost.tail483f5.ts.net`, `silence.tail483f5.ts.net`) or
+  `100.x` address. `ssh ghost` and doctor's parity checks against ghost
+  work once the connector is connected. Linux-only behavior sits behind
   `uname -s` checks in the scripts or in the gitignored `.local` files.
 
 ## What this repo contains
