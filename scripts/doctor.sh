@@ -73,11 +73,25 @@ echo "version sync (with $PEER)"
 if [ "$ROLE" = box ]; then
   echo "  skip  parity: the box has no ssh to ghost — use the ghost-env MCP versions tool"
 else
+# The peer is probed once. Each version command ends in a pipe (awk, sed,
+# head), so its exit status says nothing about the tool: an empty version is
+# treated as unreadable. Locally that fails; from the peer it skips (asleep,
+# ssh dropped mid-run, or the tool isn't installed there).
+peer_up=0
+ssh -o BatchMode=yes -o ConnectTimeout=6 "$PEER" true >/dev/null 2>&1 && peer_up=1
 parity() { # parity "label" "version command" — the same command runs on both machines
   local label=$1 cmd=$2 local_ver remote_ver
-  local_ver=$(eval "$cmd" 2>/dev/null) || { echo "  FAIL  $label: cannot read local version"; fails=$((fails+1)); return; }
-  remote_ver=$(ssh -o BatchMode=yes -o ConnectTimeout=6 "$PEER" "$cmd" 2>/dev/null) \
-    || { echo "  skip  $label: $PEER unreachable"; return; }
+  local_ver=$(eval "$cmd" 2>/dev/null)
+  if [ -z "$local_ver" ]; then
+    echo "  FAIL  $label: cannot read local version"; fails=$((fails+1)); return
+  fi
+  if [ "$peer_up" != 1 ]; then
+    echo "  skip  $label: $PEER unreachable"; return
+  fi
+  remote_ver=$(ssh -o BatchMode=yes -o ConnectTimeout=6 "$PEER" "$cmd" 2>/dev/null)
+  if [ -z "$remote_ver" ]; then
+    echo "  skip  $label: no version from $PEER (unreachable or not installed there)"; return
+  fi
   if [ "$local_ver" = "$remote_ver" ]; then
     echo "  ok    $label $local_ver (matches $PEER)"
   else
