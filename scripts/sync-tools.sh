@@ -70,16 +70,34 @@ tag() { case "$1" in    # upstream release tag for the pinned version
   ffmpeg) echo "$(ffbuild)_$(pin ffmpeg)" ;;   # build-server dir, e.g. 1789931890_9.0.2
 esac; }
 
-installed() { case "$1" in    # prints this machine's bare version, or nothing
-  nvim) nvim --version 2>/dev/null | head -1 | sed 's/^NVIM v//' ;;
-  pnpm) pnpm --version 2>/dev/null ;;
-  bun)  bun --version 2>/dev/null ;;
-  node) node --version 2>/dev/null | sed 's/^v//' ;;
-  gh)   gh --version 2>/dev/null | head -1 | awk '{print $3}' ;;
-  cloudflared) cloudflared --version 2>/dev/null | head -1 | awk '{print $3}' ;;
-  claude) claude --version 2>/dev/null | awk '{print $1}' ;;
-  ffmpeg) ffmpeg -version 2>/dev/null | head -1 | awk '{print $3}' | sed 's/-.*//' ;;   # "9.0.2-https://www.martin-riedl.de"
+# Version probes never use PATH: a system copy (/usr/bin/node,
+# /usr/local/bin/bun) at the pinned version must not hide a missing or stale
+# ~/.local/bin link. probe TOOL EXE prints EXE's bare version, or nothing.
+probe() { local x=$2; case "$1" in
+  nvim) "$x" --version 2>/dev/null | head -1 | sed 's/^NVIM v//' ;;
+  pnpm|bun) "$x" --version 2>/dev/null ;;
+  node) "$x" --version 2>/dev/null | sed 's/^v//' ;;
+  gh|cloudflared) "$x" --version 2>/dev/null | head -1 | awk '{print $3}' ;;
+  claude) "$x" --version 2>/dev/null | awk '{print $1}' ;;
+  ffmpeg) "$x" -version 2>/dev/null | head -1 | awk '{print $3}' | sed 's/-.*//' ;;   # "9.0.2-https://www.martin-riedl.de"
 esac; }
+main_entry() { local e; e=$(entries "$1"); e=${e%% *}; echo "$e"; }   # "name:rel" of the primary executable
+# installed TOOL: version of the ~/.local/bin link this script manages.
+installed() { local e; e=$(main_entry "$1"); probe "$1" "$BIN/${e%%:*}"; }
+# opt_version TOOL: version of the install in ~/.local/opt/<tool>, links or not.
+opt_version() { local e; e=$(main_entry "$1"); probe "$1" "$OPT/$1/${e#*:}"; }
+# links_ok TOOL: every entry point in ~/.local/bin links into ~/.local/opt/<tool>.
+links_ok() { local e; for e in $(entries "$1"); do
+  [ "$(readlink "$BIN/${e%%:*}" 2>/dev/null)" = "$OPT/$1/${e#*:}" ] || return 1
+done; }
+link_entries() { local t=$1 e name rel; for e in $(entries "$t"); do
+  name="${e%%:*}"; rel="${e#*:}"
+  ln -sf "$OPT/$t/$rel" "$BIN/$name"
+  # Best-effort: unsigned binaries (nvim) are blocked on first run until
+  # approved. Dropping the xattrs matches the documented approval step.
+  xattr -d com.apple.quarantine "$OPT/$t/$rel" 2>/dev/null || true
+  xattr -d com.apple.provenance "$OPT/$t/$rel" 2>/dev/null || true
+done; }
 
 asset() {                     # archive filename, platform- and arch-aware
   if [ "$os" = Linux ]; then asset_linux "$1"; return; fi
@@ -194,8 +212,11 @@ if [ "${1:-}" = "--check" ]; then
   rc=0
   for t in $TOOLS; do
     have="$(installed "$t")"
-    if [ "$have" = "$(pin "$t")" ]; then
+    if [ "$have" = "$(pin "$t")" ] && links_ok "$t"; then
       printf '  ok    %s %s\n' "$t" "$have"
+    elif [ "$have" = "$(pin "$t")" ]; then
+      printf '  FAIL  %s %s, but not every ~/.local/bin link points into ~/.local/opt/%s\n' "$t" "$have" "$t"
+      rc=1
     else
       printf '  FAIL  %s: %s, pinned %s\n' "$t" "${have:-not installed}" "$(pin "$t")"
       rc=1
@@ -206,9 +227,17 @@ fi
 
 for t in $TOOLS; do
   have="$(installed "$t")"
-  if [ "$have" = "$(pin "$t")" ]; then
+  if [ "$have" = "$(pin "$t")" ] && links_ok "$t"; then
     echo "ok    $t $have (already pinned)"
     continue
+  fi
+  # Pinned build already in ~/.local/opt, only links missing or stale: relink.
+  if [ "$(opt_version "$t")" = "$(pin "$t")" ]; then
+    link_entries "$t"
+    if [ "$(installed "$t")" = "$(pin "$t")" ] && links_ok "$t"; then
+      echo "ok    $t $(pin "$t") (relinked ~/.local/bin)"
+      continue
+    fi
   fi
   echo "== $t: ${have:-not installed} -> $(pin "$t") =="
 
@@ -311,21 +340,14 @@ for t in $TOOLS; do
   fi
 
   echo "  link entry points"
-  for e in $(entries "$t"); do
-    name="${e%%:*}"; rel="${e#*:}"
-    ln -sf "$target/$rel" "$BIN/$name"
-    # Best-effort: unsigned binaries (nvim) are blocked on first run until
-    # approved. Dropping the xattrs matches the documented approval step.
-    xattr -d com.apple.quarantine "$target/$rel" 2>/dev/null || true
-    xattr -d com.apple.provenance "$target/$rel" 2>/dev/null || true
-  done
+  link_entries "$t"
 
   have="$(installed "$t")"
   if [ "$have" = "$(pin "$t")" ]; then
     echo "  installed $t $have"
     prune_old "$t" "$rollback"
   else
-    die "$t: installed but version reads '${have:-nothing}' — check PATH and quarantine"
+    die "$t: installed but $BIN/$(main_entry "$t" | cut -d: -f1) reads '${have:-nothing}' — check the link and quarantine"
   fi
 done
 
