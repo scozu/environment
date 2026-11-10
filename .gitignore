@@ -47,3 +47,6 @@ home/.claude/*
 !home/.claude/rules/
 home/.claude/rules/*
 !home/.claude/rules/pstack-models.md
+
+# envd machine-local config (lives outside the Stow tree; ignored in case it is copied in)
+home/.config/envd/

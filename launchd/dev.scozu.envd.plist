@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- ghost only. Template: scripts/envd-setup.sh replaces @HOME@ and installs
+     the result as ~/Library/LaunchAgents/dev.scozu.envd.plist (a real file,
+     not a Stow link, so silence never auto-loads it). -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>dev.scozu.envd</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>@HOME@/.local/bin/envd</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>@HOME@/.local/bin:@HOME@/.opencode/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>@HOME@/Developer/environment</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>StandardOutPath</key>
+  <string>@HOME@/.local/var/envd.log</string>
+  <key>StandardErrorPath</key>
+  <string>@HOME@/.local/var/envd.log</string>
+</dict>
+</plist>

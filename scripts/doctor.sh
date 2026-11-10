@@ -66,10 +66,13 @@ fi
 # ghost compares it. Parity is verified from silence: silence is SSH-client
 # only (Remote Login off), so ghost can never ssh into it — the ghost-side
 # checks skip by design, and doctor on silence does the real comparison
-# against ghost. The box also compares against ghost over the Grok Bot
-# Tailscale connector (full MagicDNS name via ~/.ssh/config); until the
-# connector is connected those lines skip.
+# against ghost. The box has no SSH to ghost (its shell egress is an HTTP
+# proxy), so it skips parity here; compare with the ghost-env MCP server's
+# `versions` tool instead (docs/workflows.md).
 echo "version sync (with $PEER)"
+if [ "$ROLE" = box ]; then
+  echo "  skip  parity: the box has no ssh to ghost — use the ghost-env MCP versions tool"
+else
 parity() { # parity "label" "version command" — the same command runs on both machines
   local label=$1 cmd=$2 local_ver remote_ver
   local_ver=$(eval "$cmd" 2>/dev/null) || { echo "  FAIL  $label: cannot read local version"; fails=$((fails+1)); return; }
@@ -90,8 +93,9 @@ parity "node"     'node --version'
 parity "gh"       'gh --version | head -1'
 parity "cloudflared" 'cloudflared --version | head -1 | awk "{print \$3}"'
 parity "ffmpeg"   'ffmpeg -version | head -1 | awk "{print \$3}"'
-[ "$ROLE" != box ] && parity "claude"   'claude --version'   # box: native installer, own version
+parity "claude"   'claude --version'   # the box never gets here (own native installer)
 [ "$ROLE" = ghost ] && parity "postgres" 'postgres --version | awk "{print \$NF}"'
+fi
 
 # Rex: each Mac's Rex is on the tailnet as node <mac>-rex (built-in
 # Tailscale, see docs/workflows.md). Warn only: the node may be awaiting
@@ -131,33 +135,28 @@ if [ "$ROLE" = box ]; then
   check "~/.ssh is mode 700" sh -c 'test "$(stat -c %a "$HOME/.ssh" 2>/dev/null || stat -f %Lp "$HOME/.ssh" 2>/dev/null)" = 700'
   check "claude resolves" command -v claude
   check "pstack plugin enabled in Claude Code" sh -c 'claude plugin list 2>/dev/null | grep -A3 "pstack@cursor-plugins" | grep -q enabled'
-  ssh_banner() { timeout 4 bash -c "exec 3<>/dev/tcp/$1/22 && head -c 4 <&3" 2>/dev/null | grep -q '^SSH-'; }
   # Tailnet access comes from Grok Bot's Tailscale connector, not a local
-  # tailscale/tailscaled. Probe port 22 on each host's full MagicDNS name and
-  # require an SSH banner: the box's network accepts any TCP connect, so a
-  # bare connect is not proof of reachability.
-  # Short-name DNS from the shell is not promised. Ghost unreachable is a
-  # fail (hint: connect Tailscale in Grok Bot). Silence is a laptop and may
-  # be asleep, so unreachable is a warning.
-  if ssh_banner "$GHOST_TS"; then
-    echo "  ok    ghost reachable on the tailnet ($GHOST_TS:22)"
+  # tailscale/tailscaled, and the box's shell egress is an HTTP proxy: HTTPS
+  # to a tailnet name works, SSH and raw TCP don't. So the ghost check is
+  # envd's health endpoint behind ghost's tailnet-only serve on 443.
+  if [ "$(curl -fsS -m 8 "https://$GHOST_TS/healthz" 2>/dev/null)" = ok ]; then
+    echo "  ok    ghost-env reachable on the tailnet (https://$GHOST_TS/healthz)"
   else
-    echo "  FAIL  ghost reachable on the tailnet ($GHOST_TS:22) — connect Tailscale in Grok Bot"
+    echo "  FAIL  ghost-env reachable on the tailnet (https://$GHOST_TS/healthz) — connect Tailscale in Grok Bot, or start envd on ghost (scripts/envd-setup.sh)"
     fails=$((fails + 1))
   fi
-  if ssh_banner "$SILENCE_TS"; then
-    echo "  ok    silence reachable on the tailnet ($SILENCE_TS:22)"
+  # silence runs no envd. Any HTTPS response from its proofs port (a valid
+  # ts.net certificate and an HTTP status) proves it is on the tailnet. It is
+  # a laptop and may be asleep, so unreachable is a warning.
+  code=$(curl -s -o /dev/null -w '%{http_code}' -m 8 "https://$SILENCE_TS:8443/" 2>/dev/null)
+  if [ -n "$code" ] && [ "$code" != 000 ]; then
+    echo "  ok    silence reachable on the tailnet (https://$SILENCE_TS:8443, HTTP $code)"
   else
-    echo "  warn  silence unreachable on the tailnet ($SILENCE_TS:22) — laptop may be asleep"
+    echo "  warn  silence unreachable on the tailnet (https://$SILENCE_TS:8443) — laptop may be asleep"
   fi
-  # rex shim (home/.local/bin/rex) drives ghost's Rex over ssh; warn only.
-  # Host ghost is mapped to $GHOST_TS in the stowed ssh config (and
-  # ~/.ssh/config.local on the box must not add a tailscale nc ProxyCommand).
-  if ssh -o BatchMode=yes -o ConnectTimeout=6 ghost true 2>/dev/null; then
-    check "rex ls over ssh ghost works" sh -c 'rex ls </dev/null >/dev/null 2>&1'
-  else
-    echo "  warn  rex over ssh: ghost unreachable"
-  fi
+  # The rex shim (home/.local/bin/rex) drives ghost's Rex over ssh, which the
+  # box can't do, so this is information only.
+  echo "  info  rex shim needs ssh ghost, which the box doesn't have; the box uses the ghost-env MCP server"
   if claude auth status 2>/dev/null | grep -q '"loggedIn": *false'; then
     echo "  info  claude not logged in — sign in. Don't run /pstack:setup-pstack casually: it overwrites the tracked rule file; if it runs, git restore home/.claude/rules/pstack-models.md"
   fi
@@ -172,6 +171,11 @@ if [ "$ROLE" = ghost ]; then
   check "tailnet URL answers with auth" test "$(http_code $SERVICE_URL/api/info)" = 200
   check "upstream check job loaded (weekly report)" sh -c 'launchctl list | grep -q dev.scozu.check-upstream'
   check "proofs web LaunchAgent loaded" launchctl list com.studiopendleton.proofs-web
+  check "envd LaunchAgent dev.scozu.envd loaded" launchctl list dev.scozu.envd
+  check "envd answers on loopback (127.0.0.1:8790/healthz)" sh -c 'test "$(curl -fsS -m 5 http://127.0.0.1:8790/healthz)" = ok'
+  check "envd listens on loopback only" sh -c '! lsof -nP -iTCP:8790 -sTCP:LISTEN | awk "NR>1{print \$9}" | grep -qv "^127\.0\.0\.1:8790\$"'
+  check "tailscale serve proxies envd on 443 to 8790 (tailnet only)" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | awk -v h="https://'"$GHOST_TS"' (tailnet only)" "\$0==h{f=1;next} /^https?:/{f=0} f && / proxy http:\/\/127\.0\.0\.1:8790\$/{ok=1} END{exit !ok}"'
+  check "ghost-env answers over the tailnet (https://$GHOST_TS/healthz)" sh -c 'test "$(curl -fsS -m 8 https://'"$GHOST_TS"'/healthz)" = ok'
   check "tailscale serve proxies proofs on 8443 to 8787 (tailnet only)" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | awk "/:8443 \(tailnet only\)/{f=1;next} /^https/{f=0} f && / proxy http:\/\/127\.0\.0\.1:8787\$/{ok=1} END{exit !ok}"'
 fi
 

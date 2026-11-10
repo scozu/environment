@@ -1,0 +1,4 @@
+#!/bin/sh
+# envd — start the ghost-env MCP server (home/.local/share/envd/envd.ts).
+# Run by the LaunchAgent dev.scozu.envd on ghost; see scripts/envd-setup.sh.
+exec bun "$HOME/.local/share/envd/envd.ts" "$@"

@@ -19,15 +19,24 @@ state.
   tailscale or tailscaled (a client on the box is wiped when the box is
   replaced). Tailnet access comes from Grok Bot's Tailscale connector,
   authenticated in the Grok Bot app. Address tailnet hosts by their full
-  MagicDNS name (`ghost.tail483f5.ts.net`, `silence.tail483f5.ts.net`) or
-  `100.x` address. `ssh ghost` and doctor's parity checks against ghost
-  work once the connector is connected. Linux-only behavior sits behind
-  `uname -s` checks in the scripts or in the gitignored `.local` files.
+  MagicDNS name (`ghost.tail483f5.ts.net`, `silence.tail483f5.ts.net`)
+  over HTTPS. SSH from the box is not supported (its shell egress is an
+  HTTP proxy). The box works on ghost through **ghost-env**, an MCP server
+  on ghost (`envd`, LaunchAgent `dev.scozu.envd`) served tailnet-only at
+  `https://ghost.tail483f5.ts.net/mcp` and added in Grok Bot as an MCP
+  server: doctor, versions, repo status, fast-forward pull, stow dry run.
+  The proposed tailnet policy limits the box's device (`tag:grokbot`) to
+  ghost:443 — see [docs/tailnet-policy.md](docs/tailnet-policy.md) (not
+  applied yet). Linux-only behavior sits behind `uname -s` checks in the
+  scripts or in the gitignored `.local` files.
 
 ## What this repo contains
 
 - `home/` — the Stow package (dotfiles), target `$HOME`
 - `scripts/doctor.sh` — read-only health check for the current machine
+- `scripts/envd-setup.sh` — ghost only: install/start envd and its 443 serve
+- `launchd/` — LaunchAgent templates rendered by setup scripts (not stowed)
+- `docs/tailnet-policy.md` — proposed Tailscale policy for the box
 - `docs/tools.md` — how programs are installed and updated (read this before
   touching any tool)
 - `docs/workflows.md` — the daily operating manual
@@ -66,8 +75,9 @@ them).
 - Stowed files: `.zshenv` (PATH), `.zshrc`, `.ssh/config`, Neovim config,
   Ghostty config, Zed settings, OpenCode `opencode.jsonc`, `AGENTS.md`, and
   `agents/lead.md`, Claude Code `~/.claude/settings.json` and
-  `~/.claude/rules/pstack-models.md`, Rex `~/.config/rex/init.lua`, and Cursor rules
-  (`~/.cursor/rules/*.mdc`).
+  `~/.claude/rules/pstack-models.md`, Rex `~/.config/rex/init.lua`, Cursor rules
+  (`~/.cursor/rules/*.mdc`), and the `rex` and `envd` scripts in
+  `~/.local/bin` (envd's server is `~/.local/share/envd/envd.ts`).
   Cursor `User/settings.json` is deliberately **not** stowed — the app
   rewrites it as state (see `docs/workflows.md`).
 - Machine-specific values go in the gitignored `.local` files, which the

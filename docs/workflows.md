@@ -21,10 +21,11 @@ unclear; update it when workflows change.
   tailscaled. Tailnet access comes from Grok Bot's Tailscale connector,
   authenticated in the Grok Bot app. From the box, address tailnet hosts by
   their full MagicDNS name (`ghost.tail483f5.ts.net`,
-  `silence.tail483f5.ts.net`) or `100.x` address, over HTTP(S) or TCP.
-  Short-name DNS from the shell isn't promised. `ssh ghost` and doctor's
-  parity lines work once the connector is connected. Repo at
-  `~/Developer/environment`.
+  `silence.tail483f5.ts.net`) over HTTPS.
+  Short-name DNS from the shell isn't promised. The box's shell egress is
+  an HTTP proxy, so HTTPS to tailnet names works and SSH does not: the box
+  works on ghost through the ghost-env MCP server (see "The box and ghost"
+  below). Repo at `~/Developer/environment`.
 
 ## The connective tissue
 
@@ -41,12 +42,15 @@ unclear; update it when workflows change.
   is reached through Tailscale Serve (HTTPS, tailnet-only, never Funnel).
   Each app gets one HTTPS port, the same on every machine that runs it, so an
   address differs between machines only by name. 443 (the bare address) is
-  left unassigned so no app owns the front door; an app's HTTPS port matches
-  its local port where it can. A new app takes the next free port in the table below,
+  ghost-only and reserved for envd, the ghost-env MCP server the box uses;
+  envd checks each caller with `tailscale whois`, so the bare address is not
+  an open front door. Every other app's HTTPS port matches its local port
+  where it can. A new app takes the next free port in the table below,
   and gets a row in the same commit.
 
   | HTTPS port | App | Machines | Local port |
   | --- | --- | --- | --- |
+  | 443 | envd / ghost-env MCP (LaunchAgent `dev.scozu.envd`) | ghost | 8790 |
   | 4096 | OpenCode service (launchd `ai.opencode.service`) | ghost | 4096 |
   | 8443 | proofs (studiopendleton/proofs, LaunchAgent `com.studiopendleton.proofs-web`) | ghost, silence | 8787 |
   | 8444+ | next free port | | |
@@ -88,8 +92,10 @@ unclear; update it when workflows change.
   shared, never silence. People ghost is shared with get a grant for one
   app's port only (proofs: `tcp:8443`), never 443, and no other rule may
   match `autogroup:shared` (the default `"src": ["*"]` rule does), or the
-  limit means nothing. The policy lives in the Tailscale admin console, not
-  in this repo.
+  limit means nothing. The policy lives in the Tailscale admin console; the
+  proposed change for the box (`tag:grokbot` limited to ghost:443) is
+  written up in [tailnet-policy.md](tailnet-policy.md) and is not applied
+  until Jason pastes it in.
 
 ## Where things live
 
@@ -227,22 +233,36 @@ unclear; update it when workflows change.
   with it. Tailnet access comes from Grok Bot's Tailscale connector,
   authenticated in the Grok Bot app (Connect apps → Tailscale). Once
   connected, shell commands on the box reach tailnet hosts by their full
-  MagicDNS name (`name.tail483f5.ts.net`) or `100.x` address, over HTTP(S)
-  or TCP. A short name or `100.x` address goes to the default tailnet;
-  prefer the full `.ts.net` name. This only works during the owner's own
-  turns and routines; disconnecting cuts connections. The box's key is
-  `~/.ssh/id_ed25519` (comment `box`); add its `.pub` to
-  `~/.ssh/authorized_keys` on ghost and silence.
-- The box as a client: the shared `~/.ssh/config` maps `Host ghost` to
-  `ghost.tail483f5.ts.net`. `~/.ssh/config.local` adds a box-only `Host
-  silence` entry (`silence.tail483f5.ts.net`, user `scozu`) so `ssh
-  silence` uses the full name too. `ssh silence` works when silence is
-  awake, on the tailnet, and has Remote Login on. HTTP to tailnet
-  services (opencode `:4096`, proofs `:8443`) goes directly to the
-  MagicDNS name — no SOCKS proxy and no local tailscaled. Doctor on the
-  box probes port 22 on both hosts' full names; ghost unreachable fails
-  with a hint to connect Tailscale in Grok Bot, and silence unreachable
-  is a warning (the laptop may be asleep).
+  MagicDNS name (`name.tail483f5.ts.net`) over HTTPS. The connector is
+  built for HTTPS (MCP servers on the tailnet, via Tailscale OAuth apps),
+  and the box's shell egress is an HTTP proxy: SSH and other raw TCP from
+  the box don't work, even though the connector itself can see ghost:22.
+  Prefer the full `.ts.net` name. This only works during the owner's own
+  turns and routines; disconnecting cuts connections. The connector's tailnet device is
+  `grokbot-user-158631703` (`100.121.13.52`); the old `grokbox` device
+  (`100.127.67.48`) was the removed local tailscaled and can be deleted
+  in the admin console.
+- **The box and ghost — ghost-env MCP.** The box works on ghost through
+  envd, a small MCP server on ghost (see "envd" below), reached at
+  `https://ghost.tail483f5.ts.net/mcp` and added in Grok Bot as an MCP
+  server (Streamable HTTP, no auth header: envd identifies the caller
+  with `tailscale whois`). Tools: `doctor`, `versions`, `repo_status`,
+  `repo_pull` (fast-forward on a clean main only), `stow_dry_run`,
+  `sync_tools_check`. That replaces `ssh ghost` for parity checks: doctor
+  on the box skips the ssh parity lines and points at the `versions` tool.
+  For anything envd doesn't cover, ghost itself (or Jason) runs it.
+- HTTP to the other tailnet services (opencode `:4096`, proofs `:8443`)
+  goes directly to the MagicDNS name — no SOCKS proxy and no local
+  tailscaled — until the `tag:grokbot` lockdown in
+  [tailnet-policy.md](tailnet-policy.md) is applied; after that the box
+  reaches ghost:443 only. Doctor on the box checks
+  `https://ghost.tail483f5.ts.net/healthz` (fails with "connect Tailscale
+  in Grok Bot, or start envd on ghost") and warns if
+  `https://silence.tail483f5.ts.net:8443` gives no HTTPS response at all
+  (silence runs no envd, and the laptop may be asleep; any HTTP status
+  counts as reachable). The box's ssh key `~/.ssh/id_ed25519` and the
+  `Host silence` entry in its `~/.ssh/config.local` are left in place but
+  unused while SSH from the box doesn't work.
 - OpenCode on ghost from the box: `opencode run --server https://ghost.tail483f5.ts.net:4096 "<task>"`
   with `OPENCODE_PASSWORD` from `~/.config/opencode/ghost-server.env` (machine-local,
   mode 600). The connector reaches that URL directly, so no local port
@@ -256,12 +276,10 @@ unclear; update it when workflows change.
 - Pre-existing system copies (`/usr/bin/node`, `/usr/local/bin/{gh,bun,npm}`)
   are left alone; `~/.local/bin` shadows them.
 - Rex: no Linux build yet. The stowed `~/.local/bin/rex` shim runs ghost's
-  rex over `ssh ghost` (newest `RexServer/Versions/*`), so `rex ls`,
-  `rex capture -s <session>`, `rex send` work from the box and `rex attach`
-  works from an interactive terminal (`ssh -t` only when on a tty).
-  `REX_SSH_HOST=<host>` targets another Mac. On the Macs the same file just
-  execs the local rex. Doctor checks `rex ls` over ssh (warns if ghost is
-  unreachable).
+  rex over `ssh ghost` (newest `RexServer/Versions/*`), which needs SSH
+  from the box, so it does not work there today (doctor prints an info
+  line). `REX_SSH_HOST=<host>` targets another Mac. On the Macs the same
+  file just execs the local rex.
 - Claude Code installs itself (native installer) to
   `~/.local/share/claude/versions/<ver>` with `~/.local/bin/claude` → that
   version. The shared `~/.claude/settings.json` sets `DISABLE_AUTOUPDATER=1`,
@@ -272,6 +290,52 @@ unclear; update it when workflows change.
   **Do not run `/pstack:setup-pstack` casually**: it overwrites the tracked rule
   file, which is a symlink into this repo. If it runs, check `git diff` and
   `git restore home/.claude/rules/pstack-models.md`.
+
+### envd — the ghost-env MCP server (ghost only)
+
+- What: `home/.local/share/envd/envd.ts`, a single-file bun server with no
+  dependencies, started by the stowed `~/.local/bin/envd` shim. MCP
+  Streamable HTTP, JSON responses (no SSE), stateless: `POST /mcp`
+  (`initialize`, `ping`, `tools/list`, `tools/call`) and `GET /healthz`
+  (`ok`, no auth, used by doctor). Listens on `127.0.0.1:8790` only.
+- Tools run fixed argv lists in `~/Developer/environment`, one at a time,
+  with a 120 s timeout, and take no arguments. No arbitrary commands.
+- Auth on `/mcp`: the request must come from loopback with exactly one
+  `X-Forwarded-For` address in the tailnet ranges (what `tailscale serve`
+  sends), and `tailscale whois` on that address must show one of: an
+  untagged node owned by an allowed login (default
+  `admin@jasonscholtz.net`), a node with an allowed tag (default
+  `tag:grokbot`), or a tagged node whose hostname starts with an allowed
+  prefix (default `grokbot-`; tagged only, so a shared-in device can't
+  pass by its name). Everything else, including whois failing, gets 403.
+  `Tailscale-User-*` headers are not trusted on their own. Overrides go in
+  `~/.config/envd/env.local` on ghost (machine-local `KEY=VALUE` lines):
+  `ENVD_ALLOW_LOGINS`, `ENVD_ALLOW_TAGS`, `ENVD_ALLOW_HOST_PREFIXES`
+  (comma-separated), `ENVD_PORT`, `ENVD_TIMEOUT_S`, `ENVD_TAILSCALE`.
+  `ENVD_INSECURE_LOCAL_TEST=1` (process env only) skips auth for local
+  testing on Linux and is refused on macOS.
+- Run on ghost: LaunchAgent `dev.scozu.envd` (RunAtLoad, KeepAlive), log
+  `~/.local/var/envd.log`. The plist template is `launchd/dev.scozu.envd.plist`,
+  outside the Stow package on purpose: a stowed plist would also land in
+  silence's `~/Library/LaunchAgents` and auto-load there at login.
+  `scripts/envd-setup.sh` (ghost only, idempotent) renders it into
+  `~/Library/LaunchAgents`, bootstraps or kickstarts it, waits for
+  `/healthz`, adds `tailscale serve --bg --https=443 http://127.0.0.1:8790`
+  if 443 has no mapping (it refuses if 443 serves something else, and
+  never touches 4096 or 8443), then prints `tailscale serve status`.
+- Install or update on ghost:
+  ```sh
+  cd ~/Developer/environment && git pull --ff-only
+  stow --no-folding -n -v -t "$HOME" home   # dry run
+  stow --no-folding -t "$HOME" home
+  scripts/envd-setup.sh
+  scripts/doctor.sh
+  ```
+  After a pull that changes `envd.ts`, re-run `scripts/envd-setup.sh` (it
+  restarts the agent). Remove: `launchctl bootout gui/$(id -u)/dev.scozu.envd`,
+  delete the plist, `tailscale serve --https=443 off`.
+- In Grok Bot: add an MCP server with URL
+  `https://ghost.tail483f5.ts.net/mcp` (needs the Tailscale connector).
 
 ### 7. Terminal / SSH
 
@@ -303,6 +367,9 @@ unclear; update it when workflows change.
    except Claude Code (Postgres is ghost-only).
 7. Tailnet apps listen on `127.0.0.1` and go through Tailscale Serve on the
    port in Tailnet ports. Never Funnel: it makes a page public.
+8. The box reaches ghost over HTTPS only (Grok Bot's Tailscale connector,
+   then ghost-env MCP on 443). No SSH from the box, and no tailscale
+   client on the box.
 
 ## Status checks & maintenance
 
@@ -312,6 +379,8 @@ unclear; update it when workflows change.
   when working on the local app, `stop` when done. No launchd job by design;
   ghost-only.
 - Tailscale proxy: `tailscale serve status`.
+- envd (ghost): `launchctl print gui/$(id -u)/dev.scozu.envd`,
+  `curl http://127.0.0.1:8790/healthz`, log `~/.local/var/envd.log`.
 - SSH server: socket-activated — `ssh ghost 'echo ok'` is the test.
 - Updates: opencode self-updates (its launchd job picks up new versions on
   restart), and the GUI apps (Zed, Cursor, Tailscale, ChatGPT) auto-update
