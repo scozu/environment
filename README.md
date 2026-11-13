@@ -44,10 +44,11 @@ state.
 ## How programs are installed (no Homebrew)
 
 Every CLI tool lives at `~/.local/opt/<tool>/` with symlinks to its
-executables in `~/.local/bin`, which `.zshenv` puts first on `PATH`. Runtime
-state (Postgres data, logs) lives in `~/.local/var/`. Two exceptions: OpenCode
-installs itself to `~/.opencode/bin`, and desktop apps are `.app` bundles in
-`/Applications` (see the GUI apps section of `docs/tools.md`).
+executables in `~/.local/bin`, which `.zshenv` puts first on `PATH`. The same
+file also exports `RUSTUP_HOME` and `CARGO_HOME` under `~/.local/opt/rustup`.
+Runtime state (Postgres data, logs) lives in `~/.local/var/`. Two exceptions:
+OpenCode installs itself to `~/.opencode/bin`, and desktop apps are `.app`
+bundles in `/Applications` (see the GUI apps section of `docs/tools.md`).
 
 To install or update **any** program — "install bun", "update nvim", anything
 — follow the playbook in [docs/tools.md](docs/tools.md). It is the same
@@ -94,12 +95,12 @@ points into `~/.local/bin`, record the version in the tools inventory,
 verify with `doctor.sh`, repeat on the other machines. Full procedure:
 [docs/tools.md](docs/tools.md).
 
-The direct release tools (nvim, pnpm, bun, node, gh, cloudflared, claude, ffmpeg) are scripted:
-`scripts/sync-tools.sh` installs or updates them to the pinned versions on
-whichever machine it runs, macOS or Linux (`--check` is read-only; doctor
-uses it). stow
-and postgres (source builds) and opencode (self-updating) stay manual by
-design.
+The direct release tools (nvim, pnpm, bun, node, gh, cloudflared, claude,
+ffmpeg, rustup) are scripted: `scripts/sync-tools.sh` installs or updates them
+to the pinned versions on whichever machine it runs, macOS or Linux (`--check`
+is read-only; doctor uses it). rustup is a macOS pin (the box skips it, like
+claude); Linux gnu rustup-init assets are still in the script. stow and
+postgres (source builds) and opencode (self-updating) stay manual by design.
 
 ### 3. Doctor — verify the machine
 

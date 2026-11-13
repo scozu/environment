@@ -14,9 +14,12 @@
 # except the one rollback copy moved aside by this run.
 #
 # Covers direct release tools: nvim, pnpm, bun, node, gh, cloudflared, claude,
-# ffmpeg. Out
-# of scope by
-# design: stow and postgres (source builds — see docs/tools.md), opencode
+# ffmpeg, and rustup (macOS only in TOOLS; Linux gnu assets are in the script
+# so the box can opt in later, but a system rustc must not be shadowed).
+# rustup-init is run in place under ~/.local/opt/rustup — never move that
+# directory aside (it holds downloaded toolchains). No default toolchain is
+# installed: projects pin via rust-toolchain.toml. Out of scope by design:
+# stow and postgres (source builds — see docs/tools.md), opencode
 # (self-updating installer). Run after `git pull`; doctor.sh verifies.
 #
 # Pins are bare semver for every tool. tag() maps a pin to that project's
@@ -45,8 +48,9 @@ if [ "$os" = Linux ]; then
 fi
 
 # ---------------------------------------------------------------- config
-TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg"
-# the box keeps claude on its native installer (docs/tools.md), so skip it there
+TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg rustup"
+# the box keeps claude on its native installer (docs/tools.md) and already
+# has a system rustc, so skip both claude and rustup there
 [ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh cloudflared ffmpeg"
 
 pin() { case "$1" in    # pinned version, bare semver
@@ -58,6 +62,7 @@ pin() { case "$1" in    # pinned version, bare semver
   cloudflared) echo 2026.10.7 ;;   # sha256 per asset: pinsum()
   claude) echo 2.1.316 ;;
   ffmpeg) echo 9.0.2 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
+  rustup) echo 1.29.3 ;;  # rustup-init; no toolchain is installed by the pin
 esac; }
 
 tag() { case "$1" in    # upstream release tag for the pinned version
@@ -80,6 +85,7 @@ probe() { local x=$2; case "$1" in
   gh|cloudflared) "$x" --version 2>/dev/null | head -1 | awk '{print $3}' ;;
   claude) "$x" --version 2>/dev/null | awk '{print $1}' ;;
   ffmpeg) "$x" -version 2>/dev/null | head -1 | awk '{print $3}' | sed 's/-.*//' ;;   # "9.0.2-https://www.martin-riedl.de"
+  rustup) "$x" --version 2>/dev/null | head -1 | awk '{print $2}' ;;   # "rustup 1.29.3 (...)"
 esac; }
 main_entry() { local e; e=$(entries "$1"); e=${e%% *}; echo "$e"; }   # "name:rel" of the primary executable
 # installed TOOL: version of the ~/.local/bin link this script manages.
@@ -110,6 +116,7 @@ asset() {                     # archive filename, platform- and arch-aware
   cloudflared) echo "cloudflared-darwin-${mac/x64/amd64}.tgz" ;;
   claude) echo claude ;;
   ffmpeg) echo ffmpeg.zip ;;   # plus ffprobe.zip, fetched alongside
+  rustup) echo rustup-init ;;
 esac; }
 
 asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
@@ -120,6 +127,7 @@ asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
   gh)   echo "gh_$(pin gh)_linux_$lgh.tar.gz" ;;
   cloudflared) echo "cloudflared-linux-$lgh" ;;   # raw binary, not an archive
   ffmpeg) echo ffmpeg.zip ;;
+  rustup) echo rustup-init ;;
 esac; }
 
 url() { case "$1" in
@@ -131,6 +139,7 @@ url() { case "$1" in
   cloudflared) echo "https://github.com/cloudflare/cloudflared/releases/download/$(tag cloudflared)/$(asset "$1")" ;;
   claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/darwin-$mac/claude" ;;
   ffmpeg) echo "https://ffmpeg.martin-riedl.de/download/$(ffplat)/$(tag ffmpeg)/ffmpeg.zip" ;;
+  rustup) echo "https://static.rust-lang.org/rustup/archive/$(pin rustup)/$(rustup_triple)/rustup-init" ;;
 esac; }
 
 sums() { case "$1" in     # checksums-file URL, or - when none is published
@@ -142,6 +151,7 @@ sums() { case "$1" in     # checksums-file URL, or - when none is published
   claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/manifest.json" ;;
   cloudflared) echo pinned ;;   # no checksums file; sha256 lives in pinsum()
   ffmpeg) echo pinned ;;        # per-zip .sha256 files exist; mirrored in pinsum()
+  rustup) echo "https://static.rust-lang.org/rustup/archive/$(pin rustup)/$(rustup_triple)/rustup-init.sha256" ;;
 esac; }
 
 # pinsum ASSET: sha256 pinned in this repo, for tools whose sums() is "pinned".
@@ -179,6 +189,24 @@ ffbuild() { case "$(ffplat)" in
   linux/arm64) echo 1789931697 ;;
 esac; }
 
+# rustup-init is archived by target tuple. Linux gnu builds are in url/sums
+# so the box can opt in later; TOOLS only includes rustup on Darwin.
+rustup_triple() {
+  if [ "$os" = Linux ]; then
+    case "$arch" in
+      x86_64)        echo x86_64-unknown-linux-gnu ;;
+      aarch64|arm64) echo aarch64-unknown-linux-gnu ;;
+      *)             echo unsupported ;;
+    esac
+  else
+    case "$arch" in
+      arm64)  echo aarch64-apple-darwin ;;
+      x86_64) echo x86_64-apple-darwin ;;
+      *)      echo unsupported ;;
+    esac
+  fi
+}
+
 entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
   nvim) echo "nvim:bin/nvim" ;;
   pnpm) echo "pnpm:pnpm" ;;
@@ -188,6 +216,7 @@ entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
   cloudflared) echo "cloudflared:bin/cloudflared" ;;
   claude) echo "claude:bin/claude" ;;
   ffmpeg) echo "ffmpeg:bin/ffmpeg ffprobe:bin/ffprobe" ;;
+  rustup) echo "rustup:cargo/bin/rustup cargo:cargo/bin/cargo rustc:cargo/bin/rustc rustfmt:cargo/bin/rustfmt cargo-clippy:cargo/bin/cargo-clippy clippy-driver:cargo/bin/clippy-driver" ;;
 esac; }
 
 # ---------------------------------------------------------------- engine
@@ -290,6 +319,33 @@ for t in $TOOLS; do
       || die "$t: checksum verification failed"
   else
     echo "  ($t publishes no checksums — pinned URL only)"
+  fi
+
+  # rustup: run rustup-init into ~/.local/opt/rustup/{rustup,cargo} in place.
+  # Never move that directory aside — RUSTUP_HOME holds downloaded toolchains.
+  if [ "$t" = "rustup" ]; then
+    [ "$(rustup_triple)" != unsupported ] || die "$t: no rustup-init for $os $arch"
+    echo "  install rustup-init into $OPT/rustup (in place; toolchains are kept)"
+    chmod +x "$TMP/$file"
+    xattr -d com.apple.quarantine "$TMP/$file" 2>/dev/null || true
+    xattr -d com.apple.provenance "$TMP/$file" 2>/dev/null || true
+    mkdir -p "$OPT/rustup"
+    RUSTUP_HOME="$OPT/rustup/rustup" CARGO_HOME="$OPT/rustup/cargo" \
+      "$TMP/$file" --no-modify-path -y --default-toolchain none \
+      || die "$t: rustup-init failed"
+    echo "  link entry points"
+    link_entries "$t"
+    # keep --check meaningful: rustup must not self-update off the pin
+    RUSTUP_HOME="$OPT/rustup/rustup" CARGO_HOME="$OPT/rustup/cargo" \
+      "$BIN/rustup" set auto-self-update disable \
+      || die "$t: could not disable auto-self-update"
+    have="$(installed "$t")"
+    if [ "$have" = "$(pin "$t")" ]; then
+      echo "  installed $t $have"
+    else
+      die "$t: installed but $BIN/$(main_entry "$t" | cut -d: -f1) reads '${have:-nothing}' — check the link and quarantine"
+    fi
+    continue
   fi
 
   echo "  install into $OPT/$t"

@@ -50,6 +50,15 @@ check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow &&
 check "tools match pinned versions" "$REPO/scripts/sync-tools.sh" --check
 check "ffmpeg is the pinned static build and encodes a frame" sh -c 'case "$(command -v ffmpeg)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac && ffmpeg -v error -f lavfi -i color=c=black:s=2x2 -frames:v 1 -f rawvideo -pix_fmt rgb24 - | wc -c | grep -qx " *12"'
 
+# rustup is a sync-tools pin on macOS only (Linux assets are in the script
+# but TOOLS skips it on the box, which may already have a system rustc).
+# Skip cleanly on Linux, whether or not rustup is present there.
+if [ "$(uname -s)" = Darwin ]; then
+  check "rustup resolves from ~/.local/bin" sh -c 'case "$(command -v rustup)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac'
+  check "RUSTUP_HOME and CARGO_HOME are ~/.local/opt/rustup/{rustup,cargo} in zsh" \
+    zsh -c 'test "$RUSTUP_HOME" = "$HOME/.local/opt/rustup/rustup" && test "$CARGO_HOME" = "$HOME/.local/opt/rustup/cargo"'
+fi
+
 # Postgres is ghost-only and start-on-demand (one local app, no network).
 # A stopped server is a valid state, so this reports instead of failing.
 if [ "$ROLE" = ghost ]; then
@@ -108,6 +117,7 @@ parity "gh"       'gh --version | head -1'
 parity "cloudflared" 'cloudflared --version | head -1 | awk "{print \$3}"'
 parity "ffmpeg"   'ffmpeg -version | head -1 | awk "{print \$3}"'
 parity "claude"   'claude --version'   # the box never gets here (own native installer)
+parity "rustup"   'rustup --version | head -1 | awk "{print \$2}"'
 [ "$ROLE" = ghost ] && parity "postgres" 'postgres --version | awk "{print \$NF}"'
 fi
 

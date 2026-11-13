@@ -29,6 +29,8 @@ latest_of() { # latest_of TOOL -> bare upstream version, or nothing
     # node stays on the 24.x LTS line; index.json is newest-first
     node) curl -fsSL https://nodejs.org/dist/index.json \
             | python3 -c 'import json,sys; print([e["version"] for e in json.load(sys.stdin) if e["version"].startswith("v24.")][0].lstrip("v"))' ;;
+    rustup) curl -fsSL https://static.rust-lang.org/rustup/release-stable.toml \
+              | sed -n "s/^version = '\([^']*\)'$/\1/p" ;;
   esac
 }
 
