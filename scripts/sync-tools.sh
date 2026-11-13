@@ -14,13 +14,16 @@
 # except the one rollback copy moved aside by this run.
 #
 # Covers direct release tools: nvim, pnpm, bun, node, gh, cloudflared, claude,
-# ffmpeg, and rustup (macOS only in TOOLS; Linux gnu assets are in the script
-# so the box can opt in later, but a system rustc must not be shadowed).
+# ffmpeg, rustup, cmake, and poppler. rustup, cmake, and poppler are macOS
+# only in TOOLS (the box already has a system rustc and apt poppler-utils).
 # rustup-init is run in place under ~/.local/opt/rustup — never move that
 # directory aside (it holds downloaded toolchains). No default toolchain is
-# installed: projects pin via rust-toolchain.toml. Out of scope by design:
-# stow and postgres (source builds — see docs/tools.md), opencode
-# (self-updating installer). Run after `git pull`; doctor.sh verifies.
+# installed: projects pin via rust-toolchain.toml.
+# poppler is a macOS source build (no official macOS binary): pdftotext,
+# with a private static freetype and a pinned cmake as a build-only dep.
+# Out of scope by design: stow and postgres (source builds — see
+# docs/tools.md), opencode (self-updating installer). Run after `git pull`;
+# doctor.sh verifies.
 #
 # Pins are bare semver for every tool. tag() maps a pin to that project's
 # upstream release tag, which differs per project (v1.2.3, bun-v1.2.3).
@@ -48,9 +51,10 @@ if [ "$os" = Linux ]; then
 fi
 
 # ---------------------------------------------------------------- config
-TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg rustup"
-# the box keeps claude on its native installer (docs/tools.md) and already
-# has a system rustc, so skip both claude and rustup there
+TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg rustup cmake poppler"
+# the box keeps claude on its native installer (docs/tools.md), already has
+# a system rustc, and already has apt poppler-utils, so skip claude, rustup,
+# cmake (poppler's build-only dep), and poppler there
 [ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh cloudflared ffmpeg"
 
 pin() { case "$1" in    # pinned version, bare semver
@@ -63,6 +67,8 @@ pin() { case "$1" in    # pinned version, bare semver
   claude) echo 2.1.316 ;;
   ffmpeg) echo 9.0.2 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
   rustup) echo 1.29.3 ;;  # rustup-init; no toolchain is installed by the pin
+  cmake) echo 4.5.0 ;;    # official Kitware binary; build-only dep of poppler
+  poppler) echo 26.11.0 ;;  # source build of pdftotext; private static freetype 2.15.0
 esac; }
 
 tag() { case "$1" in    # upstream release tag for the pinned version
@@ -73,6 +79,8 @@ tag() { case "$1" in    # upstream release tag for the pinned version
   gh)   echo "v$(pin gh)" ;;
   cloudflared) pin cloudflared ;;   # bare tag, no v
   ffmpeg) echo "$(ffbuild)_$(pin ffmpeg)" ;;   # build-server dir, e.g. 1789931890_9.0.2
+  cmake) echo "v$(pin cmake)" ;;
+  poppler) echo "poppler-$(pin poppler)" ;;
 esac; }
 
 # Version probes never use PATH: a system copy (/usr/bin/node,
@@ -86,6 +94,8 @@ probe() { local x=$2; case "$1" in
   claude) "$x" --version 2>/dev/null | awk '{print $1}' ;;
   ffmpeg) "$x" -version 2>/dev/null | head -1 | awk '{print $3}' | sed 's/-.*//' ;;   # "9.0.2-https://www.martin-riedl.de"
   rustup) "$x" --version 2>/dev/null | head -1 | awk '{print $2}' ;;   # "rustup 1.29.3 (...)"
+  cmake) "$x" --version 2>/dev/null | head -1 | awk '{print $3}' ;;    # "cmake version 4.5.0"
+  poppler) "$x" -v 2>&1 | head -1 | awk '{print $3}' ;;                 # "pdftotext version 26.11.0" (stderr)
 esac; }
 main_entry() { local e; e=$(entries "$1"); e=${e%% *}; echo "$e"; }   # "name:rel" of the primary executable
 # installed TOOL: version of the ~/.local/bin link this script manages.
@@ -117,6 +127,8 @@ asset() {                     # archive filename, platform- and arch-aware
   claude) echo claude ;;
   ffmpeg) echo ffmpeg.zip ;;   # plus ffprobe.zip, fetched alongside
   rustup) echo rustup-init ;;
+  cmake) echo "cmake-$(pin cmake)-macos-universal.tar.gz" ;;
+  poppler) echo "poppler-$(pin poppler).tar.xz" ;;
 esac; }
 
 asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
@@ -140,6 +152,8 @@ url() { case "$1" in
   claude) echo "https://downloads.claude.ai/claude-code-releases/$(pin claude)/darwin-$mac/claude" ;;
   ffmpeg) echo "https://ffmpeg.martin-riedl.de/download/$(ffplat)/$(tag ffmpeg)/ffmpeg.zip" ;;
   rustup) echo "https://static.rust-lang.org/rustup/archive/$(pin rustup)/$(rustup_triple)/rustup-init" ;;
+  cmake) echo "https://github.com/Kitware/CMake/releases/download/$(tag cmake)/$(asset cmake)" ;;
+  poppler) echo "https://poppler.freedesktop.org/poppler-$(pin poppler).tar.xz" ;;
 esac; }
 
 sums() { case "$1" in     # checksums-file URL, or - when none is published
@@ -152,6 +166,8 @@ sums() { case "$1" in     # checksums-file URL, or - when none is published
   cloudflared) echo pinned ;;   # no checksums file; sha256 lives in pinsum()
   ffmpeg) echo pinned ;;        # per-zip .sha256 files exist; mirrored in pinsum()
   rustup) echo "https://static.rust-lang.org/rustup/archive/$(pin rustup)/$(rustup_triple)/rustup-init.sha256" ;;
+  cmake) echo "https://github.com/Kitware/CMake/releases/download/$(tag cmake)/cmake-$(pin cmake)-SHA-256.txt" ;;
+  poppler) echo pinned ;;   # upstream signs a .sig; sha256 lives in pinsum()
 esac; }
 
 # pinsum ASSET: sha256 pinned in this repo, for tools whose sums() is "pinned".
@@ -172,6 +188,11 @@ pinsum() { case "$1" in
   linux/amd64/ffprobe.zip)       echo 3f428c49070be3d24ec338602b76d412e401ffcb8a5641ef0e729181a232fc32 ;;
   linux/arm64/ffmpeg.zip)        echo 93a76ae90db5474eecdf951a729857c64f3de23567228d6a7d5e6e8e3cd1021b ;;
   linux/arm64/ffprobe.zip)       echo bcbe80fb741c180083327afaf5434812e006b33cacde2016b9aeaf6936128330 ;;
+  # poppler 26.11.0: sha256 of the official tarball (upstream publishes a
+  # GPG .sig, not a sha256 file), cross-checked by downloading
+  poppler-26.11.0.tar.xz)        echo 41c32680160addf5a8dd7a830e4869c01e9f6bee1abb91e44fabd1ba9d7828fb ;;
+  # freetype 2.15.0: private static build dep of poppler, official savannah tarball
+  freetype-2.15.0.tar.gz)        echo 9186627467a616d9a9e3e574748ac0c45fa77398e6364edef3041a8ba8d92f64 ;;
 esac; }
 
 # ffmpeg: static builds from Martin Riedl's build server (ffmpeg.martin-riedl.de;
@@ -217,6 +238,8 @@ entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
   claude) echo "claude:bin/claude" ;;
   ffmpeg) echo "ffmpeg:bin/ffmpeg ffprobe:bin/ffprobe" ;;
   rustup) echo "rustup:cargo/bin/rustup cargo:cargo/bin/cargo rustc:cargo/bin/rustc rustfmt:cargo/bin/rustfmt cargo-clippy:cargo/bin/cargo-clippy clippy-driver:cargo/bin/clippy-driver" ;;
+  cmake) echo "cmake:CMake.app/Contents/bin/cmake" ;;
+  poppler) echo "pdftotext:bin/pdftotext" ;;
 esac; }
 
 # ---------------------------------------------------------------- engine
@@ -344,6 +367,125 @@ for t in $TOOLS; do
       echo "  installed $t $have"
     else
       die "$t: installed but $BIN/$(main_entry "$t" | cut -d: -f1) reads '${have:-nothing}' — check the link and quarantine"
+    fi
+    continue
+  fi
+
+  # poppler: no official macOS binary. Minimal source build of pdftotext
+  # (Qt/glib/cairo/NSS/gpgme/curl/boost/image-codecs/tests off; generic
+  # fonts so fontconfig and harfbuzz are not needed). The only extra
+  # library is a private static freetype, discarded after link. cmake is
+  # a pinned official binary already on PATH from the cmake tool above.
+  # Build into a staging prefix and swap only after pdftotext verifies,
+  # so a failed compile does not remove a working install.
+  if [ "$t" = "poppler" ]; then
+    [ "$os" = Darwin ] || die "$t: macOS only"
+    cmake_bin="$BIN/cmake"
+    [ -x "$cmake_bin" ] || die "$t: cmake $(pin cmake) is required (build-only dep) but $cmake_bin is missing"
+    [ "$(probe cmake "$cmake_bin")" = "$(pin cmake)" ] \
+      || die "$t: $cmake_bin is $(probe cmake "$cmake_bin"), pinned cmake is $(pin cmake)"
+    ftver=2.15.0
+    ftfile="freetype-$ftver.tar.gz"
+    ftsum="$(pinsum "$ftfile")"
+    [ -n "$ftsum" ] || die "$t: no pinned sha256 for $ftfile"
+    jobs=$(sysctl -n hw.ncpu 2>/dev/null || echo 4)
+
+    echo "  extract $(asset poppler)"
+    mkdir -p "$TMP/pop-src"
+    python3 -c 'import tarfile,sys; tarfile.open(sys.argv[1]).extractall(sys.argv[2])' \
+      "$TMP/$file" "$TMP/pop-src" || die "$t: extract failed"
+    [ -d "$TMP/pop-src/poppler-$(pin poppler)" ] || die "$t: archive layout changed"
+
+    echo "  download private freetype $ftver (static, not installed to PATH)"
+    curl -fL --retry 2 -o "$TMP/$ftfile" \
+      "https://download.savannah.gnu.org/releases/freetype/$ftfile" \
+      || die "$t: freetype download failed"
+    echo "  verify $ftfile against the pinned sha256"
+    printf '%s  %s\n' "$ftsum" "$ftfile" | (cd "$TMP" && shasum -a 256 -c -) \
+      || die "$t: freetype checksum verification failed"
+    mkdir -p "$TMP/ft-src"
+    tar -xzf "$TMP/$ftfile" -C "$TMP/ft-src" || die "$t: freetype extract failed"
+    [ -d "$TMP/ft-src/freetype-$ftver" ] || die "$t: freetype archive layout changed"
+
+    echo "  build static freetype $ftver"
+    "$cmake_bin" -S "$TMP/ft-src/freetype-$ftver" -B "$TMP/ft-build" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="$TMP/ft" \
+      -DCMAKE_INSTALL_LIBDIR=lib \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DFT_DISABLE_HARFBUZZ=TRUE \
+      -DFT_DISABLE_PNG=TRUE \
+      -DFT_DISABLE_BZIP2=TRUE \
+      -DFT_DISABLE_BROTLI=TRUE \
+      -DFT_DISABLE_HVF=TRUE \
+      -DFT_REQUIRE_ZLIB=TRUE \
+      || die "$t: freetype cmake configure failed"
+    "$cmake_bin" --build "$TMP/ft-build" -j "$jobs" || die "$t: freetype build failed"
+    "$cmake_bin" --install "$TMP/ft-build" || die "$t: freetype install failed"
+    [ -f "$TMP/ft/lib/libfreetype.a" ] || die "$t: static libfreetype.a not produced"
+
+    echo "  build poppler $(pin poppler) (pdftotext only, static)"
+    "$cmake_bin" -S "$TMP/pop-src/poppler-$(pin poppler)" -B "$TMP/pop-build" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="$TMP/pop-dest" \
+      -DCMAKE_PREFIX_PATH="$TMP/ft" \
+      -DCMAKE_FIND_FRAMEWORK=LAST \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DFONT_CONFIGURATION=generic \
+      -DENABLE_QT5=OFF \
+      -DENABLE_QT6=OFF \
+      -DENABLE_GLIB=OFF \
+      -DENABLE_GOBJECT_INTROSPECTION=OFF \
+      -DENABLE_GTK_DOC=OFF \
+      -DENABLE_NSS3=OFF \
+      -DENABLE_GPGME=OFF \
+      -DENABLE_LIBCURL=OFF \
+      -DENABLE_BOOST=OFF \
+      -DENABLE_LIBJPEG=OFF \
+      -DENABLE_LIBOPENJPEG=OFF \
+      -DENABLE_LCMS=OFF \
+      -DENABLE_LIBTIFF=OFF \
+      -DENABLE_BROTLI=OFF \
+      -DENABLE_HARFBUZZ=OFF \
+      -DENABLE_CPP=OFF \
+      -DENABLE_UTILS=ON \
+      -DBUILD_MANUAL_TESTS=OFF \
+      -DBUILD_GTK_TESTS=OFF \
+      -DBUILD_QT5_TESTS=OFF \
+      -DBUILD_QT6_TESTS=OFF \
+      -DBUILD_CPP_TESTS=OFF \
+      -DRUN_GPERF_IF_PRESENT=OFF \
+      || die "$t: cmake configure failed"
+    "$cmake_bin" --build "$TMP/pop-build" -j "$jobs" || die "$t: build failed"
+    "$cmake_bin" --install "$TMP/pop-build" || die "$t: install to staging failed"
+    staged="$TMP/pop-dest/bin/pdftotext"
+    have="$(probe poppler "$staged")"
+    [ "$have" = "$(pin poppler)" ] || die "$t: staged pdftotext reads '${have:-nothing}', expected $(pin poppler)"
+    echo "  staged pdftotext $have"
+
+    echo "  install into $OPT/poppler"
+    target="$OPT/poppler"
+    rollback=""
+    if [ -e "$target" ]; then
+      if [ -n "$(installed poppler)" ]; then
+        keep="$target-$(echo "$(installed poppler)" | tr -cd '[:alnum:].')"
+      else
+        keep="$target-unknown"
+      fi
+      rm -rf "$keep" && mv "$target" "$keep" \
+        || die "$t: could not move old install aside"
+      echo "  (old install kept for rollback at $keep)"
+      rollback="$keep"
+    fi
+    mv "$TMP/pop-dest" "$target" || die "$t: move staged install failed"
+    echo "  link entry points"
+    link_entries "$t"
+    have="$(installed "$t")"
+    if [ "$have" = "$(pin "$t")" ] && links_ok "$t"; then
+      echo "  installed $t $have"
+      prune_old "$t" "$rollback"
+    else
+      die "$t: installed but $BIN/$(main_entry "$t" | cut -d: -f1) reads '${have:-nothing}' — check the link"
     fi
     continue
   fi

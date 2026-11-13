@@ -385,7 +385,8 @@ unclear; update it when workflows change.
 - Updates: opencode self-updates (its launchd job picks up new versions on
   restart), and the GUI apps (Zed, Cursor, Tailscale, ChatGPT) auto-update
   themselves. The tarball tools (nvim, pnpm, bun, node, gh, cloudflared,
-  claude, ffmpeg, rustup; the box skips claude and rustup) update via
+  claude, ffmpeg, rustup, cmake, poppler; the box skips claude, rustup,
+  cmake, and poppler) update via
   `scripts/sync-tools.sh`; stow and Postgres stay manual per
   [tools.md](tools.md) — pin the version and update the inventory there.
   Upstream drift is reported weekly on ghost; the log is

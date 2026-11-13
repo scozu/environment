@@ -57,6 +57,7 @@ if [ "$(uname -s)" = Darwin ]; then
   check "rustup resolves from ~/.local/bin" sh -c 'case "$(command -v rustup)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac'
   check "RUSTUP_HOME and CARGO_HOME are ~/.local/opt/rustup/{rustup,cargo} in zsh" \
     zsh -c 'test "$RUSTUP_HOME" = "$HOME/.local/opt/rustup/rustup" && test "$CARGO_HOME" = "$HOME/.local/opt/rustup/cargo"'
+  check "pdftotext resolves from ~/.local/bin" sh -c 'case "$(command -v pdftotext)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac'
 fi
 
 # Postgres is ghost-only and start-on-demand (one local app, no network).
@@ -118,6 +119,8 @@ parity "cloudflared" 'cloudflared --version | head -1 | awk "{print \$3}"'
 parity "ffmpeg"   'ffmpeg -version | head -1 | awk "{print \$3}"'
 parity "claude"   'claude --version'   # the box never gets here (own native installer)
 parity "rustup"   'rustup --version | head -1 | awk "{print \$2}"'
+parity "cmake"    'cmake --version | head -1 | awk "{print \$3}"'
+parity "pdftotext" 'pdftotext -v 2>&1 | head -1 | awk "{print \$3}"'
 [ "$ROLE" = ghost ] && parity "postgres" 'postgres --version | awk "{print \$NF}"'
 fi
 

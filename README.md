@@ -96,11 +96,13 @@ verify with `doctor.sh`, repeat on the other machines. Full procedure:
 [docs/tools.md](docs/tools.md).
 
 The direct release tools (nvim, pnpm, bun, node, gh, cloudflared, claude,
-ffmpeg, rustup) are scripted: `scripts/sync-tools.sh` installs or updates them
-to the pinned versions on whichever machine it runs, macOS or Linux (`--check`
-is read-only; doctor uses it). rustup is a macOS pin (the box skips it, like
-claude); Linux gnu rustup-init assets are still in the script. stow and
-postgres (source builds) and opencode (self-updating) stay manual by design.
+ffmpeg, rustup, cmake, poppler) are scripted: `scripts/sync-tools.sh` installs
+or updates them to the pinned versions on whichever machine it runs, macOS or
+Linux (`--check` is read-only; doctor uses it). rustup, cmake, and poppler are
+macOS pins (the box skips them, like claude): cmake is a Kitware official
+binary, used only to source-build poppler (`pdftotext`; no official macOS
+binary). stow and postgres (source builds) and opencode (self-updating) stay
+manual by design.
 
 ### 3. Doctor — verify the machine
 

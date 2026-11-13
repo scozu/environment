@@ -31,6 +31,10 @@ latest_of() { # latest_of TOOL -> bare upstream version, or nothing
             | python3 -c 'import json,sys; print([e["version"] for e in json.load(sys.stdin) if e["version"].startswith("v24.")][0].lstrip("v"))' ;;
     rustup) curl -fsSL https://static.rust-lang.org/rustup/release-stable.toml \
               | sed -n "s/^version = '\([^']*\)'$/\1/p" ;;
+    cmake) gh_latest Kitware/CMake | sed 's/^v//' ;;
+    # first poppler-N.N.N.tar.xz on the homepage is the current stable
+    poppler) curl -fsSL https://poppler.freedesktop.org/ \
+               | sed -n 's/.*poppler-\([0-9][0-9.]*\)\.tar\.xz.*/\1/p' | head -1 ;;
   esac
 }
 
