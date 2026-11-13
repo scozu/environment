@@ -64,7 +64,7 @@ pin() { case "$1" in    # pinned version, bare semver
   node) echo 24.22.2 ;;
   gh)   echo 2.103.3 ;;
   cloudflared) echo 2026.10.7 ;;   # sha256 per asset: pinsum()
-  claude) echo 2.1.316 ;;
+  claude) echo 2.1.325 ;;
   ffmpeg) echo 9.0.2 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
   rustup) echo 1.29.3 ;;  # rustup-init; no toolchain is installed by the pin
   cmake) echo 4.5.0 ;;    # official Kitware binary; build-only dep of poppler

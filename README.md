@@ -134,7 +134,7 @@ hostname, the box by `uname -s` = Linux, otherwise silence.
    in the `.local` files.
 4. ghost and silence run the same tool versions, and the box matches them
    except Claude Code. The box is still on 2.1.302 while the Macs are on
-   2.1.316, so the box needs upgrading (`claude install 2.1.316`). That
+   2.1.325, so the box needs upgrading (`claude install 2.1.325`). That
    upgrade has not been done. Doctor does not compare the box's Claude version.
    Doctor runs clean on all three.
 
