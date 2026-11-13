@@ -95,7 +95,7 @@ probe() { local x=$2; case "$1" in
   ffmpeg) "$x" -version 2>/dev/null | head -1 | awk '{print $3}' | sed 's/-.*//' ;;   # "9.0.2-https://www.martin-riedl.de"
   rustup) "$x" --version 2>/dev/null | head -1 | awk '{print $2}' ;;   # "rustup 1.29.3 (...)"
   cmake) "$x" --version 2>/dev/null | head -1 | awk '{print $3}' ;;    # "cmake version 4.5.0"
-  poppler) "$x" -v 2>&1 | head -1 | awk '{print $3}' ;;                 # "pdftotext version 26.11.0" (stderr)
+  poppler) [ -x "$x" ] && "$x" -v 2>&1 | head -1 | awk '{print $3}' ;;  # "pdftotext version 26.11.0" (stderr)
 esac; }
 main_entry() { local e; e=$(entries "$1"); e=${e%% *}; echo "$e"; }   # "name:rel" of the primary executable
 # installed TOOL: version of the ~/.local/bin link this script manages.
@@ -424,16 +424,31 @@ for t in $TOOLS; do
     "$cmake_bin" --install "$TMP/ft-build" || die "$t: freetype install failed"
     [ -f "$TMP/ft/lib/libfreetype.a" ] || die "$t: static libfreetype.a not produced"
 
+    # poppler calls pkg_check_modules(POPPLER_DATA) unconditionally
+    # (falls back to $prefix/share/poppler). A stub lets FindPkgConfig
+    # load that macro without adding a pkg-config pin; --version is
+    # enough for the find, everything else exits 1 (no .pc files).
+    mkdir -p "$TMP/stubbin"
+    cat > "$TMP/stubbin/pkg-config" <<'STUB'
+#!/bin/sh
+case "$1" in
+  --version) echo "0.0.0"; exit 0 ;;
+esac
+exit 1
+STUB
+    chmod +x "$TMP/stubbin/pkg-config"
+
     echo "  build poppler $(pin poppler) (pdftotext only, static)"
     "$cmake_bin" -S "$TMP/pop-src/poppler-$(pin poppler)" -B "$TMP/pop-build" \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX="$TMP/pop-dest" \
       -DCMAKE_PREFIX_PATH="$TMP/ft" \
       -DCMAKE_FIND_FRAMEWORK=LAST \
+      -DPKG_CONFIG_EXECUTABLE="$TMP/stubbin/pkg-config" \
       -DCMAKE_DISABLE_FIND_PACKAGE_Cairo=ON \
-      -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON \
       -DCMAKE_DISABLE_FIND_PACKAGE_PNG=ON \
       -DBUILD_SHARED_LIBS=OFF \
+
       -DFONT_CONFIGURATION=generic \
       -DENABLE_QT5=OFF \
       -DENABLE_QT6=OFF \
