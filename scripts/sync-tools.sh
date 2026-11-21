@@ -14,7 +14,7 @@
 # except the one rollback copy moved aside by this run.
 #
 # Covers direct release tools: nvim, pnpm, bun, node, gh, cloudflared, claude,
-# ffmpeg, rustup, cmake, and poppler. rustup, cmake, and poppler are macOS
+# ffmpeg, rustup, cmake, poppler, and uv. rustup, cmake, and poppler are macOS
 # only in TOOLS (the box already has a system rustc and apt poppler-utils).
 # rustup-init is run in place under ~/.local/opt/rustup — never move that
 # directory aside (it holds downloaded toolchains). No default toolchain is
@@ -44,18 +44,18 @@ arch="$(uname -m)"        # arm64 | x86_64 (macOS); x86_64 | aarch64 (Linux)
 mac="${arch/x86_64/x64}"  # the x64 naming GitHub/node use for Intel
 if [ "$os" = Linux ]; then
   case "$arch" in
-    x86_64)        lx=x64;   lgh=amd64; lnv=x86_64; lbun=x64 ;;
-    aarch64|arm64) lx=arm64; lgh=arm64; lnv=arm64;  lbun=aarch64 ;;
+    x86_64)        lx=x64;   lgh=amd64; lnv=x86_64; lbun=x64;     luv=x86_64 ;;
+    aarch64|arm64) lx=arm64; lgh=arm64; lnv=arm64;  lbun=aarch64; luv=aarch64 ;;
     *) echo "sync-tools: unsupported Linux arch $arch" >&2; exit 1 ;;
   esac
 fi
 
 # ---------------------------------------------------------------- config
-TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg rustup cmake poppler"
+TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg rustup cmake poppler uv"
 # the box keeps claude on its native installer (docs/tools.md), already has
 # a system rustc, and already has apt poppler-utils, so skip claude, rustup,
 # cmake (poppler's build-only dep), and poppler there
-[ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh cloudflared ffmpeg"
+[ "$os" = Linux ] && TOOLS="nvim pnpm bun node gh cloudflared ffmpeg uv"
 
 pin() { case "$1" in    # pinned version, bare semver
   nvim) echo 0.12.6 ;;
@@ -69,6 +69,7 @@ pin() { case "$1" in    # pinned version, bare semver
   rustup) echo 1.29.3 ;;  # rustup-init; no toolchain is installed by the pin
   cmake) echo 4.5.0 ;;    # official Kitware binary; build-only dep of poppler
   poppler) echo 26.11.0 ;;  # source build of pdftotext; private static freetype 2.15.0
+  uv) echo 0.13.9 ;;
 esac; }
 
 tag() { case "$1" in    # upstream release tag for the pinned version
@@ -81,6 +82,7 @@ tag() { case "$1" in    # upstream release tag for the pinned version
   ffmpeg) echo "$(ffbuild)_$(pin ffmpeg)" ;;   # build-server dir, e.g. 1789931890_9.0.2
   cmake) echo "v$(pin cmake)" ;;
   poppler) echo "poppler-$(pin poppler)" ;;
+  uv) pin uv ;;   # bare tag, no v
 esac; }
 
 # Version probes never use PATH: a system copy (/usr/bin/node,
@@ -96,6 +98,7 @@ probe() { local x=$2; case "$1" in
   rustup) "$x" --version 2>/dev/null | head -1 | awk '{print $2}' ;;   # "rustup 1.29.3 (...)"
   cmake) "$x" --version 2>/dev/null | head -1 | awk '{print $3}' ;;    # "cmake version 4.5.0"
   poppler) [ -x "$x" ] && "$x" -v 2>&1 | head -1 | awk '{print $3}' ;;  # "pdftotext version 26.11.0" (stderr)
+  uv) "$x" --version 2>/dev/null | awk '{print $2}' ;;   # "uv 0.13.9 (...)"
 esac; }
 main_entry() { local e; e=$(entries "$1"); e=${e%% *}; echo "$e"; }   # "name:rel" of the primary executable
 # installed TOOL: version of the ~/.local/bin link this script manages.
@@ -129,6 +132,7 @@ asset() {                     # archive filename, platform- and arch-aware
   rustup) echo rustup-init ;;
   cmake) echo "cmake-$(pin cmake)-macos-universal.tar.gz" ;;
   poppler) echo "poppler-$(pin poppler).tar.xz" ;;
+  uv)   echo "uv-${arch/arm64/aarch64}-apple-darwin.tar.gz" ;;   # uv says aarch64
 esac; }
 
 asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
@@ -140,6 +144,7 @@ asset_linux() { case "$1" in  # the box: glibc builds, never musl/baseline
   cloudflared) echo "cloudflared-linux-$lgh" ;;   # raw binary, not an archive
   ffmpeg) echo ffmpeg.zip ;;
   rustup) echo rustup-init ;;
+  uv) echo "uv-$luv-unknown-linux-gnu.tar.gz" ;;
 esac; }
 
 url() { case "$1" in
@@ -154,6 +159,7 @@ url() { case "$1" in
   rustup) echo "https://static.rust-lang.org/rustup/archive/$(pin rustup)/$(rustup_triple)/rustup-init" ;;
   cmake) echo "https://github.com/Kitware/CMake/releases/download/$(tag cmake)/$(asset cmake)" ;;
   poppler) echo "https://poppler.freedesktop.org/poppler-$(pin poppler).tar.xz" ;;
+  uv) echo "https://github.com/astral-sh/uv/releases/download/$(tag uv)/$(asset "$1")" ;;
 esac; }
 
 sums() { case "$1" in     # checksums-file URL, or - when none is published
@@ -168,6 +174,7 @@ sums() { case "$1" in     # checksums-file URL, or - when none is published
   rustup) echo "https://static.rust-lang.org/rustup/archive/$(pin rustup)/$(rustup_triple)/rustup-init.sha256" ;;
   cmake) echo "https://github.com/Kitware/CMake/releases/download/$(tag cmake)/cmake-$(pin cmake)-SHA-256.txt" ;;
   poppler) echo pinned ;;   # upstream signs a .sig; sha256 lives in pinsum()
+  uv) echo "https://github.com/astral-sh/uv/releases/download/$(tag uv)/$(asset "$1").sha256" ;;
 esac; }
 
 # pinsum ASSET: sha256 pinned in this repo, for tools whose sums() is "pinned".
@@ -240,6 +247,7 @@ entries() { case "$1" in   # "name:path-inside-opt" pairs, one link each
   rustup) echo "rustup:cargo/bin/rustup cargo:cargo/bin/cargo rustc:cargo/bin/rustc rustfmt:cargo/bin/rustfmt cargo-clippy:cargo/bin/cargo-clippy clippy-driver:cargo/bin/clippy-driver" ;;
   cmake) echo "cmake:CMake.app/Contents/bin/cmake" ;;
   poppler) echo "pdftotext:bin/pdftotext" ;;
+  uv) echo "uv:uv uvx:uvx" ;;
 esac; }
 
 # ---------------------------------------------------------------- engine

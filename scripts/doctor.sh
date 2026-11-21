@@ -46,9 +46,10 @@ check "no obvious secret-named files tracked" test -z "$(git -C "$REPO" ls-files
 echo "tools"
 check "stow installed" command -v stow
 check "Stow tree is settled (dry run has no pending links)" sh -c "cd '$REPO' && ! stow --no-folding -n -v -t \"\$HOME\" home 2>&1 | grep -v '^WARNING' | grep -q ."
-check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh && command -v cloudflared && command -v claude && command -v ffmpeg && command -v ffprobe'
+check "core tools resolve in a non-interactive shell" zsh -c 'command -v stow && command -v nvim && command -v opencode && command -v pnpm && command -v bun && command -v node && command -v npm && command -v gh && command -v cloudflared && command -v claude && command -v ffmpeg && command -v ffprobe && command -v uv && command -v uvx'
 check "tools match pinned versions" "$REPO/scripts/sync-tools.sh" --check
 check "ffmpeg is the pinned static build and encodes a frame" sh -c 'case "$(command -v ffmpeg)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac && ffmpeg -v error -f lavfi -i color=c=black:s=2x2 -frames:v 1 -f rawvideo -pix_fmt rgb24 - | wc -c | grep -qx " *12"'
+check "uv and uvx resolve from ~/.local/bin" sh -c 'for t in uv uvx; do case "$(command -v $t)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac; done'
 
 # rustup is a sync-tools pin on macOS only (Linux assets are in the script
 # but TOOLS skips it on the box, which may already have a system rustc).
@@ -121,6 +122,7 @@ parity "claude"   'claude --version'   # the box never gets here (own native ins
 parity "rustup"   'rustup --version | head -1 | awk "{print \$2}"'
 parity "cmake"    'cmake --version | head -1 | awk "{print \$3}"'
 parity "pdftotext" 'pdftotext -v 2>&1 | head -1 | awk "{print \$3}"'
+parity "uv"     'uv --version | awk "{print \$2}"'
 [ "$ROLE" = ghost ] && parity "postgres" 'postgres --version | awk "{print \$NF}"'
 fi
 
