@@ -13,4 +13,16 @@
     "title": { "model": "opencode-go/deepseek-v4.1-flash" },
     "summary": { "model": "opencode-go/deepseek-v4.1-flash" },
   },
+  "mcp": {
+    "servers": {
+      "browse": {
+        "type": "local",
+        "command": ["{env:HOME}/.local/bin/browse", "mcp"],
+        "cwd": "{env:HOME}",
+        "pool": true,
+        "environment": { "OPENCODE_BROWSER_RUNTIME": "auto-update" },
+      },
+      "notion": { "type": "remote", "url": "https://mcp.notion.com/mcp" },
+    },
+  },
 }
