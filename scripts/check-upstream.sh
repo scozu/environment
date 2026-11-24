@@ -4,6 +4,9 @@
 # inventory), then sync-tools.sh applies it. Pins come from
 # `sync-tools.sh --pins`, so the pins live in one place. Exit 0 always:
 # this is a report, not a gate. Needs network.
+#
+#   check-upstream.sh --latest TOOL            latest upstream version (auto-update.sh)
+#   check-upstream.sh --ffmpeg-build PLATFORM  "BUILD VERSION" of the latest ffmpeg
 set -u
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -12,6 +15,11 @@ gh_latest() { # gh_latest OWNER/REPO -> upstream tag of the latest release
   curl -fsSL -H 'Accept: application/vnd.github+json' \
     "https://api.github.com/repos/$1/releases/latest" \
     | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])'
+}
+
+ffmpeg_build() { # ffmpeg_build PLATFORM (macos/arm64, linux/amd64, ...) -> "BUILD VERSION"
+  curl -s -o /dev/null -D - "https://ffmpeg.martin-riedl.de/redirect/latest/$1/release/ffmpeg.zip" \
+    | tr -d '\r' | sed -n 's#^[Ll]ocation: .*/\([0-9]*\)_\([^/]*\)/ffmpeg.zip$#\1 \2#p'
 }
 
 latest_of() { # latest_of TOOL -> bare upstream version, or nothing
@@ -38,6 +46,11 @@ latest_of() { # latest_of TOOL -> bare upstream version, or nothing
                | sed -n 's/.*poppler-\([0-9][0-9.]*\)\.tar\.xz.*/\1/p' | head -1 ;;
   esac
 }
+
+case "${1:-}" in
+  --latest) latest_of "${2:?tool}"; exit 0 ;;
+  --ffmpeg-build) ffmpeg_build "${2:?platform}"; exit 0 ;;
+esac
 
 behind=0
 while read -r t pinned; do

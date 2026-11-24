@@ -227,6 +227,10 @@ unclear; update it when workflows change.
 
 ### 6. The box (Linux)
 
+- **TODO**: auto-update does not reach the box (no SSH alias from ghost). After
+  each `auto-update:` commit, run `git pull --ff-only && scripts/sync-tools.sh`
+  there, or use the ghost-env `repo_pull` and `sync_tools_check` tools (see
+  [tools.md](tools.md#automatic-bumps-ghost)).
 - Bootstrap (once): system packages from apt — `zsh` (doctor and the stowed
   `.zshenv` need it), `make` (to build stow), `openssh-client`, `curl` and
   `unzip` (sync-tools downloads and unpacks the tarballs), and whatever provides
@@ -393,14 +397,16 @@ unclear; update it when workflows change.
 - envd (ghost): `launchctl print gui/$(id -u)/dev.scozu.envd`,
   `curl http://127.0.0.1:8790/healthz`, log `~/.local/var/envd.log`.
 - SSH server: socket-activated — `ssh ghost 'echo ok'` is the test.
-- Updates: on the Macs the OpenCode desktop app self-updates and runs the
+- Updates: on the Macs the OpenCode desktop app ([tools.md](tools.md), `opencode (Macs)` row) self-updates and runs the
   server; `opencode` is its bundled CLI (via `~/.local/bin/opencode`), so
   there is nothing to update by hand. The box's standalone CLI is upgraded by
   re-running the v2 installer (see [tools.md](tools.md)). The GUI apps (Zed, Cursor, Tailscale, ChatGPT) auto-update
   themselves. The tarball tools (nvim, pnpm, bun, node, gh, cloudflared,
   claude, ffmpeg, rustup, cmake, poppler, uv; the box skips claude, rustup,
   cmake, and poppler) update via
-  `scripts/sync-tools.sh`; stow and Postgres stay manual per
+  `scripts/sync-tools.sh`. ghost bumps them every morning at 05:30
+  (`scripts/auto-update.sh`, log `~/.local/state/auto-update.log`) and updates
+  silence; see [tools.md](tools.md#automatic-bumps-ghost). stow and Postgres stay manual per
   [tools.md](tools.md) — pin the version and update the inventory there.
   Upstream drift is reported weekly on ghost; the log is
   `~/.local/var/check-upstream.log`, and `scripts/check-upstream.sh` runs it

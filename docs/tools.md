@@ -88,8 +88,8 @@ this table mirrors them and is updated in the same commit.
 | Tool | Source | Version | Location | Entry points in `~/.local/bin` | Notes |
 |---|---|---|---|---|---|
 | stow | source build (GNU tarball) | 2.4.1 | `~/.local/opt/stow` | `stow` | `./configure --prefix=… && make && make install` (same on the box; needs `make` from apt) |
-| nvim | release tarball | 0.12.6 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`; box: `nvim-linux-{x86_64,arm64}.tar.gz`. Unsigned → quarantine approval (step 6; the sync script strips quarantine xattrs best-effort). No checksums published. |
-| pnpm | release tarball (standalone build) | 12.16.1 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node; box: `pnpm-linux-{x64,arm64}.tar.gz` (glibc, not `-musl`). Pins are bare semver; `tag()` in `sync-tools.sh` adds the upstream tag prefix (`v12.16.1`). Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use` — the global Node on PATH is the tarball below. No checksums published. |
+| nvim | release tarball | 0.12.6 | `~/.local/opt/nvim` | `nvim` | macOS build: `nvim-macos-$(uname -m).tar.gz`; box: `nvim-linux-{x86_64,arm64}.tar.gz`. Unsigned → quarantine approval (step 6; the sync script strips quarantine xattrs best-effort). No checksums published upstream; the sha256 per asset (macOS arm64, Linux x86_64 and arm64) is pinned in `pinsum()`, from the download and checked against the GitHub asset digest. |
+| pnpm | release tarball (standalone build) | 12.16.1 | `~/.local/opt/pnpm` | `pnpm` | The standalone build bundles its own Node; box: `pnpm-linux-{x64,arm64}.tar.gz` (glibc, not `-musl`). Pins are bare semver; `tag()` in `sync-tools.sh` adds the upstream tag prefix (`v12.16.1`). Never use the curl installer (writes to `~/Library/pnpm` and edits shell files). Project Node versions come from `pnpm env use` — the global Node on PATH is the tarball below. No checksums published upstream; the sha256 per asset (macOS arm64, Linux x64 and arm64) is pinned in `pinsum()`, checked against the GitHub asset digest. |
 | bun | release tarball (zip) | 1.4.4 | `~/.local/opt/bun` | `bun`, `bunx` | Single binary from `bun-darwin-aarch64.zip` (Apple Silicon) or `bun-darwin-x64.zip` (Intel) — bun's macOS arm64 asset is named `aarch64`, not `arm64`. Box: `bun-linux-x64.zip` / `bun-linux-aarch64.zip` (not `-baseline`/`-musl`). Checksums in `SHASUMS256.txt`. `bunx` is a symlink to `bun`. Global installs land in `~/.bun/bin` — not on PATH by default. |
 | node | release tarball | 24.22.2 (LTS) | `~/.local/opt/node` | `node`, `npm`, `npx` | Official `node-v24.22.2-darwin-$(uname -m).tar.gz` (box: `node-v24.22.2-linux-{x64,arm64}.tar.gz`); checksums in `SHASUMS256.txt`. Global Node; project Node comes from `pnpm env use`. `corepack` intentionally not linked (deprecated). |
 | gh | release tarball (zip) | 2.103.3 | `~/.local/opt/gh` | `gh` | Official `gh_2.103.3_macOS_arm64.zip` (box: `gh_2.103.3_linux_{amd64,arm64}.tar.gz`); checksums in `gh_2.103.3_checksums.txt`. Single binary + man pages. |
@@ -147,9 +147,13 @@ The lifecycle of a pinned tool has four steps, each with one owner:
    it is machine-local, not in the repo. Doctor on ghost checks that the job
    is loaded. Silence has no tool launchd jobs (rule 4); its parity is checked
    by doctor.
-2. **Propose (manual, reviewed).** A `behind` line becomes a commit that
-   changes the pin in `sync-tools.sh` and the inventory row here.
-3. **Apply.** `scripts/sync-tools.sh` on each machine, when it is awake.
+2. **Propose and apply (automatic, on ghost).** Each morning
+   `scripts/auto-update.sh` turns a `behind` line into a verified commit that
+   bumps the pin, its checksums and the inventory row, then pushes it. See
+   [Automatic bumps](#automatic-bumps-ghost). Nothing that fails verification
+   reaches the repo.
+3. **Apply on the other machines.** That same run updates silence over SSH
+   when silence is awake. The box is not updated yet (see the TODO there).
 4. **Retain.** After a verified install, `sync-tools.sh` prunes every older
    `~/.local/opt/<tool>-*` and keeps exactly one rollback copy (the version it
    just replaced). The rollback copy is removed by the next upgrade. Nothing
@@ -159,12 +163,83 @@ Stow and Postgres are outside this loop by design. Postgres's data directory
 is tied to its build, so its old installs are removed by hand, once the
 upgrade is verified.
 
-Auto-applying pinned CLIs is deliberately not done. nvim and pnpm publish no
-checksums, so TLS to GitHub is their only integrity check, and silence sleeps,
-so unattended bumps would drift the two machines. Self-updating apps (the
-OpenCode desktop app, ChatGPT, Zed, Cursor, Tailscale) keep their own update
-channels. On the Macs, the OpenCode app is the single source for `opencode`
-(see the inventory row above), so its CLI cannot lag behind the server.
+Every pinned CLI has a sha256 pin, checked at install. Where the project
+publishes checksums (bun, node, gh, uv, cmake, rustup, claude), they come from
+upstream at install time. Otherwise the pin is the sha256 of the release asset,
+computed from the download and checked against the GitHub asset digest
+(nvim, pnpm, cloudflared) or the build server's `.sha256` (ffmpeg); poppler is
+pinned from its tarball, since upstream publishes only a GPG signature.
+Self-updating apps (the OpenCode desktop app, ChatGPT, Zed, Cursor, Tailscale)
+keep their own update channels. On the Macs, the OpenCode app is the single
+source for `opencode` (see the inventory row above), so its CLI cannot lag
+behind the server.
+
+## Automatic bumps (ghost)
+
+ghost bumps the pinned tools itself every day at 05:30. The LaunchAgent is
+`dev.scozu.auto-update`, template `launchd/dev.scozu.auto-update.plist` (in the
+repo, not stowed, so silence never loads it). It runs `scripts/auto-update.sh`:
+
+1. Refuses unless the tree is clean, the branch is `main`, and
+   `git pull --ff-only` succeeds.
+2. For each pin behind upstream (`check-upstream.sh --latest`), rewrites the
+   pin, the `pinsum()` and `ffbuild()` entries for every platform the tool
+   has, and the inventory row, through `sync-tools.sh --set-pin`, `--set-sum`
+   and `--set-ffbuild`. Nothing else edits the pins.
+3. Runs doctor, then sync-tools, then doctor again. It commits only if doctor
+   gains no FAIL. Drift a bump causes on purpose is not a new FAIL: the tree
+   is dirty before the commit, and silence reports version parity drift until
+   it updates.
+4. Commits `auto-update: <tool> a -> b, ...`, pushes to `origin main`, then
+   runs the silence update over SSH (pull, stow, sync-tools). If silence is
+   asleep it logs that and catches up on the next bump.
+5. On any failure after the pins change: `git checkout HEAD -- .`, re-runs
+   sync-tools to restore the previous versions, logs the failing lines, and
+   exits nonzero. Nothing is committed.
+
+If nothing is newer, the run writes one log line and exits.
+
+Flags, for testing: `--dry-run` prints the plan and checksums and changes
+nothing; `--no-commit` runs the whole bump, prints the diff, then restores the
+tree; `--only TOOL` limits either to one tool.
+
+**Log**: `~/.local/state/auto-update.log` (appended, timestamped). The
+LaunchAgent's own stdout and stderr go to `~/.local/state/auto-update.launchd.log`.
+After a crash, a stale lock blocks runs: `rmdir ~/.local/state/auto-update.lock`.
+
+**Load and unload** (ghost only; not loaded until reviewed):
+
+```sh
+mkdir -p ~/.local/state
+sed "s|@HOME@|$HOME|g" ~/Developer/environment/launchd/dev.scozu.auto-update.plist \
+  > ~/Library/LaunchAgents/dev.scozu.auto-update.plist
+plutil -lint ~/Library/LaunchAgents/dev.scozu.auto-update.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/dev.scozu.auto-update.plist   # load
+launchctl kickstart gui/$(id -u)/dev.scozu.auto-update                               # run now
+launchctl bootout gui/$(id -u)/dev.scozu.auto-update \
+  && rm ~/Library/LaunchAgents/dev.scozu.auto-update.plist                           # unload
+```
+
+**Revert a bad bump**: revert the auto-update commit, then sync and push:
+
+```sh
+cd ~/Developer/environment
+git revert <commit>      # restores the old pins, checksums and inventory rows
+scripts/sync-tools.sh    # reinstalls the old versions
+git push origin main
+ssh silence 'zsh -ic "cd ~/Developer/environment && git pull --ff-only -q && stow --no-folding -t \$HOME home && scripts/sync-tools.sh"'
+```
+
+The next run proposes the same bump again, so fix the cause, or unload the
+agent until the fix lands.
+
+**TODO (the box, Linux):** auto-update does not reach the box, which has no
+SSH alias from ghost. After each auto-update commit, run
+`git pull --ff-only && scripts/sync-tools.sh` on the box, or use the ghost-env
+`repo_pull` and `sync_tools_check` tools.
+
+OpenCode is not part of this loop: on the Macs it follows the desktop app (see
+the `opencode (Macs)` row above).
 
 ## Server tools
 

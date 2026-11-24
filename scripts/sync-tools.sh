@@ -9,6 +9,16 @@
 #                                  (doctor.sh uses this)
 #   scripts/sync-tools.sh --pins   read-only; prints "tool version" per pin
 #                                  (check-upstream.sh uses this)
+#   scripts/sync-tools.sh --describe TOOL
+#                                  read-only; asset, key, url, sums for this
+#                                  platform. ST_OS/ST_ARCH (Darwin|Linux,
+#                                  arm64|x86_64|aarch64) override uname to
+#                                  describe another platform (auto-update.sh)
+#   scripts/sync-tools.sh --set-pin TOOL VERSION
+#   scripts/sync-tools.sh --set-sum KEY SHA256   (empty SHA256 deletes KEY)
+#   scripts/sync-tools.sh --set-ffbuild PLATFORM BUILD
+#                                  rewrite one entry of pin(), pinsum() or
+#                                  ffbuild() in place (auto-update.sh)
 #
 # Retention: after a verified install, every older opt/<tool>-* is pruned,
 # except the one rollback copy moved aside by this run.
@@ -27,8 +37,10 @@
 #
 # Pins are bare semver for every tool. tag() maps a pin to that project's
 # upstream release tag, which differs per project (v1.2.3, bun-v1.2.3).
-# Adding or upgrading a tool = edit its pin() line, update the inventory
-# table in docs/tools.md, commit. Changing an archive layout = edit asset().
+# Upgrading a tool = its pin() line (plus pinsum()/ffbuild() where the tool
+# has them) and its inventory row in docs/tools.md. scripts/auto-update.sh
+# does this daily on ghost; by hand, use --set-pin/--set-sum/--set-ffbuild.
+# Changing an archive layout = edit asset().
 
 set -u
 
@@ -39,8 +51,8 @@ trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$OPT" "$BIN"
 PATH="$BIN:$PATH"   # the post-install version check must see what we just linked
 
-os="$(uname -s)"          # Darwin (ghost, silence) | Linux (the box)
-arch="$(uname -m)"        # arm64 | x86_64 (macOS); x86_64 | aarch64 (Linux)
+os="${ST_OS:-$(uname -s)}"        # Darwin (ghost, silence) | Linux (the box)
+arch="${ST_ARCH:-$(uname -m)}"    # arm64 | x86_64 (macOS); x86_64 | aarch64 (Linux)
 mac="${arch/x86_64/x64}"  # the x64 naming GitHub/node use for Intel
 if [ "$os" = Linux ]; then
   case "$arch" in
@@ -163,8 +175,8 @@ url() { case "$1" in
 esac; }
 
 sums() { case "$1" in     # checksums-file URL, or - when none is published
-  nvim) echo - ;;
-  pnpm) echo - ;;
+  nvim) echo pinned ;;          # no checksums file; sha256 lives in pinsum()
+  pnpm) echo pinned ;;          # no checksums file; sha256 lives in pinsum()
   bun)  echo "https://github.com/oven-sh/bun/releases/download/$(tag bun)/SHASUMS256.txt" ;;
   node) echo "https://nodejs.org/dist/$(tag node)/SHASUMS256.txt" ;;
   gh)   echo "https://github.com/cli/cli/releases/download/$(tag gh)/gh_$(pin gh)_checksums.txt" ;;
@@ -188,15 +200,23 @@ pinsum() { case "$1" in
   cloudflared-darwin-amd64.tgz) echo 02f3edfd87684dd5b705607688e4eb4b323f6e777b81e7b3a85af556aa356848 ;;
   cloudflared-linux-amd64)      echo 1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872 ;;
   cloudflared-linux-arm64)      echo 3df43aedc9ff291d1735b5cb576cb97e0b157488796db2e32b28aecabb445775 ;;
-  # ffmpeg 9.0.2: the build server's <zip>.sha256 files, cross-checked by downloading
+  # nvim and pnpm publish no checksums: sha256 of each release asset, from
+  # the download, cross-checked against the GitHub release asset digest
+  nvim-macos-arm64.tar.gz)       echo 1dbd148222b051ba6c307c4d17a318ed083df018a4f6a5a0ce46955ffc9ab87b ;;
+  nvim-linux-x86_64.tar.gz)      echo 474430d53e6264f6d6dd18db42d6dc9df3a1b56ca9e88a325bbf860e1a811d87 ;;
+  nvim-linux-arm64.tar.gz)       echo 8f1f64a0bdb97247034038c3823c6cbad5bdf9ecd5751b85494b71c3ee04c815 ;;
+  pnpm-darwin-arm64.tar.gz)      echo 6661212a6ec725634b0d3268e5bc9408e3152506dab5997891e38fa1ef22bf9c ;;
+  pnpm-linux-x64.tar.gz)         echo 565ff81174a14f6f7bd5d84c1b17e51031a80230d370a1fe24be5d16bd02a825 ;;
+  pnpm-linux-arm64.tar.gz)       echo f5847699e5d528f8f8e9bcfb385e58cb9fba7482af1b1aa7b70737be42277f81 ;;
+  # ffmpeg: the build server's <zip>.sha256 files, cross-checked by downloading
   macos/arm64/ffmpeg.zip)        echo c8ed4c4e6978a03c485edbfe4e0a5dc2380f8a30bba5150531b31b094492d924 ;;
   macos/arm64/ffprobe.zip)       echo fcbe839537485eaee7a7a8bc5cbc0f90d53617e80943e8a5b2e31cb851197ea6 ;;
   linux/amd64/ffmpeg.zip)        echo fa8ecf4abbd290d98f7d188b8649cc6b391ae209a98452be955a15aab1909d7f ;;
   linux/amd64/ffprobe.zip)       echo 3f428c49070be3d24ec338602b76d412e401ffcb8a5641ef0e729181a232fc32 ;;
   linux/arm64/ffmpeg.zip)        echo 93a76ae90db5474eecdf951a729857c64f3de23567228d6a7d5e6e8e3cd1021b ;;
   linux/arm64/ffprobe.zip)       echo bcbe80fb741c180083327afaf5434812e006b33cacde2016b9aeaf6936128330 ;;
-  # poppler 26.11.0: sha256 of the official tarball (upstream publishes a
-  # GPG .sig, not a sha256 file), cross-checked by downloading
+  # poppler: sha256 of the official tarball (upstream publishes a GPG .sig,
+  # not a sha256 file); the key carries the version, so a bump replaces it
   poppler-26.11.0.tar.xz)        echo 41c32680160addf5a8dd7a830e4869c01e9f6bee1abb91e44fabd1ba9d7828fb ;;
   # freetype 2.15.0: private static build dep of poppler, official savannah tarball
   freetype-2.15.0.tar.gz)        echo 9186627467a616d9a9e3e574748ac0c45fa77398e6364edef3041a8ba8d92f64 ;;
@@ -267,6 +287,46 @@ if [ "${1:-}" = "--pins" ]; then
   for t in $TOOLS; do echo "$t $(pin "$t")"; done
   exit 0
 fi
+
+if [ "${1:-}" = "--describe" ]; then
+  file="$(asset "$2")"; key="$file"
+  if [ "$2" = ffmpeg ]; then file=ffmpeg.zip; key="$(ffplat)/ffmpeg.zip"; fi
+  printf 'asset=%s\nkey=%s\nurl=%s\nsums=%s\n' "$file" "$key" "$(url "$2")" "$(sums "$2")"
+  exit 0
+fi
+
+# rewrite_case FUNC LABEL VALUE: set the echo of LABEL's case arm in FUNC.
+# Only pinsum() gains keys (appended first) or loses them (empty VALUE).
+rewrite_case() {
+  python3 - "$0" "$1" "$2" "${3:-}" <<'PY'
+import re, sys
+path, func, label, value = sys.argv[1:5]
+lines = open(path).read().split('\n')
+start = next((i for i, l in enumerate(lines) if l.startswith(func + '() {')), None)
+if start is None:
+    sys.exit(f'sync-tools: no {func}() in {path}')
+end = next(i for i in range(start + 1, len(lines)) if lines[i] == 'esac; }')
+pat = re.compile(r'^\s*' + re.escape(label) + r'\)\s+echo\s')
+hits = [i for i in range(start + 1, end) if pat.match(lines[i])]
+if len(hits) > 1:
+    sys.exit(f'sync-tools: {func} has {len(hits)} entries for {label}')
+if hits and value == '' and func == 'pinsum':
+    del lines[hits[0]]
+elif hits and value:
+    lines[hits[0]] = re.sub(r'echo\s+\S+\s+;;', lambda m: f'echo {value} ;;', lines[hits[0]], count=1)
+elif not hits and func == 'pinsum' and value:
+    lines.insert(start + 1, f'  {label}) echo {value} ;;')
+elif not hits and func == 'pinsum':
+    pass
+else:
+    sys.exit(f'sync-tools: no {func} entry for {label}')
+open(path, 'w').write('\n'.join(lines))
+PY
+}
+
+if [ "${1:-}" = "--set-pin" ]; then rewrite_case pin "$2" "$3"; exit $?; fi
+if [ "${1:-}" = "--set-sum" ]; then rewrite_case pinsum "$2" "${3:-}"; exit $?; fi
+if [ "${1:-}" = "--set-ffbuild" ]; then rewrite_case ffbuild "$2" "$3"; exit $?; fi
 
 if [ "${1:-}" = "--check" ]; then
   rc=0
