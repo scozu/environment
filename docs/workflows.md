@@ -51,7 +51,7 @@ unclear; update it when workflows change.
   | HTTPS port | App | Machines | Local port |
   | --- | --- | --- | --- |
   | 443 | envd / ghost-env MCP (LaunchAgent `dev.scozu.envd`) | ghost | 8790 |
-  | 4096 | OpenCode service (launchd `ai.opencode.service`) | ghost | 4096 |
+  | 4096 | OpenCode service (the desktop app's server) | ghost | 4096 |
   | 8443 | proofs (studiopendleton/proofs, LaunchAgent `com.studiopendleton.proofs-web`) | ghost, silence | 8787 |
   | 8444+ | next free port | | |
 
@@ -172,10 +172,12 @@ unclear; update it when workflows change.
   `https://ghost.tail483f5.ts.net:4096`, login `opencode` + password. Alternatively,
   generate a fresh pairing link with the command above and open it in the
   browser to sign in automatically.
-- The service runs under launchd on ghost (`ai.opencode.service`), survives
-  reboots and client disconnects; all clients share the same sessions and
-  data. On silence with no network, the service is unreachable — use local
-  clones (below) instead.
+- The service is the OpenCode desktop app's shared server on ghost
+  (`127.0.0.1:4096`, started by the app from its bundled CLI, and restarted by
+  the app on update). Clients share the same sessions and data. It is not a
+  launchd job; the old `ai.opencode.service` job is idle (see
+  [tools.md](tools.md)). On silence with no network, the service is
+  unreachable — use local clones (below) instead.
 
 ### 2. Zed remote
 
@@ -382,8 +384,8 @@ unclear; update it when workflows change.
 
 ## Status checks & maintenance
 
-- OpenCode service: on ghost `opencode service status` (launchd job:
-  `ai.opencode.service`).
+- OpenCode service: on a Mac, `opencode service status` (the desktop app runs
+  it; doctor checks that `opencode --version` matches the server on `:4096`).
 - Postgres (ghost): start on demand — `pg_ctl -D ~/.local/var/postgres start`
   when working on the local app, `stop` when done. No launchd job by design;
   ghost-only.
@@ -391,8 +393,10 @@ unclear; update it when workflows change.
 - envd (ghost): `launchctl print gui/$(id -u)/dev.scozu.envd`,
   `curl http://127.0.0.1:8790/healthz`, log `~/.local/var/envd.log`.
 - SSH server: socket-activated — `ssh ghost 'echo ok'` is the test.
-- Updates: opencode self-updates (its launchd job picks up new versions on
-  restart), and the GUI apps (Zed, Cursor, Tailscale, ChatGPT) auto-update
+- Updates: on the Macs the OpenCode desktop app self-updates and runs the
+  server; `opencode` is its bundled CLI (via `~/.local/bin/opencode`), so
+  there is nothing to update by hand. The box's standalone CLI is upgraded by
+  re-running the v2 installer (see [tools.md](tools.md)). The GUI apps (Zed, Cursor, Tailscale, ChatGPT) auto-update
   themselves. The tarball tools (nvim, pnpm, bun, node, gh, cloudflared,
   claude, ffmpeg, rustup, cmake, poppler, uv; the box skips claude, rustup,
   cmake, and poppler) update via

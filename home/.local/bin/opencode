@@ -1,0 +1,32 @@
+#!/bin/sh
+# opencode — the one `opencode` command. On a Mac with the OpenCode desktop
+# app, run the CLI bundled in the app: the app self-updates and runs the
+# shared server, so the CLI always matches it. Otherwise (the Linux box, or
+# a Mac without the app) run the standalone install in ~/.opencode/bin.
+# OPENCODE_APP_CLI_DIR overrides the app's cli directory (tests).
+APP_CLI_DIR=${OPENCODE_APP_CLI_DIR:-"$HOME/Library/Application Support/ai.opencode.desktop/cli"}
+STANDALONE="$HOME/.opencode/bin/opencode"
+
+case "$(uname -m)" in
+  arm64|aarch64) arch=arm64 ;;
+  x86_64)        arch=x64 ;;
+  *)             arch=$(uname -m) ;;
+esac
+
+# Highest version of the app's CLI for this architecture, e.g. 2.10.0 (not 2.9.3).
+latest=$(
+  for d in "$APP_CLI_DIR"/*-"$arch"; do
+    [ -x "$d/opencode-cli" ] || continue
+    name=$(basename "$d")
+    echo "${name%-"$arch"}"
+  done | sort -V | tail -n 1
+)
+
+if [ -n "$latest" ]; then
+  exec "$APP_CLI_DIR/$latest-$arch/opencode-cli" "$@"
+fi
+if [ -x "$STANDALONE" ]; then
+  exec "$STANDALONE" "$@"
+fi
+echo "opencode: no OpenCode CLI found (looked in $APP_CLI_DIR and $STANDALONE)" >&2
+exit 127

@@ -59,6 +59,29 @@ if [ "$(uname -s)" = Darwin ]; then
   check "RUSTUP_HOME and CARGO_HOME are ~/.local/opt/rustup/{rustup,cargo} in zsh" \
     zsh -c 'test "$RUSTUP_HOME" = "$HOME/.local/opt/rustup/rustup" && test "$CARGO_HOME" = "$HOME/.local/opt/rustup/cargo"'
   check "pdftotext resolves from ~/.local/bin" sh -c 'case "$(command -v pdftotext)" in "$HOME/.local/bin/"*) ;; *) exit 1 ;; esac'
+  # On a Mac, opencode is the desktop app's bundled CLI (home/.local/bin/opencode).
+  # The app runs the shared server on 127.0.0.1:4096 from its own CLI, so the
+  # CLI must be that same version or a stale standalone CLI is in use.
+  serving_exe() { # path of the process listening on :4096, or nothing
+    local pid; pid=$(lsof -nP -tiTCP:4096 -sTCP:LISTEN 2>/dev/null | head -1)
+    [ -n "$pid" ] && ps -o comm= -p "$pid"
+  }
+  echo "opencode"
+  check "opencode resolves to ~/.local/bin/opencode (the app wrapper)" sh -c 'test "$(command -v opencode)" = "$HOME/.local/bin/opencode"'
+  serve_exe=$(serving_exe)
+  if [ -z "$serve_exe" ]; then
+    echo "  skip  opencode version vs server: no server on 127.0.0.1:4096 (the app starts it)"
+  else
+    serve_ver=$("$serve_exe" --version 2>/dev/null | sed 's/^opencode v//')
+    cli_ver=$(opencode --version 2>/dev/null | sed 's/^opencode v//')
+    if [ -n "$serve_ver" ] && [ "$cli_ver" = "$serve_ver" ]; then
+      echo "  ok    opencode $cli_ver matches the server on :4096"
+    else
+      echo "  FAIL  opencode ${cli_ver:-unreadable}, but the server on :4096 is ${serve_ver:-unreadable} ($serve_exe)"
+      fails=$((fails + 1))
+    fi
+    check "server on :4096 is the desktop app's bundled CLI" sh -c 'case "$1" in *"/ai.opencode.desktop/cli/"*) ;; *) exit 1 ;; esac' _ "$serve_exe"
+  fi
 fi
 
 # Postgres is ghost-only and start-on-demand (one local app, no network).
@@ -73,7 +96,8 @@ if [ "$ROLE" = ghost ]; then
 fi
 
 # Version parity with the other machine, for every direct-installed tool.
-# opencode is exempt (it self-updates). postgres is ghost-only, so only
+# opencode is exempt (each Mac's desktop app self-updates; it is checked
+# against that Mac's own server above). postgres is ghost-only, so only
 # ghost compares it. Parity is verified from silence: silence is SSH-client
 # only (Remote Login off), so ghost can never ssh into it — the ghost-side
 # checks skip by design, and doctor on silence does the real comparison
@@ -193,7 +217,9 @@ fi
 
 if [ "$ROLE" = ghost ]; then
   echo "ghost"
-  check "launchd job ai.opencode.service loaded" sh -c 'launchctl list | grep -q ai.opencode.service'
+  # The desktop app runs the shared server on :4096. The launchd job runs the
+  # standalone CLI and would fight the app for the port, so only a running job fails.
+  check "launchd job ai.opencode.service not running (the app serves :4096)" sh -c '! launchctl list ai.opencode.service 2>/dev/null | grep -q PID'
   check "service listens on loopback only" sh -c 'lsof -nP -iTCP:4096 -sTCP:LISTEN | grep -q 127.0.0.1:4096'
   check "service answers with auth on loopback" test "$(http_code http://127.0.0.1:4096/api/info)" = 200
   check "tailscale serve proxies OpenCode" sh -c '/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status | grep -q "proxy http://127.0.0.1:4096"'
