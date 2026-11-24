@@ -77,7 +77,7 @@ them).
   Ghostty config, Zed settings, OpenCode `opencode.jsonc`, `AGENTS.md`, and
   `agents/lead.md`, Claude Code `~/.claude/settings.json` and
   `~/.claude/rules/pstack-models.md`, Rex `~/.config/rex/init.lua`, Cursor rules
-  (`~/.cursor/rules/*.mdc`), and the `rex` and `envd` scripts in
+  (`~/.cursor/rules/*.mdc`), and the `rex`, `envd`, and `ai-usage` scripts in
   `~/.local/bin` (envd's server is `~/.local/share/envd/envd.ts`).
   Cursor `User/settings.json` is deliberately **not** stowed — the app
   rewrites it as state (see `docs/workflows.md`).

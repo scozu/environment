@@ -6,12 +6,43 @@
   // the OpenCode Go subscription to save Opus usage. See agents/lead.md.
   "model": "opencode-go/deepseek-v4.1-flash",
   "default_agent": "lead",
+  // Subagent tiers, cheapest first. lead picks one per task (agents/lead.md).
   "agents": {
     "compaction": { "model": "opencode-go/deepseek-v4.1-flash" },
-    "general": { "model": "opencode-go/claude-haiku-5-5" },
-    "explore": { "model": "opencode-go/claude-haiku-5-5" },
+    "explore": {
+      "description": "Read-only search and reading of code or web sources on a cheap model; pick it for 'where is X' and 'what does Y do' questions before any edit.",
+      "model": "opencode-go/deepseek-v4.1-flash",
+    },
+    "worker": {
+      "description": "Mechanical edits, running commands and tests, and bulk changes whose steps are spelled out exactly; pick it for any change you can describe step by step.",
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "permissions": [{ "action": "subagent", "resource": "*", "effect": "deny" }],
+    },
+    "general": {
+      "description": "Scoped multi-step changes and research that need some judgment but not deep design; pick it when the task is clear but not mechanical.",
+      "model": "opencode-go/claude-haiku-5-5",
+    },
+    "senior": {
+      "description": "Sonnet for tricky debugging, design-heavy changes, or work that failed twice on a lower tier; pick it only when the task is hard, or when ai-usage advice is open and the task is medium.",
+      "mode": "subagent",
+      "model": "claude-agent/sonnet",
+      "permissions": [{ "action": "subagent", "resource": "*", "effect": "deny" }],
+    },
     "title": { "model": "opencode-go/deepseek-v4.1-flash" },
     "summary": { "model": "opencode-go/deepseek-v4.1-flash" },
+  },
+  // Lead's context is capped at 150k so auto-compaction (15% buffer) fires near
+  // 127k instead of ~850k. Subagents keep their own windows: the buffer is a
+  // share of each model's window. Cache entries last 1h on Claude (2x write
+  // cost, cheaper resends on long threads).
+  "providers": {
+    "claude-agent": {
+      "settings": { "cache": { "ttl": "1h" } },
+      "models": {
+        "opus": { "limit": { "context": 150000 } },
+      },
+    },
   },
   "mcp": {
     "servers": {

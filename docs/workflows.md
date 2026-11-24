@@ -135,17 +135,26 @@ unclear; update it when workflows change.
   makes edits through subagents, and its shell allows git and read-only commands
   and asks before anything else. That limit prevents accidents; it is not a
   security boundary.
-- **Models**: the `general` and `explore` subagents run on
-  `opencode-go/claude-haiku-5-5`. The global default (so `build` and `plan`),
+- **Models**: subagents are tiered (see Subagent tiers below). The global default (so `build` and `plan`),
   compaction, title, and summary run on `opencode-go/deepseek-v4.1-flash`.
   `/models` still overrides a session's model. Use `opencode-go/`, not
   `opencode/`, which is pay-as-you-go. If Console is signed out, subagents fail
   with `Reconnect OpenCode Console to continue`; fix it with `opencode auth login`.
-- **Long threads cost more**: every turn resends the whole history. Run
-  `/compact` after finishing a chunk of work, and start a new thread for a
-  separate task.
-- **Usage**: `claude -p "/usage"` shows Claude plan limits;
-  `opencode api get /api/experimental/usage/limits` shows OpenCode Go usage.
+- **One long thread per project is fine**: lead compacts at about 125k tokens
+  (opus `limit.context` 150k with the default 15% buffer), and the 1h Claude
+  cache makes resent history cheap. Keep lead lean: short replies, short
+  subagent reports. Run `/compact` by hand after a big chunk if you want it sooner.
+- **Subagent tiers**: `explore` (read-only search, DeepSeek Flash), `worker`
+  (mechanical edits, commands, tests; DeepSeek Flash), `general` (scoped
+  changes; Haiku), `senior` (hard debugging or design; Sonnet on the Claude
+  plan). lead picks the cheapest tier that fits and follows `ai-usage` advice.
+- **Usage**: `ai-usage` (on PATH from any directory) prints one line: Claude
+  session and week use against their pace, OpenCode Go 5h, week and month
+  use, and advice (`open`, `normal`, `conserve`, plus `go-tight`). Each run
+  appends to `~/.local/state/ai-usage.log` (machine-local, never in the repo).
+  After a week, read the log: many `conserve` lines mean lead was held back too
+  often; `open` alongside `go-tight` means headroom went unused. Raw sources:
+  `claude -p "/usage"` and `opencode api get /api/experimental/usage/limits`.
 - **On ghost**: run `opencode` (TUI) or the desktop app — both auto-connect to
   the local service.
 - **On silence (desktop)**: connect OpenCode Desktop to ghost over Tailscale.
