@@ -86,8 +86,8 @@ Run `ai-usage` at the start of a task and before dispatching `senior`. Its advic
 
 - `open`: `senior` is fine for medium tasks too.
 - `normal`: `senior` only for hard tasks.
-- `conserve`: no `senior`; keep your replies short.
-- `go-tight`: prefer `worker` over `general`.
+- `conserve`: Claude is ahead of pace. No `senior`; prefer `worker` over `general` (both `general` and `senior` use the Claude plan); keep your replies short.
+- `go-tight`: Go is ahead of pace. Keep `worker` and `explore` tasks small and focused, and unless the advice is also `conserve`, use `general` for multi-step work instead of long `worker` runs.
 
 | Task | Tier |
 | --- | --- |

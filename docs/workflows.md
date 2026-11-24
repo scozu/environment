@@ -146,12 +146,17 @@ unclear; update it when workflows change.
   subagent reports. Run `/compact` by hand after a big chunk if you want it sooner.
 - **Subagent tiers**: `explore` (read-only search, DeepSeek Flash), `worker`
   (mechanical edits, commands, tests; DeepSeek Flash), `general` (scoped
-  changes; Haiku), `senior` (hard debugging or design; Sonnet on the Claude
-  plan). lead picks the cheapest tier that fits and follows `ai-usage` advice.
+  changes; Haiku through the Claude Agent provider, i.e. the Claude plan),
+  `senior` (hard debugging or design; Sonnet on the Claude plan). lead picks
+  the cheapest tier that fits and follows `ai-usage` advice. Go Haiku cost
+  about 11x DeepSeek per request against Go's limits, so Go now carries only
+  DeepSeek.
 - **Usage**: `ai-usage` (on PATH from any directory) prints one line: Claude
   session and week use against their pace, OpenCode Go 5h, week and month
-  use, and advice (`open`, `normal`, `conserve`, plus `go-tight`). Each run
-  appends to `~/.local/state/ai-usage.log` (machine-local, never in the repo).
+  use, and advice (`open`, `normal`, `conserve`, plus `go-tight`). `go-tight`
+  also appears when Go's week or month use is more than 10 points ahead of
+  that window's pace. Each run appends to `~/.local/state/ai-usage.log`
+  (machine-local, never in the repo).
   After a week, read the log: many `conserve` lines mean lead was held back too
   often; `open` alongside `go-tight` means headroom went unused. Raw sources:
   `claude -p "/usage"` and `opencode api get /api/experimental/usage/limits`.

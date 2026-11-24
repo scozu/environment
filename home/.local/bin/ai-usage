@@ -53,8 +53,13 @@ week=$(window_fields "$claude_text" "Current week \(all models\)" 604800)
 
 go_json=$(limit 6 opencode api get /api/experimental/usage/limits 2>/dev/null)
 go_window() {
-  printf '%s' "$go_json" | grep -o "\"$1\":{\"percent\":[0-9.]*,\"limited\":[a-z]*" |
-    sed -E 's/.*"percent":([0-9]+)[0-9.]*,"limited":([a-z]+)/\1 \2/' | head -1
+  obj=$(printf '%s' "$go_json" | grep -o "\"$1\":{[^}]*}" | head -1)
+  [ -n "$obj" ] || return 0
+  pct=$(printf '%s' "$obj" | sed -n -E 's/.*"percent":([0-9]+).*/\1/p')
+  lim=$(printf '%s' "$obj" | sed -n -E 's/.*"limited":([a-z]+).*/\1/p')
+  [ -n "$pct" ] && [ -n "$lim" ] || return 0
+  reset=$(printf '%s' "$obj" | sed -n -E 's/.*"resetsAt":([0-9]+).*/\1/p')
+  echo "$pct $lim $reset"
 }
 rolling=$(go_window rolling)
 weekly=$(go_window weekly)
@@ -63,11 +68,27 @@ monthly=$(go_window monthly)
 go_tight=
 go_part=unknown
 if [ -n "$rolling" ] && [ -n "$weekly" ] && [ -n "$monthly" ]; then
-  go_part="go 5h ${rolling%% *}% week ${weekly%% *}% month ${monthly%% *}%"
-  for w in "$rolling" "$weekly" "$monthly"; do
+  r_pct=${rolling%% *}; r_rest=${rolling#* }; r_lim=${r_rest%% *}
+  w_pct=${weekly%% *}; w_rest=${weekly#* }; w_lim=${w_rest%% *}; w_reset=${w_rest#* }
+  m_pct=${monthly%% *}; m_rest=${monthly#* }; m_lim=${m_rest%% *}; m_reset=${m_rest#* }
+  go_part="go 5h ${r_pct}% week ${w_pct}%"
+  go_wk_pace=
+  if [ -n "$w_reset" ]; then
+    go_wk_pace=$(pace $((w_reset / 1000)) 604800)
+    go_part="$go_part (pace ${go_wk_pace}%)"
+  fi
+  go_part="$go_part month ${m_pct}%"
+  go_mo_pace=
+  if [ -n "$m_reset" ]; then
+    go_mo_pace=$(pace $((m_reset / 1000)) 2592000)
+    go_part="$go_part (pace ${go_mo_pace}%)"
+  fi
+  for w in "$r_pct $r_lim" "$w_pct $w_lim" "$m_pct $m_lim"; do
     pct=${w%% *}; lim=${w#* }
     if [ "$pct" -ge 80 ] || [ "$lim" = true ]; then go_tight=" go-tight"; fi
   done
+  if [ -n "$go_wk_pace" ] && [ "$w_pct" -gt $((go_wk_pace + 10)) ]; then go_tight=" go-tight"; fi
+  if [ -n "$go_mo_pace" ] && [ "$m_pct" -gt $((go_mo_pace + 10)) ]; then go_tight=" go-tight"; fi
 fi
 
 if [ -n "$sess" ] && [ -n "$week" ]; then
