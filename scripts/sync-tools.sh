@@ -71,15 +71,15 @@ TOOLS="nvim pnpm bun node gh cloudflared claude ffmpeg rustup cmake poppler uv"
 
 pin() { case "$1" in    # pinned version, bare semver
   nvim) echo 0.12.6 ;;
-  pnpm) echo 12.16.1 ;;
-  bun)  echo 1.4.4 ;;
-  node) echo 24.22.2 ;;
-  gh)   echo 2.103.3 ;;
-  cloudflared) echo 2026.10.7 ;;   # sha256 per asset: pinsum()
-  claude) echo 2.1.325 ;;
-  ffmpeg) echo 9.0.2 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
+  pnpm) echo 12.23.0 ;;
+  bun)  echo 1.4.5 ;;
+  node) echo 24.22.3 ;;
+  gh)   echo 2.105.0 ;;
+  cloudflared) echo 2026.11.2 ;;   # sha256 per asset: pinsum()
+  claude) echo 2.1.331 ;;
+  ffmpeg) echo 9.1 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
   rustup) echo 1.29.3 ;;  # rustup-init; no toolchain is installed by the pin
-  cmake) echo 4.5.0 ;;    # official Kitware binary; build-only dep of poppler
+  cmake) echo 4.5.1 ;;    # official Kitware binary; build-only dep of poppler
   poppler) echo 26.11.0 ;;  # source build of pdftotext; private static freetype 2.15.0
   uv) echo 0.13.9 ;;
 esac; }
@@ -196,25 +196,25 @@ esac; }
 # asset digests (API field assets[].digest), cross-checked by downloading;
 # the linux ones also match the release notes. Bump them with the pin.
 pinsum() { case "$1" in
-  cloudflared-darwin-arm64.tgz) echo 3586ccf397e98e5f437e60e7c307ca6ac463e110580503af8bb8e6f9ebf831bd ;;
-  cloudflared-darwin-amd64.tgz) echo 02f3edfd87684dd5b705607688e4eb4b323f6e777b81e7b3a85af556aa356848 ;;
-  cloudflared-linux-amd64)      echo 1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872 ;;
-  cloudflared-linux-arm64)      echo 3df43aedc9ff291d1735b5cb576cb97e0b157488796db2e32b28aecabb445775 ;;
+  cloudflared-darwin-arm64.tgz) echo f6d58eeec91ad1ec5fd1f7e4a587303772929b2625be5d24068033851c36ff55 ;;
+  cloudflared-darwin-amd64.tgz) echo 6153d9ec629174882a3adbff2f7dc5a24b4f3bdd7ccc38eaa84fba26eb890311 ;;
+  cloudflared-linux-amd64)      echo 56f13335143ec0e22772963290683a84a04114a35ec64cbc794a4d39ff9bb8cf ;;
+  cloudflared-linux-arm64)      echo 04a7b7f08bce85d56b26ffe1fdbfbb21a074495a363d16f0783c40e25b5c5281 ;;
   # nvim and pnpm publish no checksums: sha256 of each release asset, from
   # the download, cross-checked against the GitHub release asset digest
   nvim-macos-arm64.tar.gz)       echo 1dbd148222b051ba6c307c4d17a318ed083df018a4f6a5a0ce46955ffc9ab87b ;;
   nvim-linux-x86_64.tar.gz)      echo 474430d53e6264f6d6dd18db42d6dc9df3a1b56ca9e88a325bbf860e1a811d87 ;;
   nvim-linux-arm64.tar.gz)       echo 8f1f64a0bdb97247034038c3823c6cbad5bdf9ecd5751b85494b71c3ee04c815 ;;
-  pnpm-darwin-arm64.tar.gz)      echo 6661212a6ec725634b0d3268e5bc9408e3152506dab5997891e38fa1ef22bf9c ;;
-  pnpm-linux-x64.tar.gz)         echo 565ff81174a14f6f7bd5d84c1b17e51031a80230d370a1fe24be5d16bd02a825 ;;
-  pnpm-linux-arm64.tar.gz)       echo f5847699e5d528f8f8e9bcfb385e58cb9fba7482af1b1aa7b70737be42277f81 ;;
+  pnpm-darwin-arm64.tar.gz)      echo 52bb314bf0d48928fc15126ccce42aa199275e29018bef112a04ae8acdcaaf14 ;;
+  pnpm-linux-x64.tar.gz)         echo b515e29f2ac1adc0fbe63173414a6682827baff24f17e7ad3476821bdef236ac ;;
+  pnpm-linux-arm64.tar.gz)       echo dd03f7616625ff8f13d952f641f0864a2300d73d0a751a682737615bd9f9a7a2 ;;
   # ffmpeg: the build server's <zip>.sha256 files, cross-checked by downloading
-  macos/arm64/ffmpeg.zip)        echo c8ed4c4e6978a03c485edbfe4e0a5dc2380f8a30bba5150531b31b094492d924 ;;
-  macos/arm64/ffprobe.zip)       echo fcbe839537485eaee7a7a8bc5cbc0f90d53617e80943e8a5b2e31cb851197ea6 ;;
-  linux/amd64/ffmpeg.zip)        echo fa8ecf4abbd290d98f7d188b8649cc6b391ae209a98452be955a15aab1909d7f ;;
-  linux/amd64/ffprobe.zip)       echo 3f428c49070be3d24ec338602b76d412e401ffcb8a5641ef0e729181a232fc32 ;;
-  linux/arm64/ffmpeg.zip)        echo 93a76ae90db5474eecdf951a729857c64f3de23567228d6a7d5e6e8e3cd1021b ;;
-  linux/arm64/ffprobe.zip)       echo bcbe80fb741c180083327afaf5434812e006b33cacde2016b9aeaf6936128330 ;;
+  macos/arm64/ffmpeg.zip)        echo 1f66e9a690a7f1c9e60b012379f8869c11818d1797f45b21dbb2f2564ba61ae1 ;;
+  macos/arm64/ffprobe.zip)       echo 6ef2df5f575042923a28537ab37adf936f28bf3e7b85de23a1447ed447ec1dbd ;;
+  linux/amd64/ffmpeg.zip)        echo 707d4fa675932cc310e39e1506ac9224049786119689e345fed1c453a8a0896e ;;
+  linux/amd64/ffprobe.zip)       echo 5e4c53c9c86d6371027efa83d62c2cea00e02ded0234d8cc952d06c9259e4b33 ;;
+  linux/arm64/ffmpeg.zip)        echo e42242dd20b01cf9fe6cff1902b6e5e72be07c2b551d95abc8f332cdb0ff7d86 ;;
+  linux/arm64/ffprobe.zip)       echo a1561aa2136bce9f51dac9b13be4480466a3031f82907d551619dcdc3b867ccc ;;
   # poppler: sha256 of the official tarball (upstream publishes a GPG .sig,
   # not a sha256 file); the key carries the version, so a bump replaces it
   poppler-26.11.0.tar.xz)        echo 41c32680160addf5a8dd7a830e4869c01e9f6bee1abb91e44fabd1ba9d7828fb ;;
@@ -232,9 +232,9 @@ ffplat() {
   else echo unsupported; fi
 }
 ffbuild() { case "$(ffplat)" in
-  macos/arm64) echo 1789931890 ;;
-  linux/amd64) echo 1789931100 ;;
-  linux/arm64) echo 1789931697 ;;
+  macos/arm64) echo 1795207104 ;;
+  linux/amd64) echo 1795205506 ;;
+  linux/arm64) echo 1795204341 ;;
 esac; }
 
 # rustup-init is archived by target tuple. Linux gnu builds are in url/sums
