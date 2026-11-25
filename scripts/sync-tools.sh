@@ -76,12 +76,12 @@ pin() { case "$1" in    # pinned version, bare semver
   node) echo 24.22.3 ;;
   gh)   echo 2.105.0 ;;
   cloudflared) echo 2026.11.2 ;;   # sha256 per asset: pinsum()
-  claude) echo 2.1.331 ;;
+  claude) echo 2.1.332 ;;
   ffmpeg) echo 9.1 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
   rustup) echo 1.29.3 ;;  # rustup-init; no toolchain is installed by the pin
   cmake) echo 4.5.1 ;;    # official Kitware binary; build-only dep of poppler
   poppler) echo 26.11.0 ;;  # source build of pdftotext; private static freetype 2.15.0
-  uv) echo 0.13.9 ;;
+  uv) echo 0.13.10 ;;
 esac; }
 
 tag() { case "$1" in    # upstream release tag for the pinned version
