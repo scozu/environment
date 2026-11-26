@@ -140,10 +140,15 @@ unclear; update it when workflows change.
   `/models` still overrides a session's model. Use `opencode-go/`, not
   `opencode/`, which is pay-as-you-go. If Console is signed out, subagents fail
   with `Reconnect OpenCode Console to continue`; fix it with `opencode auth login`.
-- **One long thread per project is fine**: lead compacts at about 125k tokens
-  (opus `limit.context` 150k with the default 15% buffer), and the 1h Claude
-  cache makes resent history cheap. Keep lead lean: short replies, short
-  subagent reports. Run `/compact` by hand after a big chunk if you want it sooner.
+- **One long thread per project is fine**: lead (`claude-agent/opus`,
+  `limit.context` 200k) compacts near 170k (window minus 15%, at least 16k), and
+  Opus subagents use the alias `claude-agent/opus-long` (`modelID: "opus"`, 1M
+  window) and compact near 850k. The 1h Claude cache makes resent history cheap.
+  Keep lead lean: short replies, short subagent reports. Run `/compact` by hand
+  after a big chunk if you want it sooner. Limits are per model ID, not per
+  agent, which is why the alias exists. Config changes apply after
+  `opencode api post /api/location/reload -H "x-opencode-directory:<dir>"`
+  (no restart).
 - **Subagent tiers**: `explore` (read-only search, DeepSeek Flash), `worker`
   (mechanical edits, commands, tests; DeepSeek Flash), `general` (scoped
   changes; Haiku through the Claude Agent provider, i.e. the Claude plan),

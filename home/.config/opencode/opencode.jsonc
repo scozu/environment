@@ -33,16 +33,21 @@
     "title": { "model": "opencode-go/deepseek-v4.1-flash" },
     "summary": { "model": "opencode-go/deepseek-v4.1-flash" },
   },
-  // Opus is capped at 400k so auto-compaction (15% buffer) fires near
-  // 340k instead of ~850k. The cap is per model, so it applies to the lead
-  // and to any subagent run on Opus (e.g. senior with model claude-agent/opus);
-  // 150k made those subagents compact too often. Cache entries last 1h on
-  // Claude (2x write cost, cheaper resends on long threads).
+  // Auto-compaction fires once the prompt reaches the window minus a 15%
+  // buffer (at least 16k): 200k compacts near 170k, 1M near 850k.
+  // The lead (claude-agent/opus) gets a 200k window so its per-turn context
+  // stays lean; it delegates the heavy reading. Subagents that need Opus
+  // use claude-agent/opus-long: the same model with the full 1M window, so
+  // they rarely compact. Limits are per model ID, which is why the alias
+  // exists. Cache entries last 1h on Claude (2x write cost, cheaper resends
+  // on long threads).
   "providers": {
     "claude-agent": {
       "settings": { "cache": { "ttl": "1h" } },
       "models": {
-        "opus": { "limit": { "context": 400000 } },
+        "opus": { "limit": { "context": 200000 } },
+        // Alias: modelID sends the real model ID ("opus") to the Claude SDK.
+        "opus-long": { "modelID": "opus", "limit": { "context": 1000000 } },
       },
     },
   },

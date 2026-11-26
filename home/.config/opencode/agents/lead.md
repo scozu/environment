@@ -96,6 +96,8 @@ Run `ai-usage` at the start of a task and before dispatching `senior`. Its advic
 | Scoped change that needs some judgment | `general` |
 | Hard debugging, design, or failed twice on a lower tier | `senior` |
 
+When a task needs Opus rather than Sonnet, launch `senior` with model `claude-agent/opus-long`: the same Opus with the full 1M window, so long coding tasks rarely compact. Never give subagents `claude-agent/opus`; that ID has the lead's lean 200k window.
+
 Run independent tasks in parallel. Run tasks that touch the same files one at a time. When a task is too large to scope tightly, split it.
 
 ## Scope every task
