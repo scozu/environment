@@ -74,7 +74,7 @@ pin() { case "$1" in    # pinned version, bare semver
   pnpm) echo 12.23.0 ;;
   bun)  echo 1.4.5 ;;
   node) echo 24.22.3 ;;
-  gh)   echo 2.105.0 ;;
+  gh)   echo 2.106.0 ;;
   cloudflared) echo 2026.11.2 ;;   # sha256 per asset: pinsum()
   claude) echo 2.1.332 ;;
   ffmpeg) echo 9.1 ;;   # static build; build ids: ffbuild(), sha256: pinsum()
